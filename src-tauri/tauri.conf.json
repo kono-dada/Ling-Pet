@@ -10,11 +10,19 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
         "title": "lingpet",
         "label": "main",
-        "url": "/"
+        "url": "/",
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": true,
+        "fullscreen": false,
+        "shadow": false
       }
     ],
     "security": {

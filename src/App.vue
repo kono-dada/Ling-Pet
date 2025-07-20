@@ -3,9 +3,7 @@
 </script>
 
 <template>
-  <v-app>
-    <router-view/>
-  </v-app>
+  <router-view/>
 </template>
 
 <style>
@@ -16,12 +14,9 @@
   box-sizing: border-box;
 }
 
-html, body {
+html, body, #app{
   height: 100%;
-}
-
-#app {
-  height: 100%;
+  overflow: hidden;
 }
 
 </style>
