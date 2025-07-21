@@ -16,11 +16,14 @@
         "title": "lingpet",
         "label": "main",
         "url": "/",
+        "minWidth": 100,
+        "minHeight": 100,
+        "resizable": false,
         "transparent": true,
         "decorations": false,
         "alwaysOnTop": true,
         "skipTaskbar": true,
-        "visible": true,
+        "visible": false,
         "fullscreen": false,
         "shadow": false
       }

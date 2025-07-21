@@ -8,13 +8,17 @@ import Avatar from '../components/main/Avatar.vue';
 const avatarRef = ref();
 
 // 设置窗口为正方形
-onMounted(async () => {
+async function setWindowToSquare() {
   const window = getCurrentWebviewWindow();
   const physicalSize = await window.innerSize();
   const scaleFactor = await window.scaleFactor();
   const minSize = Math.min(physicalSize.width, physicalSize.height) / scaleFactor;
   const squaredLogicalSize = new LogicalSize(minSize, minSize);
   window.setSize(squaredLogicalSize);
+}
+
+onMounted(async () => {
+  await setWindowToSquare();
 });
 
 function quitApp() {
