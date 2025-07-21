@@ -4,6 +4,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { LogicalSize } from '@tauri-apps/api/dpi';
 import Avatar from '../components/main/Avatar.vue';
+import Input from '../components/main/Input.vue';
+import SettingButton from '../components/main/SettingButton.vue';
 
 const avatarRef = ref();
 
@@ -27,15 +29,17 @@ function quitApp() {
 </script>
 
 <template>
-  <div class="main-page">
+  <div class="main-wrapper">
     <Avatar ref="avatarRef" />
+    <SettingButton class="settings-button" />
+    <Input class="input" />
   </div>
   <v-btn @click="quitApp">退出</v-btn>
 </template>
 
 <style scoped>
 /* totally transparent, center, no-scrolling */
-.main-page {
+.main-wrapper {
   position: fixed;
   top: 0;
   left: 0;
@@ -46,6 +50,7 @@ function quitApp() {
   align-items: center;
   overflow: hidden;
   overscroll-behavior: none;
+  padding: 5px;
 
   /* 防止图片被选中和拖拽 */
   -webkit-user-select: none;
@@ -56,5 +61,15 @@ function quitApp() {
   /* 防止图片加载时的闪烁 */
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+}
+
+
+.main-wrapper:hover .input,
+.main-wrapper:focus-within .input {
+  opacity: 0.6;
+}
+.main-wrapper:hover .settings-button,
+.main-wrapper:focus-within .settings-button {
+  opacity: 1;
 }
 </style>

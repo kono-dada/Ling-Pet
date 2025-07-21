@@ -44,12 +44,11 @@ defineExpose({
   object-fit: contain;
   border-radius: 50%;
   /* 默认显示轮廓：阴影 + 边框 */
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   border: none;
   transition: all 0.3s ease;
   background: transparent;
-  width: 100%;
-  height: 100%;
+  width: 80%;
   cursor: pointer;
 }
 
@@ -88,6 +87,8 @@ defineExpose({
 .pet-avatar:hover {
   transform: scale(1.05);
   transform-origin: center bottom;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 1);
 }
 
 </style>
