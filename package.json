@@ -18,6 +18,8 @@
     "@tauri-apps/plugin-store": "~2.3.0",
     "@tauri-apps/plugin-window-state": "~2.3.0",
     "@tauri-store/pinia": "^3.7.1",
+    "@types/lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "pinia": "^3.0.3",
     "vue": "^3.5.13",
     "vue-router": "^4.5.1",

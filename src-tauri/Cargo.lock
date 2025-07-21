@@ -2250,6 +2250,7 @@ name = "lingpet"
 version = "0.1.0"
 dependencies = [
  "cocoa",
+ "log",
  "objc",
  "objc-foundation",
  "serde",

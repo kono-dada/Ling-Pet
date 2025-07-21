@@ -27,7 +27,10 @@ pub fn run() {
 
             Ok(())
         })
-        .plugin(tauri_plugin_log::Builder::new().build())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+            .level(log::LevelFilter::Debug).build(),
+        )
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_window_state::Builder::new().build())
