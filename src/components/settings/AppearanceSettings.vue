@@ -27,7 +27,7 @@
 
           <div class="d-flex justify-space-between align-center">
             <div>
-              <v-label>显示装饰</v-label>
+              <v-label>显示光圈装饰</v-label>
             </div>
             <v-switch
               v-model="ac.showDecorations"

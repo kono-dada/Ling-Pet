@@ -58,7 +58,7 @@ function preventSendWhenThinking(event: KeyboardEvent) {
   position: absolute;
   display: flex;
   bottom: 0;
-  padding: 6px 10px;
+  padding: 3px 10px;
   width: 60%;
   /* align-items: center; */
 

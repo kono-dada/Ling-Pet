@@ -13,6 +13,11 @@ async function openSettings() {
   const allWindows = await getAllWebviewWindows();
   const allLabels = allWindows.map(window => window.label);
   debug(allLabels.join(', '));
+  const settingsWindow = allWindows.find(window => window.label === 'settings');
+  if (settingsWindow) {
+    settingsWindow?.setFocus();
+    return;
+  }
   const settingWindowConfig = {
     title: '设置',
     url: '/#/settings',
@@ -23,8 +28,8 @@ async function openSettings() {
     transparent: false,
     decorations: true,
     alwaysOnTop: false,
-    skipTaskbar: false,
-    center: true,
+    skipTaskbar: true,
+    center: false,
     visible: true,
   };
   new WebviewWindow('settings', {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watchEffect } from 'vue';
+import { onMounted, ref, watchEffect, nextTick } from 'vue';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { LogicalSize } from '@tauri-apps/api/dpi';
 import Avatar from '../components/main/Avatar.vue';
@@ -18,8 +18,11 @@ async function setWindowToSquare() {
 
 onMounted(async () => {
   await setWindowToSquare();
-  watchEffect(async () => {
+  watchEffect(async () => {  // 监听 petSize 的变化， 确保窗口大小同步更新
     await window.setSize(new LogicalSize(ac.petSize, ac.petSize + 30));
+    ac.showDecorations = false; 
+    await nextTick(); // 确保 DOM 更新
+    ac.showDecorations = true; // 触发装饰元素的重新渲染
   });
 });
 
@@ -100,26 +103,26 @@ onMounted(async () => {
 
 /* 主呼吸光圈 */
 .glow-ring.primary {
-  width: 200px;
-  height: 200px;
-  border: 2px solid rgba(99, 102, 241, 0.4);
+  width: 60vmin;
+  height: 60vmin;
+  border: 3px solid rgba(99, 102, 241, 0.6); /* 提高透明度 */
   animation: pulse 3s ease-in-out infinite;
 }
 
 /* 次级光圈 */
 .glow-ring.secondary {
-  width: 160px;
-  height: 160px;
-  border: 1px solid rgba(147, 51, 234, 0.3);
+  width: 48vmin;
+  height: 48vmin;
+  border: 2px solid rgba(147, 51, 234, 0.5); /* 提高透明度 */
   animation: pulse 2.5s ease-in-out infinite;
   animation-delay: 0.5s;
 }
 
 /* 外层光环 */
 .glow-ring.outer {
-  width: 260px;
-  height: 260px;
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  width: 78vmin;
+  height: 78vmin;
+  border: 2px solid rgba(59, 130, 246, 0.4); /* 提高透明度 */
   animation: pulse 4s ease-in-out infinite;
   animation-delay: 1s;
 }
@@ -134,15 +137,15 @@ onMounted(async () => {
 
 .corner-light {
   position: absolute;
-  width: 6px;
-  height: 6px;
+  width: 1.8vmin;
+  height: 1.8vmin;
   background: radial-gradient(circle, rgba(99, 102, 241, 0.8) 0%, transparent 70%);
   border-radius: 50%;
   animation: corner-glow 2s ease-in-out infinite alternate;
   
   /* 根据索引定位到四个角 */
-  top: calc(cos(calc(var(--index) * 90deg)) * 120px);
-  left: calc(sin(calc(var(--index) * 90deg)) * 120px);
+  top: calc(cos(calc(var(--index) * 90deg)) * 36vmin);
+  left: calc(sin(calc(var(--index) * 90deg)) * 36vmin);
 }
 
 /* 中心柔和光晕 */
@@ -151,8 +154,8 @@ onMounted(async () => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 100px;
-  height: 100px;
+  width: 30vmin;
+  height: 30vmin;
   background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
   border-radius: 50%;
   animation: glow-breathe 4s ease-in-out infinite;
