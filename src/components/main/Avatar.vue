@@ -1,23 +1,25 @@
 <template>
-  <img :src="`/avatar/${currentEmotion + '.png'}`" :alt="currentEmotion" class="pet-avatar"
-    :class="{ 'shaking': isShaking }" draggable="false" @mousedown="onDragStart" />
+  <img :src="`/avatar/${state.currentEmotion + '.png'}`" :alt="state.currentEmotion" class="pet-avatar"
+    :class="{ 'shaking': isShaking }" draggable="false" @mousedown="onDragStart" @click.stop="onClick" />
 </template>
 
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { EmotionName } from '../../types/emotion';
+import { useStateStore } from '../../stores/state';
+import { EMOTIONS } from '../../constants/emotions';
 
+const state = useStateStore()
 const appWindow = getCurrentWebviewWindow();
-
-const props = defineProps<{
-  currentEmotion: EmotionName;
-}>();
 
 const isShaking = ref(false);
 
 function onDragStart() {
   appWindow.startDragging();
+}
+
+function onClick() {
+  state.currentEmotion = EMOTIONS[Math.floor(Math.random() * EMOTIONS.length)];
 }
 
 function triggerShakeEffect() {
@@ -27,7 +29,7 @@ function triggerShakeEffect() {
   }, 600);
 }
 
-watch(() => props.currentEmotion, () => {
+watch(() => state.currentEmotion, () => {
   triggerShakeEffect();
 });
 
@@ -69,11 +71,11 @@ defineExpose({
   }
 
   80% {
-    transform: scaleY(1.05) scaleX(0.98);
+    transform: scaleY(1.1) scaleX(0.98);
   }
 
   100% {
-    transform: scaleY(1) scaleX(1);
+    transform: scaleY(1.05) scaleX(1.05);
   }
 }
 
@@ -81,4 +83,10 @@ defineExpose({
   animation: startled 0.6s ease-out;
   transform-origin: center bottom;
 }
+
+.pet-avatar:hover {
+  transform: scale(1.05);
+  transform-origin: center bottom;
+}
+
 </style>

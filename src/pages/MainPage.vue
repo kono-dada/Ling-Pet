@@ -4,7 +4,6 @@ import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { LogicalSize } from '@tauri-apps/api/dpi';
 import Avatar from '../components/main/Avatar.vue';
-import { EmotionName } from '../types/emotion';
 
 const avatarRef = ref();
 
@@ -29,7 +28,7 @@ function quitApp() {
 
 <template>
   <div class="main-page">
-    <Avatar :currentEmotion="('高兴' as EmotionName)" ref="avatarRef" />
+    <Avatar ref="avatarRef" />
   </div>
   <v-btn @click="quitApp">退出</v-btn>
 </template>
