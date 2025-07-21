@@ -6,11 +6,12 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { EmotionName } from '../../types/emotion';
 
 const appWindow = getCurrentWebviewWindow();
 
 const props = defineProps<{
-  currentEmotion: string;
+  currentEmotion: EmotionName;
 }>();
 
 const isShaking = ref(false);
