@@ -26,7 +26,7 @@ function triggerShakeEffect() {
   isShaking.value = true;
   setTimeout(() => {
     isShaking.value = false;
-  }, 600);
+  }, 1000);
 }
 
 watch(() => state.currentEmotion, () => {
@@ -50,6 +50,7 @@ defineExpose({
   background: transparent;
   width: 100%;
   height: 100%;
+  cursor: pointer;
 }
 
 /* 一惊一乍的伸缩动画 */
