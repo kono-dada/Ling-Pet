@@ -59,7 +59,7 @@ function preventSendWhenThinking(event: KeyboardEvent) {
   display: flex;
   bottom: 0;
   padding: 6px 10px;
-  width: 80%;
+  width: 60%;
   /* align-items: center; */
 
   opacity: 0;

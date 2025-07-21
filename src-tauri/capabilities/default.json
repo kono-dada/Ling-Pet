@@ -2,12 +2,17 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["main"],
+  "windows": ["main", "settings"],
   "permissions": [
     "core:default",
     "opener:default",
     "core:window:allow-start-dragging",
     "core:webview:allow-set-webview-auto-resize",
-    "core:window:allow-set-size"
+    "core:window:allow-set-size",
+    "core:window:allow-show",
+    "core:window:allow-set-focus",
+    "log:allow-log",
+    "log:default",
+    "core:webview:allow-create-webview-window"
   ]
 }

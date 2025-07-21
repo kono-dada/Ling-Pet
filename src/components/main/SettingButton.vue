@@ -6,17 +6,39 @@
 </template>
 
 <script lang="ts" setup>
+import { getAllWebviewWindows, WebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { debug } from '@tauri-apps/plugin-log';
 
-function openSettings() {
-
+async function openSettings() {
+  const allWindows = await getAllWebviewWindows();
+  const allLabels = allWindows.map(window => window.label);
+  debug(allLabels.join(', '));
+  const settingWindowConfig = {
+    title: '设置',
+    url: '/#/settings',
+    label: 'settings',
+    width: 800,
+    height: 600,
+    resizable: true,
+    transparent: false,
+    decorations: true,
+    alwaysOnTop: false,
+    skipTaskbar: false,
+    center: true,
+    visible: true,
+  };
+  new WebviewWindow('settings', {
+    ...settingWindowConfig,
+    visible: true
+  });
 }
 </script>
 
 <style scoped>
 .settings-button {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 10%;
+  right: 10%;
   width: 24px;
   height: 24px;
   border: none;

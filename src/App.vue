@@ -1,5 +1,12 @@
 <script setup lang="ts">
-// 应用入口组件
+import { useAppearanceConfigStore } from './stores/appearanceConfig';
+import { useStateStore } from './stores/state';
+import { onMounted } from 'vue';
+
+onMounted(() => {
+  useAppearanceConfigStore().$tauri.start();
+  useStateStore().$tauri.start();
+});
 </script>
 
 <template>
