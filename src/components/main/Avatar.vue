@@ -6,7 +6,7 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { useStateStore } from '../../stores/state';
+import { useStateStore } from '../../stores/petState';
 import { EMOTIONS } from '../../constants/emotions';
 
 const state = useStateStore()

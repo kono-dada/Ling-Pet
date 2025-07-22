@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAppearanceConfigStore } from './stores/appearanceConfig';
-import { useStateStore } from './stores/state';
+import { useStateStore } from './stores/petState';
 import { onMounted } from 'vue';
 
 onMounted(() => {
