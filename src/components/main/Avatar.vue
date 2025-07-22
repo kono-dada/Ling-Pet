@@ -50,6 +50,7 @@ defineExpose({
   background: transparent;
   width: 80%;
   cursor: pointer;
+  image-rendering: auto; /* 或 smooth，auto 通常效果更好 */
 }
 
 /* 一惊一乍的伸缩动画 */
