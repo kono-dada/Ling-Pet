@@ -5,6 +5,10 @@
 
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
+import { useChatBubbleStateStore } from '../../stores/chatBubbleState';
+import { debug } from '@tauri-apps/plugin-log';
+
+const cbs = useChatBubbleStateStore();
 
 const inputMessage = ref('');
 const isSending = ref(false);
@@ -34,14 +38,15 @@ function sendMessage() {
     setTimeout(() => {
       // 模拟思考完成
       // isSending.value = false;
-      console.log('用户消息:', userMessage);
+      cbs.currentMessage = userMessage; // 更新当前消息状态
       // 这里可以添加实际的消息发送逻辑，比如调用 API 或者更新状态
       clearInterval(thinkingTimer);
       thinkingIndex.value = 0;
 
       // 无论成功还是失败，都要重置发送状态
       isSending.value = false;
-    }, 5000);
+      debug(`Sending message: ${cbs.currentMessage}`);
+    }, 2000);
   }
 }
 

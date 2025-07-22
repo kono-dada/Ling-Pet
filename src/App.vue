@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import { useAppearanceConfigStore } from './stores/appearanceConfig';
 import { useStateStore } from './stores/petState';
+import { useChatBubbleStateStore } from './stores/chatBubbleState';
 import { onMounted } from 'vue';
+import { denySave } from '@tauri-store/pinia';
 
-onMounted(() => {
-  useAppearanceConfigStore().$tauri.start();
-  useStateStore().$tauri.start();
+onMounted(async () => {
+  await useAppearanceConfigStore().$tauri.start();
+  await useStateStore().$tauri.start();
+  await useChatBubbleStateStore().$tauri.start();
+  denySave('chatBubbleState');
 });
 </script>
 
 <template>
-  <router-view/>
+  <router-view />
 </template>
 
 <style>
@@ -21,9 +25,10 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
-html, body, #app{
+html,
+body,
+#app {
   height: 100%;
   overflow: hidden;
 }
-
 </style>
