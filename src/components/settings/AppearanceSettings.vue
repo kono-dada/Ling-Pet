@@ -56,16 +56,13 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
-import { SETTINGS_CONSTRAINTS } from '../../constants/settings_default';
 import { useAppearanceConfigStore } from '../../stores/appearanceConfig';
 
 // Constants
-const {
-  minSize: MIN_SIZE,
-  maxSize: MAX_SIZE,
-  minOpacity: MIN_OPACITY,
-  maxOpacity: MAX_OPACITY
-} = SETTINGS_CONSTRAINTS;
+const MIN_SIZE = 100;
+const MAX_SIZE = 300;
+const MIN_OPACITY = 0.1;
+const MAX_OPACITY = 1.0;
 
 // State management
 const ac = useAppearanceConfigStore();

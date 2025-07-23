@@ -43,13 +43,36 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
-import { SETTINGS_TABS, DEFAULT_ACTIVE_TAB } from "../constants/settings-ui";
-import type { SettingsState } from '../types/settings-ui';
 import AppearanceSettings from '../components/settings/AppearanceSettings.vue';
 import AISettings from '../components/settings/AISettings.vue';
 import AboutSettings from '../components/settings/AboutSettings.vue';
 
-const settingsState = ref<SettingsState>({
+const SETTINGS_TABS = [
+  {
+    id: 'appearance',
+    name: '外观设置',
+    icon: 'appearance',
+  },
+  {
+    id: 'ai',
+    name: 'AI设置',
+    icon: 'ai',
+  },
+  {
+    id: 'xp',
+    name: 'XP设置',
+    icon: 'xp',
+  },
+  {
+    id: 'about',
+    name: '关于',
+    icon: 'about',
+  },
+];
+const DEFAULT_ACTIVE_TAB = 'appearance';
+
+
+const settingsState = ref({
     activeTab: DEFAULT_ACTIVE_TAB,
     isLoading: false,
 });
