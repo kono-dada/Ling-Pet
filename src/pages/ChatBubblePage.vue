@@ -5,134 +5,48 @@
         <div class="bubble-text" :style="{ textAlign, color: colorTheme.text }">
           {{ displayedMessage }}<span v-if="isTyping" class="typing-cursor" :style="{ color: colorTheme.text }">|</span>
         </div>
+        <div class="continue-hint">点击灵灵继续</div>
+        <!-- 尾巴 SVG -->
+        <svg class="bubble-tail" viewBox="0 0 24 20" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          <path d="M0,0 
+            Q0,10 10,14 
+            Q12,15 18,18 
+            Q12,10 14,0 
+            Q3,2 0,0 Z" :fill="colorTheme.background" fill-opacity="0.95" stroke="none" />
+        </svg>
       </div>
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue';
-import { getEmotionColorTheme } from '../constants/emotionColors';
-import { useChatBubbleStateStore } from '../stores/chatBubbleState';
-import { usePetStateStore } from '../stores/petState';
-import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi';
-import { debug } from '@tauri-apps/plugin-log';
-
-const cbs = useChatBubbleStateStore();
-cbs.$tauri.start();
-const petState = usePetStateStore();
-
-const displayedMessage = ref('');
-const isTyping = ref(false);
-const textAlign = ref<'center' | 'left'>('center');
-
-// 计算颜色主题
-const colorTheme = computed(() => getEmotionColorTheme(petState.currentEmotion))
-
-// 计算气泡样式
-const bubbleStyles = computed(() => {
-  const theme = colorTheme.value;
-  return {
-    background: theme.background,
-    borderColor: theme.border,
-    boxShadow: `0 8px 32px ${theme.shadow}, 0 0 0 1px ${theme.border}`,
-    color: theme.text,
-    // 设置 CSS 变量用于动画
-    '--dynamic-shadow': `0 8px 32px ${theme.shadow}`,
-    '--glow-color': theme.shadow,
-    '--border-glow': theme.border
-  };
-});
-
-// 打字机效果
-const typeMessage = async (message: string) => {
-  const typeSpeed = 50
-  if (!message) return;
-
-  // 根据文字长度决定对齐方式
-  textAlign.value = message.length > 30 ? 'left' : 'center';
-
-  isTyping.value = true;
-  displayedMessage.value = '';
-
-  for (let i = 0; i <= message.length; i++) {
-    displayedMessage.value = message.slice(0, i);
-    await new Promise(resolve => setTimeout(resolve, typeSpeed)); 
-  }
-
-  isTyping.value = false;
-};
-
-// 监听消息变化
-watch(() => cbs.currentMessage, (newMessage) => {
-  debug(`cb检测到新消息：${newMessage}`);
-  resizeAndPositionBubble();
-  typeMessage(newMessage);
-}, { immediate: true });
-
-async function calculateBubbleWindowProps(mainWindow: WebviewWindow, message: string) {
-  // 获取主窗口信息
-  const [mainPosition, mainSize, scaleFactor] = await Promise.all([
-    mainWindow.innerPosition(),
-    mainWindow.innerSize(),
-    mainWindow.scaleFactor()
-  ]);
-
-  // 根据消息长度动态计算气泡尺寸
-  const messageLength = message.length;
-  const bubbleWidth = 250;
-
-  // 根据消息长度估算高度（考虑换行）
-  const estimatedLines = Math.ceil(messageLength / 10);
-  const bubbleHeight = Math.min(Math.max(estimatedLines * 24 + 60, 80), 250);
-
-  // 将物理坐标转换为逻辑坐标
-  const logicalMainX = mainPosition.x / scaleFactor;
-  const logicalMainY = mainPosition.y / scaleFactor;
-  const logicalMainWidth = mainSize.width / scaleFactor;
-  const logicalMainHeight = mainSize.height / scaleFactor;
-
-  // 计算气泡逻辑位置：主窗口正左方
-  const bubbleX = logicalMainX + logicalMainWidth / 3 - bubbleWidth; // 右侧留出10px
-  const bubbleY = logicalMainY + logicalMainHeight / 2 - bubbleHeight / 2;
-  return {
-    width: bubbleWidth,
-    height: bubbleHeight,
-    x: bubbleX,
-    y: bubbleY,
-  };
-}
-
-async function resizeAndPositionBubble() {
-  const chatBubbleWindow = getCurrentWebviewWindow();
-  const mainWindow = await WebviewWindow.getByLabel('main');
-  if (chatBubbleWindow && mainWindow) {
-    const props = await calculateBubbleWindowProps(mainWindow, cbs.currentMessage);
-    await chatBubbleWindow.setSize(new LogicalSize(props.width, props.height));
-    await chatBubbleWindow.setPosition(new LogicalPosition(props.x, props.y));
-  }
-}
-
-onMounted(async () => {
-  const chatBubbleWindow = getCurrentWebviewWindow();
-  chatBubbleWindow.setAlwaysOnTop(true)
-  const mainWindow = await WebviewWindow.getByLabel('main');
-  resizeAndPositionBubble()  //无论是生成还是更新消息，都需要重新计算位置
-  mainWindow?.onMoved(async () => {
-    if (chatBubbleWindow) {
-      const props = await calculateBubbleWindowProps(mainWindow, cbs.currentMessage);
-      chatBubbleWindow.setPosition(new LogicalPosition(props.x, props.y));
-    }
-  });
-});
-
-</script>
-
 <style scoped>
+.continue-hint {
+  position: absolute;
+  bottom: 0; /* 贴近底边线 */
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 10px;
+  color: #666;
+  font-weight: 500;
+  opacity: 0.7;
+  background: transparent;
+  pointer-events: none;
+  z-index: 1;
+}
+.bubble-tail {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  bottom: -10px;
+  right: -5px;
+  z-index: 1;
+  pointer-events: none;
+}
+
 .chat-bubble-window {
   width: 100%;
   height: 100%;
+  bottom: 20px;
   display: flex;
   align-items: flex-end;
   /* 固定在底部 */
@@ -344,3 +258,122 @@ onMounted(async () => {
   }
 }
 </style>
+
+<script setup lang="ts">
+import { ref, watch, computed, onMounted } from 'vue';
+import { getEmotionColorTheme } from '../constants/emotionColors';
+import { useChatBubbleStateStore } from '../stores/chatBubbleState';
+import { usePetStateStore } from '../stores/petState';
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi';
+import { debug } from '@tauri-apps/plugin-log';
+
+const cbs = useChatBubbleStateStore();
+cbs.$tauri.start();
+const petState = usePetStateStore();
+
+const displayedMessage = ref('');
+const isTyping = ref(false);
+const textAlign = ref<'center' | 'left'>('center');
+
+// 计算颜色主题
+const colorTheme = computed(() => getEmotionColorTheme(petState.currentEmotion))
+
+// 计算气泡样式
+const bubbleStyles = computed(() => {
+  const theme = colorTheme.value;
+  return {
+    background: theme.background,
+    borderColor: theme.border,
+    boxShadow: `0 8px 32px ${theme.shadow}, 0 0 0 1px ${theme.border}`,
+    color: theme.text,
+    // 设置 CSS 变量用于动画
+    '--dynamic-shadow': `0 8px 32px ${theme.shadow}`,
+    '--glow-color': theme.shadow,
+    '--border-glow': theme.border
+  };
+});
+
+// 打字机效果
+const typeMessage = async (message: string) => {
+  const typeSpeed = 50
+  if (!message) return;
+
+  // 根据文字长度决定对齐方式
+  textAlign.value = message.length > 30 ? 'left' : 'center';
+
+  isTyping.value = true;
+  displayedMessage.value = '';
+
+  for (let i = 0; i <= message.length; i++) {
+    displayedMessage.value = message.slice(0, i);
+    await new Promise(resolve => setTimeout(resolve, typeSpeed));
+  }
+
+  isTyping.value = false;
+};
+
+// 监听消息变化
+watch(() => cbs.currentMessage, (newMessage) => {
+  debug(`cb检测到新消息：${newMessage}`);
+  resizeAndPositionBubble();
+  typeMessage(newMessage);
+}, { immediate: true });
+
+async function calculateBubbleWindowProps(mainWindow: WebviewWindow, message: string) {
+  // 获取主窗口信息
+  const [mainPosition, mainSize, scaleFactor] = await Promise.all([
+    mainWindow.innerPosition(),
+    mainWindow.innerSize(),
+    mainWindow.scaleFactor()
+  ]);
+
+  // 根据消息长度动态计算气泡尺寸
+  const messageLength = message.length;
+  const bubbleWidth = 250;
+
+  // 根据消息长度估算高度（考虑换行）
+  const estimatedLines = Math.ceil(messageLength / 10);
+  const bubbleHeight = Math.min(Math.max(estimatedLines * 24 + 60, 80), 250);
+
+  // 将物理坐标转换为逻辑坐标
+  const logicalMainX = mainPosition.x / scaleFactor;
+  const logicalMainY = mainPosition.y / scaleFactor;
+  const logicalMainWidth = mainSize.width / scaleFactor;
+  const logicalMainHeight = mainSize.height / scaleFactor;
+
+  // 计算气泡逻辑位置：主窗口正左方
+  const bubbleX = logicalMainX + logicalMainWidth / 3 - bubbleWidth; // 右侧留出10px
+  const bubbleY = logicalMainY + logicalMainHeight * 7 / 12 - bubbleHeight;
+  return {
+    width: bubbleWidth,
+    height: bubbleHeight,
+    x: bubbleX,
+    y: bubbleY,
+  };
+}
+
+async function resizeAndPositionBubble() {
+  const chatBubbleWindow = getCurrentWebviewWindow();
+  const mainWindow = await WebviewWindow.getByLabel('main');
+  if (chatBubbleWindow && mainWindow) {
+    const props = await calculateBubbleWindowProps(mainWindow, cbs.currentMessage);
+    await chatBubbleWindow.setSize(new LogicalSize(props.width, props.height));
+    await chatBubbleWindow.setPosition(new LogicalPosition(props.x, props.y));
+  }
+}
+
+onMounted(async () => {
+  const chatBubbleWindow = getCurrentWebviewWindow();
+  chatBubbleWindow.setAlwaysOnTop(true)
+  const mainWindow = await WebviewWindow.getByLabel('main');
+  resizeAndPositionBubble()  //无论是生成还是更新消息，都需要重新计算位置
+  mainWindow?.onMoved(async () => {
+    if (chatBubbleWindow) {
+      const props = await calculateBubbleWindowProps(mainWindow, cbs.currentMessage);
+      chatBubbleWindow.setPosition(new LogicalPosition(props.x, props.y));
+    }
+  });
+});
+
+</script>
