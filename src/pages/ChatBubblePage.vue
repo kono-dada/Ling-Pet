@@ -5,7 +5,7 @@
         <div class="bubble-text" :style="{ textAlign, color: colorTheme.text }">
           {{ displayedMessage }}<span v-if="isTyping" class="typing-cursor" :style="{ color: colorTheme.text }">|</span>
         </div>
-        <div class="continue-hint">点击灵灵继续</div>
+        <!-- <div class="continue-hint">点击灵灵继续</div> -->
         <!-- 尾巴 SVG -->
         <svg class="bubble-tail" viewBox="0 0 24 20" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
           <path d="M0,0 

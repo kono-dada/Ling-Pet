@@ -1,7 +1,12 @@
 <template>
-  <button class="settings-button" @click.stop.prevent="openSettings" @mousedown.stop.prevent @mouseup.stop.prevent
-    title="打开设置">
-    <v-icon size="18">mdi-cog</v-icon>
+  <button
+    class="chat-history-button"
+    @click.stop.prevent="openChatHistory"
+    @mousedown.stop.prevent
+    @mouseup.stop.prevent
+    title="查看聊天记录"
+  >
+    <v-icon size="18">mdi-message-text-outline</v-icon>
   </button>
 </template>
 
@@ -9,21 +14,21 @@
 import { getAllWebviewWindows, WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { debug } from '@tauri-apps/plugin-log';
 
-async function openSettings() {
+async function openChatHistory() {
   const allWindows = await getAllWebviewWindows();
   const allLabels = allWindows.map(window => window.label);
   debug(allLabels.join(', '));
-  const settingsWindow = allWindows.find(window => window.label === 'settings');
-  if (settingsWindow) {
-    settingsWindow?.setFocus();
+  const chatHistoryWindow = allWindows.find(window => window.label === 'chat-history');
+  if (chatHistoryWindow) {
+    chatHistoryWindow?.setFocus();
     return;
   }
-  const settingWindowConfig = {
-    title: '设置',
-    url: '/#/settings',
-    label: 'settings',
-    width: 800,
-    height: 600,
+  const chatHistoryWindowConfig = {
+    title: '聊天记录',
+    url: '/#/chat-history',
+    label: 'chat-history',
+    width: 600,
+    height: 700,
     resizable: true,
     transparent: false,
     decorations: true,
@@ -32,18 +37,18 @@ async function openSettings() {
     center: false,
     visible: true,
   };
-  new WebviewWindow('settings', {
-    ...settingWindowConfig,
+  new WebviewWindow('chat-history', {
+    ...chatHistoryWindowConfig,
     visible: true
   });
 }
 </script>
 
 <style scoped>
-.settings-button {
+.chat-history-button {
   position: absolute;
   top: 10%;
-  right: 10%;
+  left: 10%;
   width: 24px;
   height: 24px;
   border: none;
@@ -61,7 +66,7 @@ async function openSettings() {
   z-index: 10;
 }
 
-.settings-button:hover {
+.chat-history-button:hover {
   background: rgba(255, 255, 255, 1);
   border-color: rgba(255, 255, 255, 1);
   transform: scale(1.1);

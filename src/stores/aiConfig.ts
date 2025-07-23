@@ -11,6 +11,7 @@ export const useAIConfigStore = defineStore(
     const temperature = ref(0.7) // 默认温度
     const maxTokens = ref(2000) // 默认最大令牌数
     const systemPrompt = ref(DEFAULT_CHARACTER_PROMPT) // 默认系统提示为空
+    const historyMaxLength = ref(100) // 默认历史记录最大长度
 
     return {
       apiKey,
@@ -19,6 +20,7 @@ export const useAIConfigStore = defineStore(
       temperature,
       maxTokens,
       systemPrompt,
+      historyMaxLength,
     }
   },
   {

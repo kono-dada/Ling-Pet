@@ -20,6 +20,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 const MainPage = () => import('../pages/MainPage.vue')
 const SettingsPage = () => import('../pages/SettingsPage.vue')
 const ChatBubblePage = () => import('../pages/ChatBubblePage.vue')
+const ChatHistoryPage = () => import('../pages/ChatHistoryPage.vue')
 
 const routes = [
   {
@@ -36,6 +37,11 @@ const routes = [
     path: '/chat-bubble',
     name: 'chat-bubble',
     component: ChatBubblePage
+  },
+  {
+    path: '/chat-history',
+    name: 'chat-history',
+    component: ChatHistoryPage
   }
 ]
 

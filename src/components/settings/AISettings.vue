@@ -41,6 +41,16 @@
             </div>
             <v-slider v-model="ac.maxTokens" :min="1000" :max="20000" :step="200" thumb-label color="orange"></v-slider>
           </div>
+
+          <!-- 历史消息最大长度，使用ac.historyMaxLength控制，用slider，范围为10~inf -->
+          <div class="mt-6">
+            <div class="d-flex justify-space-between align-center mb-1">
+              <v-label>历史消息最大长度</v-label>
+              <span class="text-primary font-weight-medium">{{ ac.historyMaxLength }}</span>
+            </div>
+            <v-slider v-model="ac.historyMaxLength" :min="10" :max="1000" :step="10" thumb-label color="green"></v-slider>
+          </div>
+
         </div>
 
         <v-divider class="my-8"></v-divider>

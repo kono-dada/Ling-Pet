@@ -5,6 +5,7 @@ import { LogicalSize } from '@tauri-apps/api/dpi';
 import Avatar from '../components/main/Avatar.vue';
 import Input from '../components/main/Input.vue';
 import SettingButton from '../components/main/SettingButton.vue';
+import ChatHistoryButton from '../components/main/ChatHistoryButton.vue';
 import decorations from '../components/main/Decorations.vue';
 import { useAppearanceConfigStore } from '../stores/appearanceConfig';
 import { useChatBubbleStateStore } from '../stores/chatBubbleState';
@@ -64,8 +65,9 @@ onMounted(async () => {
 <template>
   <div class="main-wrapper" :style="{ opacity: ac.opacity }" @wheel.prevent> <!-- 防止滚轮事件导致滚动 -->
     <decorations />
+    <ChatHistoryButton class="button" />
     <Avatar ref="avatarRef" />
-    <SettingButton class="settings-button" />
+    <SettingButton class="button" />
     <Input class="input" />
   </div>
 </template>
@@ -101,8 +103,8 @@ onMounted(async () => {
   opacity: 0.95;
 }
 
-.main-wrapper:hover .settings-button,
-.main-wrapper:focus-within .settings-button {
+.main-wrapper:hover .button,
+.main-wrapper:focus-within .button {
   opacity: 1;
 }
 </style>
