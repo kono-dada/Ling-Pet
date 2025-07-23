@@ -21,7 +21,7 @@ export const useAppearanceConfigStore = defineStore(
       // You can also debounce or throttle when saving.
       // This is optional. The default behavior is to save immediately.
       saveStrategy: 'debounce',
-      saveInterval: 1000,
+      saveInterval: 500,
     },
   }
 );

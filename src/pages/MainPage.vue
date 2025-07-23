@@ -8,11 +8,14 @@ import SettingButton from '../components/main/SettingButton.vue';
 import decorations from '../components/main/Decorations.vue';
 import { useAppearanceConfigStore } from '../stores/appearanceConfig';
 import { useChatBubbleStateStore } from '../stores/chatBubbleState';
+import { useAIConfigStore } from '../stores/aiConfig';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { debug } from '@tauri-apps/plugin-log';
 
 const avatarRef = ref();
 const ac = useAppearanceConfigStore();
 const cbs = useChatBubbleStateStore();
+const aic = useAIConfigStore();
 const window = getCurrentWebviewWindow();
 
 // 设置窗口为正方形

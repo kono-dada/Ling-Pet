@@ -1,5 +1,4 @@
-<template></template>
-<!-- <template>
+<template>
   <v-container>
     <v-card flat class="pa-2">
       <v-card-text>
@@ -8,15 +7,15 @@
           <h2 class="text-h6 font-weight-bold mb-4">API 配置</h2>
           <v-divider class="mb-6"></v-divider>
 
-          <v-text-field v-model="config.ai.api_key" :type="showApiKey ? 'text' : 'password'" label="API Key"
+          <v-text-field v-model="ac.apiKey" :type="showApiKey ? 'text' : 'password'" label="API Key"
             variant="outlined" density="compact" persistent-hint
             :append-inner-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'" @click:append-inner="showApiKey = !showApiKey"
             class="mb-4"></v-text-field>
 
-          <v-text-field v-model="config.ai.base_url" label="API 基础地址" variant="outlined" density="compact"
+          <v-text-field v-model="ac.baseURL" label="API 基础地址" variant="outlined" density="compact"
             persistent-hint class="mb-4"></v-text-field>
 
-          <v-text-field v-model="config.ai.model" label="模型" variant="outlined" density="compact"
+          <v-text-field v-model="ac.model" label="模型" variant="outlined" density="compact"
             persistent-hint></v-text-field>
         </div>
 
@@ -29,18 +28,18 @@
           <div class="mb-6">
             <div class="d-flex justify-space-between align-center mb-1">
               <v-label>Temperature</v-label>
-              <span class="text-primary font-weight-medium">{{ config.ai.temperature }}</span>
+              <span class="text-primary font-weight-medium">{{ ac.temperature }}</span>
             </div>
             <p class="text-caption text-medium-emphasis">控制回复的随机性和创造性</p>
-            <v-slider v-model="config.ai.temperature" :min="0" :max="1" :step="0.1" thumb-label color="primary"></v-slider>
+            <v-slider v-model="ac.temperature" :min="0" :max="1" :step="0.1" thumb-label color="primary"></v-slider>
           </div>
 
           <div>
             <div class="d-flex justify-space-between align-center mb-1">
               <v-label>最大回复长度</v-label>
-              <span class="text-primary font-weight-medium">{{ config.ai.max_tokens }}</span>
+              <span class="text-primary font-weight-medium">{{ ac.maxTokens }}</span>
             </div>
-            <v-slider v-model="config.ai.max_tokens" :min="1000" :max="20000" :step="200" thumb-label color="orange"></v-slider>
+            <v-slider v-model="ac.maxTokens" :min="1000" :max="20000" :step="200" thumb-label color="orange"></v-slider>
           </div>
         </div>
 
@@ -49,13 +48,13 @@
         <div class="mb-8">
           <div class="d-flex justify-space-between align-center mb-4">
             <h2 class="text-h6 font-weight-bold">系统设置</h2>
-            <v-btn variant="text" size="small" @click="config.ai.system_prompt = DEFAULT_CHARACTER_PROMPT;">
+            <v-btn variant="text" size="small" @click="ac.systemPrompt = DEFAULT_CHARACTER_PROMPT;">
               重置为默认
             </v-btn>
           </div>
           <v-divider class="mb-6"></v-divider>
 
-          <v-textarea v-model="config.ai.system_prompt" label="系统提示词" variant="outlined" rows="6" auto-grow
+          <v-textarea v-model="ac.systemPrompt" label="系统提示词" variant="outlined" rows="6" auto-grow
             hint="定义宠物的性格和行为规则" persistent-hint></v-textarea>
         </div>
 
@@ -78,30 +77,25 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { DEFAULT_CHARACTER_PROMPT } from '../../constants/ai';
-import { useConfigStore } from '../stores/config';
-import { storeToRefs } from 'pinia';
-import { useAIService } from '../services/aiService';
+import { useAIConfigStore } from '../../stores/aiConfig';
+// import { useAIService } from '../services/aiService';
 
 // 测试相关
 const testResult = ref<{ success: boolean; message: string } | null>(null);
 const isTesting = ref(false);
 
-const configStore = useConfigStore();
-const { config } = storeToRefs(configStore);
+const ac = useAIConfigStore();
 
 const showApiKey = ref(false);
 
-onMounted(() => {
-  console.log(config.value.ai);
-});
 
 // 测试连接
 async function testConnection() {
-  isTesting.value = true;
-  const aiService = useAIService();
-  const result = await aiService.testAIConnection();
-  isTesting.value = false;
-  testResult.value = result;
+  // isTesting.value = true;
+  // const aiService = useAIService();
+  // const result = await aiService.testAIConnection();
+  // isTesting.value = false;
+  // testResult.value = result;
 }
 
 </script>
@@ -114,4 +108,4 @@ async function testConnection() {
   font-weight: 500;
   opacity: 1;
 }
-</style> -->
+</style>
