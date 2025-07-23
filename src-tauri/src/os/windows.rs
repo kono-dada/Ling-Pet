@@ -22,6 +22,7 @@
 //! - 禁用窗口阴影以实现真正的透明效果
 //! - 任务栏图标管理
 //! - 窗口行为优化
+use tauri::WebviewWindow;
 
 /// 设置 Windows 应用的全局配置
 #[cfg(target_os = "windows")]

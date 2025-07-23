@@ -16,7 +16,10 @@ const { playNext } = useConversation();
 const isShaking = ref(false);
 
 function onDragStart() {
-  appWindow.startDragging();
+  setTimeout(() => {
+    appWindow.startDragging();
+  }, 100); // 防止拖拽阻挡点击事件的形成
+
 }
 
 function onClick() {

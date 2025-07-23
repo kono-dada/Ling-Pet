@@ -30,7 +30,7 @@ async function openSettings() {
     alwaysOnTop: false,
     skipTaskbar: true,
     center: false,
-    visible: true,
+    visible: false,
   };
   new WebviewWindow('settings', {
     ...settingWindowConfig,

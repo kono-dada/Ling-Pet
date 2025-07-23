@@ -35,7 +35,7 @@ async function openChatHistory() {
     alwaysOnTop: false,
     skipTaskbar: true,
     center: false,
-    visible: true,
+    visible: false,
   };
   new WebviewWindow('chat-history', {
     ...chatHistoryWindowConfig,

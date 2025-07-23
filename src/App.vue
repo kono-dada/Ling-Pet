@@ -34,4 +34,8 @@ body,
 #app {
   height: 100%;
 }
+
+body::-webkit-scrollbar {
+  display: none; /* Windows禁止显示滚动条 */
+}
 </style>
