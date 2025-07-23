@@ -69,9 +69,3 @@ export interface PetResponse {
   data?: PetResponseItem[];
   error?: string;
 }
-
-export interface ConversationContext {
-  messages: AIMessage[];
-  petPersonality: string;
-  currentEmotion: string;
-}

@@ -14,14 +14,14 @@
 import { ref, watch, computed, onMounted } from 'vue';
 import { getEmotionColorTheme } from '../constants/emotionColors';
 import { useChatBubbleStateStore } from '../stores/chatBubbleState';
-import { useStateStore } from '../stores/petState';
+import { usePetStateStore } from '../stores/petState';
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi';
 import { debug } from '@tauri-apps/plugin-log';
 
 const cbs = useChatBubbleStateStore();
 cbs.$tauri.start();
-const petState = useStateStore();
+const petState = usePetStateStore();
 
 const displayedMessage = ref('');
 const isTyping = ref(false);

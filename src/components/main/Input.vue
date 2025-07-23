@@ -6,9 +6,12 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
 import { useChatBubbleStateStore } from '../../stores/chatBubbleState';
-import { debug } from '@tauri-apps/plugin-log';
+import { useConversation } from '../../services/useConversation';
+import { useAIService } from '../../services/aiService';
 
 const cbs = useChatBubbleStateStore();
+const { startConversation } = useConversation();
+const { chatWithPet } = useAIService();
 
 const inputMessage = ref('');
 const isSending = ref(false);
@@ -18,9 +21,15 @@ const placeholder = computed(() => {
   return isSending.value ? thinkingMessages[thinkingIndex.value] : '和我聊天吧...';
 });
 
-function sendMessage() {
-  if (inputMessage.value.trim() && !isSending.value) {
-    const userMessage = inputMessage.value.trim();
+async function sendMessage() {
+  const userMessage = inputMessage.value.trim();
+  if (userMessage && !isSending.value) {
+    if (userMessage.startsWith('/')) { // 测试气泡样式用的后门
+      // 如果是命令，直接处理
+      cbs.setCurrentMessage(`执行命令: ${userMessage}`);
+      inputMessage.value = '';
+      return;
+    }
 
     // 立即清空输入框，这样 placeholder 就能显示
     inputMessage.value = '';
@@ -34,19 +43,20 @@ function sendMessage() {
       thinkingIndex.value = (thinkingIndex.value + 1) % thinkingMessages.length;
     }, 500);
 
-    // 模拟思考过程，这里可以替换为实际的 API 调用或其他逻辑
-    setTimeout(() => {
-      // 模拟思考完成
-      // isSending.value = false;
-      cbs.currentMessage = userMessage; // 更新当前消息状态
-      // 这里可以添加实际的消息发送逻辑，比如调用 API 或者更新状态
-      clearInterval(thinkingTimer);
-      thinkingIndex.value = 0;
+    const petResponse = await chatWithPet(userMessage);
 
-      // 无论成功还是失败，都要重置发送状态
-      isSending.value = false;
-      debug(`Sending message: ${cbs.currentMessage}`);
-    }, 2000);
+    if (petResponse.success) {
+      // 如果有宠物响应，开始对话
+      await startConversation(petResponse.data ? petResponse.data : []);
+    } else {
+      cbs.setCurrentMessage(petResponse.error || '发生错误，请稍后再试。');
+    }
+
+    clearInterval(thinkingTimer);
+    thinkingIndex.value = 0;
+
+    // 无论成功还是失败，都要重置发送状态
+    isSending.value = false;
   }
 }
 

@@ -6,11 +6,12 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { useStateStore } from '../../stores/petState';
-import { EMOTIONS } from '../../constants/emotions';
+import { usePetStateStore } from '../../stores/petState';
+import { useConversation } from '../../services/useConversation';
 
-const state = useStateStore()
+const state = usePetStateStore()
 const appWindow = getCurrentWebviewWindow();
+const { playNext } = useConversation();
 
 const isShaking = ref(false);
 
@@ -19,7 +20,7 @@ function onDragStart() {
 }
 
 function onClick() {
-  state.currentEmotion = EMOTIONS[Math.floor(Math.random() * EMOTIONS.length)];
+  playNext();
 }
 
 function triggerShakeEffect() {
@@ -31,10 +32,6 @@ function triggerShakeEffect() {
 
 watch(() => state.currentEmotion, () => {
   triggerShakeEffect();
-});
-
-defineExpose({
-  triggerShakeEffect
 });
 
 </script>
