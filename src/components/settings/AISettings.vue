@@ -75,14 +75,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref  } from 'vue';
 import { DEFAULT_CHARACTER_PROMPT } from '../../constants/ai';
 import { useAIConfigStore } from '../../stores/aiConfig';
-// import { useAIService } from '../services/aiService';
+import { useAIService } from '../../services/aiService';
 
 // 测试相关
 const testResult = ref<{ success: boolean; message: string } | null>(null);
 const isTesting = ref(false);
+const {testAIConnection} = useAIService();
 
 const ac = useAIConfigStore();
 
@@ -91,11 +92,10 @@ const showApiKey = ref(false);
 
 // 测试连接
 async function testConnection() {
-  // isTesting.value = true;
-  // const aiService = useAIService();
-  // const result = await aiService.testAIConnection();
-  // isTesting.value = false;
-  // testResult.value = result;
+  isTesting.value = true;
+  const result = await testAIConnection();
+  isTesting.value = false;
+  testResult.value = result;
 }
 
 </script>
