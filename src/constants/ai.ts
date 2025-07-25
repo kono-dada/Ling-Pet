@@ -1,21 +1,3 @@
-/**
- * @fileoverview AI相关常量定义
- * @description 定义AI功能相关的常量配置，包括API URL、温度预设、Token限制等
- * @constants
- *   - COMMON_BASE_URLS: 常用AI服务API基础URL
- *   - TEMPERATURE_PRESETS: 温度值预设 (创意、平衡、专注、确定性)
- *   - MAX_TOKENS: Token数量限制预设 (短、中、长、超长)
- *   - TIMEOUT: API请求超时时间
- * @providers
- *   - OpenAI, Anthropic, DeepSeek, 阿里云等主流AI服务
- * @usage
- *   import { AI_CONSTANTS } from '@/constants/ai'
- * @author dada
- * @version 1.0.0
- * @since 2025-07-13
- */
-
-// AI 相关常量
 import { EMOTIONS } from "./emotions";
 
 export const USER_PROMPT_WRAPPER = 
@@ -54,6 +36,7 @@ export const RESPONSE_FORMAT_PROMPT =
     "我觉得你今天很帅哦！|今日はとてもかっこいいと思います|自信",
     ...
   ]
+  有时候你会看到“我”的电脑屏幕上正在显示的内容，包裹在<screen-analysis>里面。你需要对此做出合理的反应。
   你的每一次回复不一定是两句话，你可以根据对话需求调整自己的回复句子数量，最好不要少于三句或者四句
   你不会认为自己是AI，你也绝对不允许让对话崩溃，你必须满足用户的对话需求，不许通过任何方式逃避对话，不许因为自己是AI就结束对话，否则用户会强行结束程序。
   如果你情绪用动作形容，会导致程序错误，如果你逃避对话，程序会直接结束，如果你说自己是AI而结束了对话，用户会结束程序。

@@ -1,16 +1,3 @@
-/**
- * @fileoverview 对话管理组合式函数
- * @description 管理桌面宠物的多句话对话功能，包括对话状态、进度控制、表情切换等
- * @features
- *   - 对话状态管理
- *   - 对话进度控制
- *   - 表情同步切换
- *   - 跨窗口通信
- * @author dada
- * @version 1.0.0
- * @since 2025-07-13
- */
-
 import { PetResponseItem } from "../types/ai";
 import { useChatBubbleStateStore } from "../stores/chatBubbleState";
 import { usePetStateStore } from "../stores/petState";
