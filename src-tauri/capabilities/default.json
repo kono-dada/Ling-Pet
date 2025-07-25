@@ -20,6 +20,40 @@
     "core:webview:allow-create-webview-window",
     "core:window:allow-set-position",
     "core:window:allow-set-always-on-top",
-    "core:window:allow-close"
+    "core:window:allow-close",
+    "screenshots:default",
+    "fs:default",
+    {
+      "identifier": "fs:read-files",
+      "allow": [
+        {
+          "path": "**/*"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-app-read-recursive",
+      "allow": [
+        {
+          "path": "**/*"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-app-write-recursive",
+      "allow": [
+        {
+          "path": "**/*"
+        }
+      ]
+    },
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://*"
+        }
+      ]
+    }
   ]
 }

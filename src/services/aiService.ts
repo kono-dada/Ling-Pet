@@ -5,8 +5,9 @@ import type { AIMessage, PetResponse, PetResponseItem } from '../types/ai';
 import { DEFAULT_CHARACTER_PROMPT, RESPONSE_FORMAT_PROMPT, USER_PROMPT_WRAPPER } from '../constants/ai';
 import { EMOTIONS } from '../constants/emotions';
 import { EmotionName } from '../types/emotion';
-import OpenAI from "openai";
 import { ChatCompletion } from 'openai/resources';
+import { fetch } from '@tauri-apps/plugin-http';
+
 
 export function useAIService() {
   const ac = useAIConfigStore();
@@ -14,20 +15,38 @@ export function useAIService() {
   const validateAIConfig = computed(() => Boolean(ac.apiKey && ac.baseURL && ac.model));
 
   async function callAI(messages: AIMessage[]): Promise<ChatCompletion> {
-    const client = new OpenAI({
-      apiKey: ac.apiKey,
-      baseURL: ac.baseURL,
-      dangerouslyAllowBrowser: true, // 允许浏览器环境
+    const url = ac.baseURL.replace(/\/+$/, '') + '/chat/completions';
+    console.log('调用AI服务:', url);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${ac.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: ac.model,
+        messages: messages,
+      }),
     });
 
-    const completion = await client.chat.completions.create({
-      model: ac.model,
-      messages: messages,
-      temperature: ac.temperature,
-      max_tokens: ac.maxTokens,
-    });
+    console.log('发送的消息:', messages);
+    const result = await res.json();
+    console.log('AI响应:', result);
+    return result as ChatCompletion;
+  }
 
-    return completion;
+  function parsePetResponseItemString(response: string): PetResponseItem | null {
+    const parts = response.split('|');
+    if (parts.length !== 3) return null;
+    const [message, japanese, emotion] = parts.map(part => part.trim());
+    if (!message || !japanese || !EMOTIONS.includes(emotion as EmotionName)) {
+      return null;
+    }
+    return {
+      message,
+      japanese,
+      emotion: emotion as EmotionName,
+    };
   }
 
   async function chatWithPet(userMessage: string): Promise<PetResponse> {
@@ -53,10 +72,7 @@ export function useAIService() {
       for (let i = chs.chatHistory.length - historyLength; i < chs.chatHistory.length; i++) {
         const message = chs.chatHistory[i];
         if (message.role === 'user' || message.role === 'assistant') {
-          messages.push({
-            role: message.role,
-            content: message.content
-          });
+          messages.push(message);
         }
       }
       // 添加用户消息
@@ -64,9 +80,7 @@ export function useAIService() {
         role: 'user',
         content: USER_PROMPT_WRAPPER.replace('{}', userMessage)
       });
-      console.log('发送的消息:', messages);
       const response = await callAI(messages);
-      console.log('AI响应:', response);
       const aiResponseContent = response.choices[0]?.message?.content;
 
       if (!aiResponseContent) {
@@ -80,19 +94,7 @@ export function useAIService() {
         if (Array.isArray(parsedResponse)) {
           const validItems: PetResponseItem[] = parsedResponse
             .map(item => {
-              if (typeof item !== 'string') return null;
-              const [message, japanese, emotion] = item.split('|');
-              if (
-                message && japanese && emotion &&
-                EMOTIONS.includes(emotion.trim() as EmotionName)
-              ) {
-                return {
-                  message: message.trim(),
-                  japanese: japanese.trim(),
-                  emotion: emotion.trim() as EmotionName
-                };
-              }
-              return null;
+              return parsePetResponseItemString(item);
             })
             .filter(Boolean) as PetResponseItem[];
 
@@ -152,6 +154,6 @@ export function useAIService() {
     validateAIConfig,
     callAI,
     chatWithPet,
-    testAIConnection
+    testAIConnection,
   };
 }
