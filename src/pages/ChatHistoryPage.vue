@@ -130,6 +130,7 @@ import { useChatHistoryStore } from '../stores/chatHistory';
 import { getEmotionColorTheme } from '../constants/emotionColors';
 import { isEmotionName, type EmotionName } from '../types/emotion';
 import { ref } from 'vue';
+import type { AIMessageContent } from '../types/ai';
 
 const chs = useChatHistoryStore();
 
@@ -140,7 +141,10 @@ interface ParsedAIMessage {
 }
 
 // 解析AI消息
-function parseAIMessage(content: string): ParsedAIMessage[] {
+function parseAIMessage(content: AIMessageContent): ParsedAIMessage[] {
+  if (typeof content !== 'string') {
+    return [];
+  }
   try {
     // 提取JSON数组部分
     const jsonMatch = content.match(/\[([\s\S]*)\]/);

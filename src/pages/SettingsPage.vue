@@ -33,6 +33,14 @@
                     <AISettings />
                 </v-window-item>
 
+                <v-window-item value="screenGlancer" :transition="false">
+                    <ScreenGlancerSettings />
+                </v-window-item>
+
+                <v-window-item value="xp" :transition="false">
+                    <XPSettings />
+                </v-window-item>
+
                 <v-window-item value="about" :transition="false">
                     <AboutSettings />
                 </v-window-item>
@@ -45,7 +53,9 @@
 import { ref, watch, computed } from 'vue';
 import AppearanceSettings from '../components/settings/AppearanceSettings.vue';
 import AISettings from '../components/settings/AISettings.vue';
+import XPSettings from '../components/settings/XPSettings.vue';
 import AboutSettings from '../components/settings/AboutSettings.vue';
+import ScreenGlancerSettings from '../components/settings/ScreenAnalysisSettings.vue';
 
 const SETTINGS_TABS = [
   {
@@ -57,6 +67,11 @@ const SETTINGS_TABS = [
     id: 'ai',
     name: 'AI设置',
     icon: 'ai',
+  },
+  {
+    id: 'screenGlancer',
+    name: '屏幕分析',
+    icon: 'screenGlancer',
   },
   {
     id: 'xp',
@@ -110,6 +125,8 @@ watch(currentTab, (newTab) => {
 const iconMap: { [key: string]: string } = {
     appearance: 'mdi-palette-swatch-outline',
     ai: 'mdi-brain',
+    screenGlancer: 'mdi-monitor-screenshot',
+    xp: 'mdi-heart-multiple',
     about: 'mdi-information-outline'
 };
 </script>

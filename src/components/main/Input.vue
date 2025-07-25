@@ -8,10 +8,13 @@ import { ref, computed } from 'vue';
 import { useChatBubbleStateStore } from '../../stores/chatBubbleState';
 import { useConversation } from '../../services/useConversation';
 import { useAIService } from '../../services/aiService';
+import { useScreenAnalysisService } from '../../services/screenAnalysisService';
 
 const cbs = useChatBubbleStateStore();
 const { startConversation } = useConversation();
 const { chatWithPet } = useAIService();
+const { screenAnalysis } = useScreenAnalysisService();
+
 
 const inputMessage = ref('');
 const isSending = ref(false);
@@ -25,8 +28,15 @@ async function sendMessage() {
   const userMessage = inputMessage.value.trim();
   if (userMessage && !isSending.value) {
     if (userMessage.startsWith('/')) { // 测试气泡样式用的后门
-      // 如果是命令，直接处理
-      cbs.setCurrentMessage(`执行命令: ${userMessage}`);
+      if (userMessage === '/sa') {
+        const result = await screenAnalysis();
+        cbs.setCurrentMessage(`屏幕分析结果: ${result}`);
+        inputMessage.value = '';
+        return;
+      } else {
+        // 如果是命令，直接处理
+        cbs.setCurrentMessage(`执行命令: ${userMessage}`);
+      }
       inputMessage.value = '';
       return;
     }

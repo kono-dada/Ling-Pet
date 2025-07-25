@@ -20,7 +20,7 @@
  */
 
 //! macOS 特定的功能实现
-//! 
+//!
 //! 这个模块包含所有 macOS 平台特定的功能，包括：
 //! - 隐藏 Dock 图标
 //! - 设置窗口行为以避免参与四指轻扫等窗口活动
@@ -29,9 +29,11 @@
 #![allow(unexpected_cfgs)]
 
 #[cfg(target_os = "macos")]
-use cocoa::appkit::{NSApp, NSApplication, NSApplicationActivationPolicy, NSWindowCollectionBehavior};
+use cocoa::appkit::{
+    NSApp, NSApplication, NSApplicationActivationPolicy, NSWindowCollectionBehavior,
+};
 #[cfg(target_os = "macos")]
-use objc::{runtime::Object, msg_send, sel, sel_impl};
+use objc::{msg_send, runtime::Object, sel, sel_impl};
 #[cfg(target_os = "macos")]
 use tauri::WebviewWindow;
 
@@ -42,7 +44,9 @@ pub fn setup_app() {
         let app = NSApp();
         // 设置为 accessory 模式，这样不会在 Dock 中显示图标
         // NSApplicationActivationPolicyAccessory 让应用成为后台应用，不显示在 Dock 中
-        app.setActivationPolicy_(NSApplicationActivationPolicy::NSApplicationActivationPolicyAccessory);
+        app.setActivationPolicy_(
+            NSApplicationActivationPolicy::NSApplicationActivationPolicyAccessory,
+        );
     }
 }
 
@@ -51,23 +55,23 @@ pub fn setup_app() {
 pub fn setup_window(window: &WebviewWindow) -> Result<(), Box<dyn std::error::Error>> {
     // 确保窗口可以拖拽
     window.set_ignore_cursor_events(false)?;
-    
+
     // 获取 NSWindow 对象并设置窗口行为
     let nswindow = window.ns_window()? as *mut Object;
-    
+
     unsafe {
         // 设置窗口集合行为，使其：
         // - CanJoinAllSpaces: 可以出现在所有桌面空间中
         // - IgnoresCycle: 不参与窗口循环（Cmd+Tab 等）
         // - Stationary: 在空间切换时保持位置
-        let behavior = NSWindowCollectionBehavior::NSWindowCollectionBehaviorCanJoinAllSpaces |
-                      NSWindowCollectionBehavior::NSWindowCollectionBehaviorIgnoresCycle |
-                      NSWindowCollectionBehavior::NSWindowCollectionBehaviorStationary;
-        
+        let behavior = NSWindowCollectionBehavior::NSWindowCollectionBehaviorCanJoinAllSpaces
+            | NSWindowCollectionBehavior::NSWindowCollectionBehaviorIgnoresCycle
+            | NSWindowCollectionBehavior::NSWindowCollectionBehaviorStationary;
+
         #[allow(unused_variables)]
         let _: () = msg_send![nswindow, setCollectionBehavior: behavior];
     }
-    
+
     Ok(())
 }
 

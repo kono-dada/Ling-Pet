@@ -19,9 +19,18 @@
 
 import { EmotionName } from "./emotion";
 
+export type AIMessageContent = string | Array<{
+  type: 'text' | 'image_url';
+  text?: string;
+  image_url?: {
+    url: string;
+    detail?: 'low' | 'medium' | 'high';
+  };
+}>;
+
 export interface AIMessage {
   role: 'system' | 'user' | 'assistant';
-  content: string;
+  content: AIMessageContent;
 }
 
 export interface AIResponse {

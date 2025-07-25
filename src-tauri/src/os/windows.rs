@@ -17,7 +17,7 @@
  */
 
 //! Windows 特定的功能实现
-//! 
+//!
 //! 这个模块包含所有 Windows 平台特定的功能，包括：
 //! - 禁用窗口阴影以实现真正的透明效果
 //! - 任务栏图标管理
@@ -38,14 +38,14 @@ pub fn setup_window(window: &WebviewWindow) -> Result<(), Box<dyn std::error::Er
     // 对于透明无边框窗口，禁用阴影以获得真正的透明效果
     // 这解决了Windows上透明窗口仍有阴影的问题
     window.set_shadow(false)?;
-    
+
     // 确保窗口可以拖拽
     window.set_ignore_cursor_events(false)?;
-    
+
     // Windows特定：设置窗口类名以便更好的系统集成
     // 这可以帮助改善事件处理和DPI感知
     let _ = window.set_title("桌面宠物");
-    
+
     Ok(())
 }
 
