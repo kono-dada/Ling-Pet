@@ -130,7 +130,6 @@ import { useChatHistoryStore } from '../stores/chatHistory';
 import { getEmotionColorTheme } from '../constants/emotionColors';
 import { isEmotionName, type EmotionName } from '../types/emotion';
 import { ref } from 'vue';
-import type { AIMessageContent } from '../types/ai';
 
 const chs = useChatHistoryStore();
 
@@ -141,13 +140,28 @@ interface ParsedAIMessage {
 }
 
 // 解析AI消息
-function parseAIMessage(content: AIMessageContent): ParsedAIMessage[] {
-  if (typeof content !== 'string') {
+function parseAIMessage(content: string | Array<any> | null | undefined): ParsedAIMessage[] {
+  // 处理OpenAI SDK的复杂内容类型
+  let contentString: string = '';
+  
+  if (typeof content === 'string') {
+    contentString = content;
+  } else if (Array.isArray(content)) {
+    // 如果是数组，尝试提取文本内容
+    contentString = content
+      .filter(item => item.type === 'text')
+      .map(item => item.text)
+      .join(' ');
+  } else {
+    return [];
+  }
+
+  if (!contentString) {
     return [];
   }
   try {
     // 提取JSON数组部分
-    const jsonMatch = content.match(/\[([\s\S]*)\]/);
+    const jsonMatch = contentString.match(/\[([\s\S]*)\]/);
     if (!jsonMatch) return [];
 
     const jsonStr = '[' + jsonMatch[1] + ']';

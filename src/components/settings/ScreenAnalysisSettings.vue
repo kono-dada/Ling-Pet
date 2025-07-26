@@ -7,13 +7,12 @@
           <h2 class="text-h6 font-weight-bold mb-4">API 配置</h2>
           <v-divider class="mb-6"></v-divider>
 
-          <v-text-field v-model="sc.apiKey" :type="showApiKey ? 'text' : 'password'" label="API Key"
-            variant="outlined" density="compact" persistent-hint
-            :append-inner-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'" @click:append-inner="showApiKey = !showApiKey"
-            class="mb-4"></v-text-field>
+          <v-text-field v-model="sc.apiKey" :type="showApiKey ? 'text' : 'password'" label="API Key" variant="outlined"
+            density="compact" persistent-hint :append-inner-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
+            @click:append-inner="showApiKey = !showApiKey" class="mb-4"></v-text-field>
 
-          <v-text-field v-model="sc.baseURL" label="API 基础地址" variant="outlined" density="compact"
-            persistent-hint class="mb-4"></v-text-field>
+          <v-text-field v-model="sc.baseURL" label="API 基础地址" variant="outlined" density="compact" persistent-hint
+            class="mb-4"></v-text-field>
 
           <v-text-field v-model="sc.model" label="模型" variant="outlined" density="compact"
             persistent-hint></v-text-field>
@@ -48,12 +47,14 @@
               <span class="text-primary font-weight-medium">{{ sc.imageDetail }}</span>
             </div>
             <p class="text-caption text-medium-emphasis">控制图像分析的详细程度</p>
-            <v-select 
-              v-model="sc.imageDetail" 
-              :items="imageDetailOptions" 
-              variant="outlined" 
-              density="compact"
+            <v-select v-model="sc.imageDetail" :items="imageDetailOptions" variant="outlined" density="compact"
               class="mt-2"></v-select>
+          </div>
+          <div class="d-flex justify-space-between align-center">
+            <div>
+              <v-label>开启思考（可能会变得很慢）</v-label>
+            </div>
+            <v-switch v-model="sc.enableThinking" color="success" inset hide-details></v-switch>
           </div>
         </div>
 
@@ -68,8 +69,8 @@
           </div>
           <v-divider class="mb-6"></v-divider>
 
-          <v-textarea v-model="sc.systemPrompt" label="系统提示词" variant="outlined" rows="6" auto-grow
-            hint="定义屏幕分析的提示和规则" persistent-hint></v-textarea>
+          <v-textarea v-model="sc.systemPrompt" label="系统提示词" variant="outlined" rows="6" auto-grow hint="定义屏幕分析的提示和规则"
+            persistent-hint></v-textarea>
         </div>
 
         <v-divider class="my-8"></v-divider>
@@ -108,8 +109,8 @@ const showApiKey = ref(false);
 // 图像细节选项
 const imageDetailOptions = [
   { title: '低 (Low)', value: 'low' },
-  { title: '中 (Medium)', value: 'medium' },
-  { title: '高 (High)', value: 'high' }
+  { title: '高 (High)', value: 'high' },
+  { title: '自动 (Auto)', value: 'auto' }
 ];
 
 // 测试连接

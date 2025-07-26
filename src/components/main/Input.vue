@@ -6,7 +6,7 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
 import { useChatBubbleStateStore } from '../../stores/chatBubbleState';
-import { useConversation } from '../../services/useConversation';
+import { useConversation } from '../../services/playConversation';
 import { useAIService } from '../../services/aiService';
 import { useScreenAnalysisService } from '../../services/screenAnalysisService';
 
@@ -27,33 +27,24 @@ const placeholder = computed(() => {
 async function sendMessage() {
   const userMessage = inputMessage.value.trim();
   if (userMessage && !isSending.value) {
-    if (userMessage.startsWith('/')) { // 测试气泡样式用的后门
-      if (userMessage === '/sa') {
-        const result = await screenAnalysis();
-        cbs.setCurrentMessage(`屏幕分析结果: ${result}`);
-        inputMessage.value = '';
-        return;
-      } else {
-        // 如果是命令，直接处理
-        cbs.setCurrentMessage(`执行命令: ${userMessage}`);
-      }
-      inputMessage.value = '';
-      return;
-    }
-
-    // 立即清空输入框，这样 placeholder 就能显示
-    inputMessage.value = '';
-
     // 设置发送状态
     isSending.value = true;
-
-
+    // 立即清空输入框，这样 placeholder 就能显示
+    inputMessage.value = '';
     // 启动思考动画
     const thinkingTimer = setInterval(() => {
       thinkingIndex.value = (thinkingIndex.value + 1) % thinkingMessages.length;
     }, 500);
 
-    const petResponse = await chatWithPet(userMessage);
+    let screenAnalysisOn = false;
+    if (userMessage.startsWith('.')) { // 使用屏幕分析
+      screenAnalysisOn = true;
+    }
+    const screenAnalysisResponse = screenAnalysisOn ? await screenAnalysis() : '';
+    const screenAnalysisBlock = `<screen-analysis>${screenAnalysisResponse}</screen-analysis>`;
+
+
+    const petResponse = await chatWithPet(userMessage + (screenAnalysisOn ? screenAnalysisBlock : ''));
 
     if (petResponse.success) {
       // 如果有宠物响应，开始对话
