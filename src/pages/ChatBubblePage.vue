@@ -260,7 +260,7 @@
 </style>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue';
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import { getEmotionColorTheme } from '../constants/emotionColors';
 import { useChatBubbleStateStore } from '../stores/chatBubbleState';
 import { usePetStateStore } from '../stores/petState';
@@ -363,17 +363,22 @@ async function resizeAndPositionBubble() {
   }
 }
 
+let stopMainWindowMoved: (() => void) | null = null;
 onMounted(async () => {
   const chatBubbleWindow = getCurrentWebviewWindow();
   chatBubbleWindow.setAlwaysOnTop(true)
   const mainWindow = await WebviewWindow.getByLabel('main');
   resizeAndPositionBubble()  //无论是生成还是更新消息，都需要重新计算位置
-  mainWindow?.onMoved(async () => {
-    if (chatBubbleWindow) {
-      const props = await calculateBubbleWindowProps(mainWindow, cbs.currentMessage);
-      chatBubbleWindow.setPosition(new LogicalPosition(props.x, props.y));
-    }
-  });
+  if (mainWindow) {
+    stopMainWindowMoved = await mainWindow?.onMoved(async () => {
+      if (chatBubbleWindow) {
+        const props = await calculateBubbleWindowProps(mainWindow, cbs.currentMessage);
+        chatBubbleWindow.setPosition(new LogicalPosition(props.x, props.y));
+      }
+    });
+  }
 });
-
+onUnmounted(() => {
+  stopMainWindowMoved?.();
+});
 </script>

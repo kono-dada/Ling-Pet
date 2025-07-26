@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue';
+import { computed } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { useAppearanceConfigStore } from '../../stores/appearanceConfig';
 
@@ -75,10 +75,6 @@ async function quitApp() {
   await invoke('quit_app');
 }
 
-// Initialization
-onMounted(() => {
-  // The main window needs to listen for configuration changes
-});
 </script>
 
 <style scoped>

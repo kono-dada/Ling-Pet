@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watchEffect, nextTick, } from 'vue';
+import { onMounted, ref, watchEffect, nextTick, onUnmounted, } from 'vue';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { LogicalSize } from '@tauri-apps/api/dpi';
 import Avatar from '../components/main/Avatar.vue';
@@ -38,9 +38,11 @@ function openChatBubble() {
   new WebviewWindow('chat-bubble', chatBubbleConfig);
 }
 
+let stopPetSizeWatcher: (() => void) | null = null;
+let stopChatBubbleWatcher: (() => void) | null = null;
 onMounted(async () => {
   await setWindowToSquare();
-  watchEffect(async () => {  // 监听 petSize 的变化， 确保窗口大小同步更新
+  stopPetSizeWatcher = watchEffect(async () => {  // 监听 petSize 的变化， 确保窗口大小同步更新
     await window.setSize(new LogicalSize(ac.petSize, ac.petSize + 30));
     // 触发装饰元素的重新渲染，否则位置会出问题
     if (ac.showDecorations) {
@@ -50,7 +52,7 @@ onMounted(async () => {
     }
   });
   // 管理聊天气泡的打开和关闭
-  watchEffect(async () => {
+  stopChatBubbleWatcher = watchEffect(async () => {
     const currentMessage = cbs.currentMessage;
     const chatBubbleWindow = await WebviewWindow.getByLabel('chat-bubble')
     if (chatBubbleWindow) {
@@ -58,6 +60,11 @@ onMounted(async () => {
       else if (!await chatBubbleWindow.isVisible()) await chatBubbleWindow.show();  // 如果有消息且窗口不可见，显示气泡窗口
     } else if (currentMessage) openChatBubble();  // 如果没有窗口但有消息，创建新的气泡窗口
   });
+});
+
+onUnmounted(() => {
+  stopPetSizeWatcher?.();
+  stopChatBubbleWatcher?.();
 });
 
 </script>
