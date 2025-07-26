@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-type ImageDetail = 'low' | 'medium' | 'high'
+type ImageDetail = 'low' | 'auto' | 'high'
 
 export const useScreenAnalysisConfigStore = defineStore(
-  'screenGlancerConfig',
+  'screenAnalysisConfig',
   () => {
     const apiKey = ref('') // 默认API密钥为空
     const baseURL = ref('https://api.siliconflow.cn/v1') // 默认基础URL为空
@@ -13,6 +13,7 @@ export const useScreenAnalysisConfigStore = defineStore(
     const maxTokens = ref(2000) // 默认最大令牌数
     const systemPrompt = ref('描述此屏幕截图的内容') // 默认系统提示为空
     const imageDetail = ref<ImageDetail>('low') // 默认图像细节级别
+    const enableThinking = ref(false) // 是否启用思考模式
 
     return {
       apiKey,
@@ -22,6 +23,7 @@ export const useScreenAnalysisConfigStore = defineStore(
       maxTokens,
       systemPrompt,
       imageDetail,
+      enableThinking,
     }
   },
   {

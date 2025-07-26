@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { AIMessage } from '../types/ai';
+import type { AIMessage } from '../types/ai';
 
 const exampleChatHistory: AIMessage[] = []
 

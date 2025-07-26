@@ -5,7 +5,7 @@ import type { AIMessage, PetResponse, PetResponseItem } from '../types/ai';
 import { DEFAULT_CHARACTER_PROMPT, RESPONSE_FORMAT_PROMPT, USER_PROMPT_WRAPPER } from '../constants/ai';
 import { EMOTIONS } from '../constants/emotions';
 import { EmotionName } from '../types/emotion';
-import { ChatCompletion } from 'openai/resources';
+import type { ChatCompletion } from 'openai/resources';
 import { fetch } from '@tauri-apps/plugin-http';
 
 

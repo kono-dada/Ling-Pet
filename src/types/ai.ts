@@ -1,35 +1,9 @@
 import { EmotionName } from "./emotion";
+import type { ChatCompletionMessageParam, ChatCompletionCreateParams } from 'openai/resources/chat/completions';
 
-export type AIMessageContent = string | Array<{
-  type: 'text' | 'image_url';
-  text?: string;
-  image_url?: {
-    url: string;
-    detail?: 'low' | 'medium' | 'high';
-  };
-}>;
-
-export interface AIMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: AIMessageContent;
-}
-
-export interface AIResponse {
-  id: string;
-  object: string;
-  created: number;
-  model: string;
-  choices: {
-    index: number;
-    message: AIMessage;
-    finish_reason: string;
-  }[];
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-}
+// 使用 OpenAI SDK 的官方类型
+export type AIMessage = ChatCompletionMessageParam;
+export type ChatRequest = ChatCompletionCreateParams;
 
 export interface AIConfig {
   apiKey: string;
@@ -38,13 +12,6 @@ export interface AIConfig {
   temperature: number;
   maxTokens: number;
   systemPrompt?: string;
-}
-
-export interface ChatRequest {
-  messages: AIMessage[];
-  temperature?: number;
-  max_tokens?: number;
-  stream?: boolean;
 }
 
 // 桌宠对话相关类型

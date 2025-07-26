@@ -1,6 +1,6 @@
 import { useScreenAnalysisConfigStore } from '../stores/screenAnalysisConfig';
 import type { AIMessage } from '../types/ai';
-import { ChatCompletion } from 'openai/resources';
+import type { ChatCompletion } from 'openai/resources';
 import { fetch } from '@tauri-apps/plugin-http';
 import {
   getScreenshotableMonitors,
@@ -15,7 +15,7 @@ export function useScreenAnalysisService() {
 
   async function callAI(messages: AIMessage[]): Promise<ChatCompletion> {
     const url = sgc.baseURL.replace(/\/+$/, '') + '/chat/completions';
-    console.log('调用AI服务:', url);
+    console.log('发送的消息:', messages);
     const res = await fetch(url, {
       method: "POST",
       headers: {
@@ -27,63 +27,68 @@ export function useScreenAnalysisService() {
         messages: messages,
         temperature: sgc.temperature,
         max_tokens: sgc.maxTokens,
+        // enable_thinking: sgc.enableThinking,
       }),
     });
 
-    console.log('发送的消息:', messages);
     const result = await res.json();
     console.log('AI响应:', result);
     return result as ChatCompletion;
   }
   function toBase64(array: Uint8Array): Promise<string> {
-  const blob = new Blob([array]);
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const dataUrl = reader.result as string;
-      // 去掉前缀 data:...base64,
-      resolve(dataUrl.split(',')[1]);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
+    const blob = new Blob([array]);
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        // 去掉前缀 data:...base64,
+        resolve(dataUrl.split(',')[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
 
   async function screenAnalysis(): Promise<string> {
-    const monitors = await getScreenshotableMonitors();
-    const path = await getMonitorScreenshot(monitors[0].id);
-    debug(`获取屏幕截图路径: ${path}`);
-    // 读取文件二进制
-    const binary = await readFile(path, { baseDir: BaseDirectory.AppCache });
-    // 将 Uint8Array 转为 base64
-    const base64 = await toBase64(binary);
+    try {
+      const monitors = await getScreenshotableMonitors();
+      const path = await getMonitorScreenshot(monitors[0].id);
+      debug(`获取屏幕截图路径: ${path}`);
+      // 读取文件二进制
+      const binary = await readFile(path, { baseDir: BaseDirectory.AppCache });
+      // 将 Uint8Array 转为 base64
+      const base64 = await toBase64(binary);
 
-    // 搭配 data URI 使用
-    const dataUri = `data:image/png;base64,${base64}`;
-    const messages: AIMessage[] = [
-      {
-        role: 'system',
-        content: sgc.systemPrompt
-      },
-      {
-        role: 'user',
-        content: [
-          {
-            "type": "image_url",
-            "image_url": {
-              "url": dataUri,
-              "detail": sgc.imageDetail
-            }
-          },
-        ]
+      // 搭配 data URI 使用
+      const dataUri = `data:image/png;base64,${base64}`;
+      const messages: AIMessage[] = [
+        {
+          role: 'system',
+          content: sgc.systemPrompt
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              "type": "image_url",
+              "image_url": {
+                "url": dataUri,
+                "detail": sgc.imageDetail
+              }
+            },
+          ]
+        }
+      ];
+      const response = await callAI(messages);
+      const aiMessage = response.choices[0]?.message;
+      if (!aiMessage || !aiMessage.content || typeof aiMessage.content !== 'string') {
+        return 'AI服务未返回有效响应';
       }
-    ];
-    const response = await callAI(messages);
-    const aiMessage = response.choices[0]?.message;
-    if (!aiMessage || !aiMessage.content || typeof aiMessage.content !== 'string') {
-      return 'AI服务未返回有效响应';
-    } 
-    return aiMessage.content;
+      return aiMessage.content;
+    } catch (error) {
+      console.error(error);
+      return '';
+    }
   }
 
   async function testScreenAnalysis(): Promise<{ success: boolean; message: string }> {

@@ -7,7 +7,7 @@
 import { ref, watch } from 'vue';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { usePetStateStore } from '../../stores/petState';
-import { useConversation } from '../../services/useConversation';
+import { useConversation } from '../../services/playConversation';
 
 const state = usePetStateStore()
 const appWindow = getCurrentWebviewWindow();
