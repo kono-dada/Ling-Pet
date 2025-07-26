@@ -1,7 +1,7 @@
 import { useScreenAnalysisConfigStore } from '../stores/screenAnalysisConfig';
 import type { AIMessage } from '../types/ai';
 import type { ChatCompletion } from 'openai/resources';
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import {
   getScreenshotableMonitors,
   getMonitorScreenshot,
@@ -9,32 +9,31 @@ import {
 import { readFile } from "@tauri-apps/plugin-fs";
 import { BaseDirectory } from "@tauri-apps/plugin-fs";
 import { debug } from '@tauri-apps/plugin-log';
+import { OpenAI } from 'openai';
 
 export function useScreenAnalysisService() {
   const sgc = useScreenAnalysisConfigStore();
 
   async function callAI(messages: AIMessage[]): Promise<ChatCompletion> {
-    const url = sgc.baseURL.replace(/\/+$/, '') + '/chat/completions';
-    console.log('发送的消息:', messages);
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${sgc.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: sgc.model,
-        messages: messages,
-        temperature: sgc.temperature,
-        max_tokens: sgc.maxTokens,
-        // enable_thinking: sgc.enableThinking,
-      }),
+    const client = new OpenAI({
+      apiKey: sgc.apiKey,
+      baseURL: sgc.baseURL,
+      fetch: tauriFetch, // 使用 Tauri 的 fetch，防止CORS问题
+      dangerouslyAllowBrowser: true, // 允许浏览器环境
     });
 
-    const result = await res.json();
-    console.log('AI响应:', result);
-    return result as ChatCompletion;
+    console.log('调用AI服务，消息:', messages);
+    const completion = await client.chat.completions.create({
+      model: sgc.model,
+      messages: messages,
+      temperature: sgc.temperature,
+      max_tokens: sgc.maxTokens,
+    });
+    console.log('AI服务响应:', completion);
+
+    return completion;
   }
+
   function toBase64(array: Uint8Array): Promise<string> {
     const blob = new Blob([array]);
     return new Promise((resolve, reject) => {

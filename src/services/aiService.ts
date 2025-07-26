@@ -6,33 +6,33 @@ import { DEFAULT_CHARACTER_PROMPT, RESPONSE_FORMAT_PROMPT, USER_PROMPT_WRAPPER }
 import { EMOTIONS } from '../constants/emotions';
 import { EmotionName } from '../types/emotion';
 import type { ChatCompletion } from 'openai/resources';
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
+import { OpenAI } from 'openai';
 
 
 export function useAIService() {
   const ac = useAIConfigStore();
   const chs = useChatHistoryStore();
   const validateAIConfig = computed(() => Boolean(ac.apiKey && ac.baseURL && ac.model));
-
+  
   async function callAI(messages: AIMessage[]): Promise<ChatCompletion> {
-    const url = ac.baseURL.replace(/\/+$/, '') + '/chat/completions';
-    console.log('调用AI服务:', url);
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${ac.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: ac.model,
-        messages: messages,
-      }),
+    const client = new OpenAI({
+      apiKey: ac.apiKey,
+      baseURL: ac.baseURL,
+      fetch: tauriFetch, // 使用 Tauri 的 fetch，防止CORS问题
+      dangerouslyAllowBrowser: true, // 允许浏览器环境
     });
 
-    console.log('发送的消息:', messages);
-    const result = await res.json();
-    console.log('AI响应:', result);
-    return result as ChatCompletion;
+    console.log('调用AI服务，消息:', messages);
+    const completion = await client.chat.completions.create({
+      model: ac.model,
+      messages: messages,
+      temperature: ac.temperature,
+      max_tokens: ac.maxTokens,
+    });
+    console.log('AI服务响应:', completion);
+
+    return completion;
   }
 
   function parsePetResponseItemString(response: string): PetResponseItem | null {
