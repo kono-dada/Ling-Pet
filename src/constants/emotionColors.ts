@@ -33,7 +33,7 @@ export const EMOTION_COLOR_THEMES: Record<EmotionName, ColorTheme> = {
     text: "#92400e",
     shadow: "rgba(245, 158, 11, 0.2)"
   },
-  "兴奋": {
+  "微笑": {
     background: "rgba(255, 237, 213, 0.98)",
     border: "rgba(251, 146, 60, 0.6)",
     text: "#c2410c",
@@ -145,6 +145,20 @@ export const EMOTION_COLOR_THEMES: Record<EmotionName, ColorTheme> = {
     text: "#475569",
     shadow: "rgba(100, 116, 139, 0.15)"
   },
+
+  // 性奋情绪 - 深色调
+  "啊嘿颜": {
+    background: "rgba(245, 243, 255, 0.98)",
+    border: "rgba(139, 92, 246, 0.6)",
+    text: "#7c3aed",
+    shadow: "rgba(139, 92, 246, 0.15)"
+  }, 
+  "欲求不满": {
+    background: "rgba(255, 245, 243, 0.98)",
+    border: "rgba(239, 68, 68, 0.6)",
+    text: "#dc2626",
+    shadow: "rgba(239, 68, 68, 0.15)"
+  }
 };
 
 // 获取表情对应的颜色主题
