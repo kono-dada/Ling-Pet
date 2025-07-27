@@ -15,7 +15,7 @@ async function openSettings() {
   debug(allLabels.join(', '));
   const settingsWindow = allWindows.find(window => window.label === 'settings');
   if (settingsWindow) {
-    settingsWindow?.setFocus();
+    settingsWindow?.close();
     return;
   }
   const settingWindowConfig = {

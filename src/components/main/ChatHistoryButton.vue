@@ -20,7 +20,7 @@ async function openChatHistory() {
   debug(allLabels.join(', '));
   const chatHistoryWindow = allWindows.find(window => window.label === 'chat-history');
   if (chatHistoryWindow) {
-    chatHistoryWindow?.setFocus();
+    chatHistoryWindow?.close();
     return;
   }
   const chatHistoryWindowConfig = {
