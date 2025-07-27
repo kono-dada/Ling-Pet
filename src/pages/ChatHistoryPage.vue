@@ -95,7 +95,7 @@
               <h4 class="text-subtitle-1 mb-3 text-grey-darken-1">情绪分布</h4>
               <div class="emotion-chips">
                 <v-chip v-for="[emotion, count] in sortedEmotions" :key="emotion" class="ma-1" size="small"
-                  :color="getEmotionChipColor(emotion)" variant="tonal">
+                  variant="tonal">
                   {{ emotion }} ({{ count }})
                 </v-chip>
               </div>
@@ -140,49 +140,32 @@ interface ParsedAIMessage {
 }
 
 // 解析AI消息
-function parseAIMessage(content: string | Array<any> | null | undefined): ParsedAIMessage[] {
-  // 处理OpenAI SDK的复杂内容类型
-  let contentString: string = '';
-  
-  if (typeof content === 'string') {
-    contentString = content;
-  } else if (Array.isArray(content)) {
-    // 如果是数组，尝试提取文本内容
-    contentString = content
-      .filter(item => item.type === 'text')
-      .map(item => item.text)
-      .join(' ');
-  } else {
-    return [];
-  }
-
-  if (!contentString) {
-    return [];
-  }
+function parseAIMessage(content: string): ParsedAIMessage[] {
   try {
-    // 提取JSON数组部分
-    const jsonMatch = contentString.match(/\[([\s\S]*)\]/);
-    if (!jsonMatch) return [];
+    // 提取 <item>...</item> 内容
+    const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+    const result: ParsedAIMessage[] = [];
+    let match: RegExpExecArray | null;
 
-    const jsonStr = '[' + jsonMatch[1] + ']';
-    const parsed = JSON.parse(jsonStr);
-
-    return parsed.map((item: string) => {
+    while ((match = itemRegex.exec(content)) !== null) {
+      const item = match[1];
       const parts = item.split('|');
       if (parts.length === 3) {
         const emotion = parts[2].trim();
-        return {
+        result.push({
           chinese: parts[0].trim(),
           japanese: parts[1].trim(),
           emotion: isEmotionName(emotion) ? emotion : '正常'
-        };
+        });
+      } else {
+        result.push({
+          chinese: item,
+          japanese: '',
+          emotion: '正常' as EmotionName
+        });
       }
-      return {
-        chinese: item,
-        japanese: '',
-        emotion: '正常' as EmotionName
-      };
-    });
+    }
+    return result;
   } catch (error) {
     console.error('解析AI消息失败:', error);
     return [];
@@ -198,16 +181,6 @@ function getEmotionStyle(emotion: EmotionName) {
     color: theme.text,
     boxShadow: `0 2px 8px ${theme.shadow}`
   };
-}
-
-// 获取情绪芯片颜色
-function getEmotionChipColor(emotion: string) {
-  const positiveEmotions = ['高兴', '兴奋', '心动', '调皮', '自信'];
-  const negativeEmotions = ['伤心', '生气', '害怕', '担心', '无奈'];
-
-  if (positiveEmotions.includes(emotion)) return 'success';
-  if (negativeEmotions.includes(emotion)) return 'error';
-  return 'primary';
 }
 
 // 计算统计数据

@@ -5,24 +5,9 @@ import type { ChatCompletionMessageParam, ChatCompletionCreateParams } from 'ope
 export type AIMessage = ChatCompletionMessageParam;
 export type ChatRequest = ChatCompletionCreateParams;
 
-export interface AIConfig {
-  apiKey: string;
-  baseURL: string;
-  model: string;
-  temperature: number;
-  maxTokens: number;
-  systemPrompt?: string;
-}
-
 // 桌宠对话相关类型
 export interface PetResponseItem {
   message: string;
   emotion: EmotionName;
   japanese: string;
-}
-
-export interface PetResponse {
-  success: boolean;
-  data?: PetResponseItem[];
-  error?: string;
 }

@@ -1,20 +1,20 @@
 import { useAIConfigStore } from '../stores/aiConfig';
 import { useChatHistoryStore } from '../stores/chatHistory';
 import { computed } from 'vue';
-import type { AIMessage, PetResponse, PetResponseItem } from '../types/ai';
+import type { AIMessage, PetResponseItem } from '../types/ai';
 import { DEFAULT_CHARACTER_PROMPT, RESPONSE_FORMAT_PROMPT, USER_PROMPT_WRAPPER } from '../constants/ai';
 import { EMOTIONS } from '../constants/emotions';
 import { EmotionName } from '../types/emotion';
 import type { ChatCompletion } from 'openai/resources';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { OpenAI } from 'openai';
-
+import { debug } from '@tauri-apps/plugin-log';
 
 export function useAIService() {
   const ac = useAIConfigStore();
   const chs = useChatHistoryStore();
   const validateAIConfig = computed(() => Boolean(ac.apiKey && ac.baseURL && ac.model));
-  
+
   async function callAI(messages: AIMessage[]): Promise<ChatCompletion> {
     const client = new OpenAI({
       apiKey: ac.apiKey,
@@ -35,6 +35,68 @@ export function useAIService() {
     return completion;
   }
 
+  // 流式对话，无需等待全部生成就能产生聊天气泡
+  async function callAIStream(
+    messages: AIMessage[],
+    onItemComplete: (item: PetResponseItem) => void
+  ): Promise<{
+    response: string;
+    error?: string;
+    success: boolean;
+  }> {
+    const client = new OpenAI({
+      apiKey: ac.apiKey,
+      baseURL: ac.baseURL,
+      fetch: tauriFetch,
+      dangerouslyAllowBrowser: true,
+    });
+    let total = '';
+
+    try {
+      console.log('调用AI流式服务，消息:', messages);
+      const stream = await client.chat.completions.create({
+        model: ac.model,
+        messages: messages,
+        temperature: ac.temperature,
+        max_tokens: ac.maxTokens,
+        stream: true,
+      });
+
+      let buffer = '';
+
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || '';
+        total += content;
+        buffer += content;
+
+        // 检查是否有完整的 <item></item> 标签
+        const itemRegex = /<item>(.*?)<\/item>/g;
+        let match;
+
+        while ((match = itemRegex.exec(buffer)) !== null) {
+          const itemContent = match[1];
+          const parsedItem = parsePetResponseItemString(itemContent);
+
+          if (parsedItem) {  // 如果解析成功，调用回调函数
+            onItemComplete(parsedItem);
+            console.log('解析到完整item:', parsedItem);
+          } else {
+            console.warn('解析item失败:', itemContent);
+          }
+        }
+
+        // 移除已处理的完整 item 标签
+        buffer = buffer.replace(/<item>.*?<\/item>/g, '');
+      }
+
+      debug('AI流式服务完成');
+      return { response: total, success: true };
+    } catch (error: any) {
+      debug('AI流式服务错误:', error);
+      return { response: total, error: error instanceof Error ? error.message : '未知错误', success: false };
+    }
+  }
+
   function parsePetResponseItemString(response: string): PetResponseItem | null {
     const parts = response.split('|');
     if (parts.length !== 3) return null;
@@ -49,7 +111,10 @@ export function useAIService() {
     };
   }
 
-  async function chatWithPet(userMessage: string): Promise<PetResponse> {
+  async function chatWithPetStream(
+    userMessage: string,
+    onItemComplete: (item: PetResponseItem) => void
+  ): Promise<{ success: boolean; error?: string }> {
     // 检查配置是否完整
     if (!validateAIConfig.value) {
       return {
@@ -58,77 +123,46 @@ export function useAIService() {
       };
     }
 
-    try {
-      const messages: AIMessage[] = [];
-      // 添加系统提示词和响应格式要求
-      if (ac.systemPrompt) {
-        messages.push({
-          role: 'system',
-          content: ac.systemPrompt + '\n\n' + RESPONSE_FORMAT_PROMPT
-        });
-      }
-      // 添加历史消息的最末尾的ac.maxHistoryLength条消息
-      const historyLength = Math.min(chs.chatHistory.length, ac.historyMaxLength);
-      for (let i = chs.chatHistory.length - historyLength; i < chs.chatHistory.length; i++) {
-        const message = chs.chatHistory[i];
-        if (message.role === 'user' || message.role === 'assistant') {
-          messages.push(message);
-        }
-      }
-      // 添加用户消息
+    const messages: AIMessage[] = [];
+    // 添加系统提示词和响应格式要求
+    if (ac.systemPrompt) {
       messages.push({
-        role: 'user',
-        content: USER_PROMPT_WRAPPER.replace('{}', userMessage)
+        role: 'system',
+        content: ac.systemPrompt + '\n\n' + RESPONSE_FORMAT_PROMPT
       });
-      const response = await callAI(messages);
-      const aiResponseContent = response.choices[0]?.message?.content;
-
-      if (!aiResponseContent) {
-        console.error('AI服务返回空响应');
-        return { success: false, error: 'AI服务返回空响应' };
-      }
-
-      // 解析JSON并转换为PetResponseItem[]
-      try {
-        const parsedResponse = JSON.parse(aiResponseContent);
-        if (Array.isArray(parsedResponse)) {
-          const validItems: PetResponseItem[] = parsedResponse
-            .map(item => {
-              return parsePetResponseItemString(item);
-            })
-            .filter(Boolean) as PetResponseItem[];
-
-          if (validItems.length > 0) {
-            // 添加user和AI消息到聊天历史
-            chs.addMessage({
-              role: 'user',
-              content: userMessage
-            });
-            chs.addMessage({
-              role: 'assistant',
-              content: aiResponseContent
-            });
-            return { success: true, data: validItems };
-          } else {
-            console.error('AI响应格式错误，未返回有效的列表');
-            return { success: false, error: 'AI响应格式错误，未返回有效的列表' };
-          }
-        }
-        console.error('AI响应格式错误，未返回有效的列表');
-        return { success: false, error: 'AI响应格式错误，未返回有效的列表' };
-      } catch (error) {
-        console.error('AI响应解析失败:', error);
-        return { success: false };
-      }
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '未知错误';
-      return {
-        success: false,
-        error: `对话失败: ${errorMessage}`
-      };
     }
+    // 添加历史消息的最末尾的ac.maxHistoryLength条消息
+    const historyLength = Math.min(chs.chatHistory.length, ac.historyMaxLength);
+    for (let i = chs.chatHistory.length - historyLength; i < chs.chatHistory.length; i++) {
+      const message = chs.chatHistory[i];
+      if (message.role === 'user' || message.role === 'assistant') {
+        messages.push(message);
+      }
+    }
+    // 添加用户消息
+    messages.push({
+      role: 'user',
+      content: USER_PROMPT_WRAPPER.replace('{}', userMessage)
+    });
+
+    // 添加user消息到聊天历史
+    chs.addMessage({
+      role: 'user',
+      content: userMessage
+    });
+
+    const result = await callAIStream(messages, onItemComplete);
+
+    chs.addMessage({
+      role: 'assistant',
+      content: result.response // 将流式响应内容作为AI的回复
+    });
+
+    chs.$tauri.save();
+
+    return { success: result.success, error: result.error };
   }
+
 
   async function testAIConnection(): Promise<{ success: boolean; message: string }> {
     if (!validateAIConfig.value) {
@@ -151,9 +185,8 @@ export function useAIService() {
   }
 
   return {
-    validateAIConfig,
     callAI,
-    chatWithPet,
+    chatWithPetStream,
     testAIConnection,
   };
 }

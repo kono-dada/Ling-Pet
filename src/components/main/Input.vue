@@ -1,34 +1,33 @@
 <template>
   <input type="text" v-model="inputMessage" @keyup.enter="sendMessage" @keydown.enter="preventSendWhenThinking"
-    :readonly="isSending" :placeholder="placeholder" class="chat-input" :class="{ 'thinking': isSending }" />
+    :readonly="cbs.isStreaming" :placeholder="placeholder" class="chat-input" :class="{ 'thinking': cbs.isStreaming }" />
 </template>
 
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
 import { useChatBubbleStateStore } from '../../stores/chatBubbleState';
-import { useConversation } from '../../services/playConversation';
 import { useAIService } from '../../services/aiService';
 import { useScreenAnalysisService } from '../../services/screenAnalysisService';
+import { useStreamConversation } from '../../services/streamConversation';
 
 const cbs = useChatBubbleStateStore();
-const { startConversation } = useConversation();
-const { chatWithPet } = useAIService();
+const { chatWithPetStream } = useAIService();
 const { screenAnalysis } = useScreenAnalysisService();
+const { startStreaming, finishStreaming, addStreamItem } = useStreamConversation();
 
 
 const inputMessage = ref('');
-const isSending = ref(false);
 const thinkingMessages = ['正在思考中', '正在思考中.', '正在思考中..', '正在思考中...'];
 const thinkingIndex = ref(0);
 const placeholder = computed(() => {
-  return isSending.value ? thinkingMessages[thinkingIndex.value] : '和我聊天吧...';
+  return cbs.isStreaming ? thinkingMessages[thinkingIndex.value] : '和我聊天吧...';
 });
 
 async function sendMessage() {
   const userMessage = inputMessage.value.trim();
-  if (userMessage && !isSending.value) {
+  if (userMessage && !cbs.isStreaming) {
     // 设置发送状态
-    isSending.value = true;
+    startStreaming();
     // 立即清空输入框，这样 placeholder 就能显示
     inputMessage.value = '';
     // 启动思考动画
@@ -43,13 +42,12 @@ async function sendMessage() {
     const screenAnalysisResponse = screenAnalysisOn ? await screenAnalysis() : '';
     const screenAnalysisBlock = `<screen-analysis>${screenAnalysisResponse}</screen-analysis>`;
 
+    const petResponse = await chatWithPetStream(
+      userMessage + (screenAnalysisOn ? screenAnalysisBlock : ''),
+      addStreamItem
+    );
 
-    const petResponse = await chatWithPet(userMessage + (screenAnalysisOn ? screenAnalysisBlock : ''));
-
-    if (petResponse.success) {
-      // 如果有宠物响应，开始对话
-      await startConversation(petResponse.data ? petResponse.data : []);
-    } else {
+    if (!petResponse.success) {
       cbs.setCurrentMessage(petResponse.error || '发生错误，请稍后再试。');
     }
 
@@ -57,12 +55,12 @@ async function sendMessage() {
     thinkingIndex.value = 0;
 
     // 无论成功还是失败，都要重置发送状态
-    isSending.value = false;
+    finishStreaming();
   }
 }
 
 function preventSendWhenThinking(event: KeyboardEvent) {
-  if (isSending.value) {
+  if (cbs.isStreaming) {
     event.preventDefault();
     event.stopPropagation();
   }

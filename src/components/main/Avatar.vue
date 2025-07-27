@@ -7,11 +7,11 @@
 import { ref, watch } from 'vue';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { usePetStateStore } from '../../stores/petState';
-import { useConversation } from '../../services/playConversation';
+import { useStreamConversation } from '../../services/streamConversation';
 
 const state = usePetStateStore()
 const appWindow = getCurrentWebviewWindow();
-const { playNext } = useConversation();
+const { playNext } = useStreamConversation();
 
 const isShaking = ref(false);
 
@@ -19,7 +19,6 @@ function onDragStart() {
   setTimeout(() => {
     appWindow.startDragging();
   }, 100); // 防止拖拽阻挡点击事件的形成
-
 }
 
 function onClick() {

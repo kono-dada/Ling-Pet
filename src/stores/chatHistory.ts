@@ -1,14 +1,18 @@
 import { defineStore } from 'pinia'
-import type { AIMessage } from '../types/ai';
 
-const exampleChatHistory: AIMessage[] = []
+interface ChatHistoryItem {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+const exampleChatHistory: ChatHistoryItem[] = []
 
 export const useChatHistoryStore = defineStore('chatHistory', {
   state: () => ({
     chatHistory: exampleChatHistory,
   }),
   actions: {
-    addMessage(message: AIMessage) {
+    addMessage(message: ChatHistoryItem) {
       this.chatHistory.push(message);
     },
     clear() {
