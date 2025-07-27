@@ -9,9 +9,9 @@
 
           <v-alert type="info" variant="tonal" density="compact" class="mb-4">
             <div class="d-flex align-center">
-              <span class="mr-1">注意，需要先配置好 vits-simple-api，具体参见<a href="#" @click.prevent="openGitHubLink"
+              <span class="mr-1">注意，需要先配置好 style-bert-vits2，具体参见<a href="#" @click.prevent="openGitHubLink"
                   class="text-primary text-decoration-underline" style="cursor: pointer;">
-                  vits-simple-api
+                  style-bert-vits2
                 </a></span>
             </div>
           </v-alert>
@@ -21,9 +21,6 @@
 
           <v-text-field v-model="vc.baseURL" label="VITS API 基础地址" variant="outlined" density="compact" persistent-hint
             class="mb-4" :disabled="!vc.on" placeholder="http://localhost:23456"></v-text-field>
-
-          <v-text-field v-model.number="vc.id" label="音色ID" variant="outlined" density="compact" persistent-hint
-            type="number" :disabled="!vc.on" hint="不同的音色ID对应不同的声音"></v-text-field>
         </div>
 
         <v-divider class="my-8"></v-divider>
@@ -31,46 +28,6 @@
         <div class="mb-8" :class="{ 'text-disabled': !vc.on }">
           <h2 class="text-h6 font-weight-bold mb-4">语音参数</h2>
           <v-divider class="mb-6"></v-divider>
-
-          <div class="mb-6">
-            <div class="d-flex justify-space-between align-center mb-1">
-              <v-label>语音长度</v-label>
-              <span class="text-primary font-weight-medium">{{ vc.length }}</span>
-            </div>
-            <p class="text-caption text-medium-emphasis">控制语音的播放速度</p>
-            <v-slider v-model="vc.length" :min="0.5" :max="2" :step="0.1" thumb-label color="primary"
-              :disabled="!vc.on"></v-slider>
-          </div>
-
-          <div class="mb-6">
-            <div class="d-flex justify-space-between align-center mb-1">
-              <v-label>噪声强度</v-label>
-              <span class="text-primary font-weight-medium">{{ vc.noise }}</span>
-            </div>
-            <p class="text-caption text-medium-emphasis">控制语音的随机性</p>
-            <v-slider v-model="vc.noise" :min="0" :max="1" :step="0.01" thumb-label color="orange"
-              :disabled="!vc.on"></v-slider>
-          </div>
-
-          <div class="mb-6">
-            <div class="d-flex justify-space-between align-center mb-1">
-              <v-label>噪声权重</v-label>
-              <span class="text-primary font-weight-medium">{{ vc.noisew }}</span>
-            </div>
-            <p class="text-caption text-medium-emphasis">控制噪声对语音的影响程度</p>
-            <v-slider v-model="vc.noisew" :min="0" :max="1" :step="0.01" thumb-label color="green"
-              :disabled="!vc.on"></v-slider>
-          </div>
-
-          <div class="mb-6">
-            <div class="d-flex justify-space-between align-center mb-1">
-              <v-label>分段大小</v-label>
-              <span class="text-primary font-weight-medium">{{ vc.segmentSize }}</span>
-            </div>
-            <p class="text-caption text-medium-emphasis">长文本分段处理的大小</p>
-            <v-slider v-model="vc.segmentSize" :min="10" :max="200" :step="10" thumb-label color="purple"
-              :disabled="!vc.on"></v-slider>
-          </div>
         </div>
 
         <v-divider class="my-8"></v-divider>
@@ -105,7 +62,7 @@ const vc = useVitsConfigStore();
 // 打开GitHub链接
 async function openGitHubLink() {
   try {
-    await openUrl('https://github.com/Artrajz/vits-simple-api');
+    await openUrl('https://github.com/litagin02/Style-Bert-VITS2');
   } catch (error) {
     console.error('Failed to open link:', error);
   }
@@ -118,7 +75,7 @@ async function testConnection() {
 
   try {
     // 使用简短的测试文本
-    const testText = "测试";
+    const testText = "テスト";
     await voiceVits(testText);
 
     testResult.value = {

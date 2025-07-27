@@ -1,4 +1,5 @@
 import { useVitsConfigStore } from '../stores/vitsConfig'
+import { fetch } from '@tauri-apps/plugin-http'
 
 export interface VitsOptions {
   id?: number
@@ -15,19 +16,18 @@ export async function voiceVits(
 ): Promise<Blob> {
   const vitsConfig = useVitsConfigStore()
 
-  const formData = new FormData()
-  formData.append('text', text)
-  formData.append('id', vitsConfig.id.toString())
-  formData.append('format', vitsConfig.format)
-  formData.append('lang', vitsConfig.lang)
-  formData.append('length', vitsConfig.length.toString())
-  formData.append('noise', vitsConfig.noise.toString())
-  formData.append('noisew', vitsConfig.noisew.toString())
-  formData.append('segment_size', vitsConfig.segmentSize.toString())
+  const body = {
+    text,
+    ident: vitsConfig.ident, // 使用配置中的音色ID
+    // 其他参数可以加进来
+  }
 
-  const response = await fetch(`${vitsConfig.baseURL}/voice/vits`, {
+  const response = await fetch(`${vitsConfig.baseURL}/synthesize`, {
     method: 'POST',
-    body: formData
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
   })
 
   if (!response.ok) {
