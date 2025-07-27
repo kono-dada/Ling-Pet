@@ -33,8 +33,12 @@
                     <AISettings />
                 </v-window-item>
 
-                <v-window-item value="screenGlancer" :transition="false">
-                    <ScreenGlancerSettings />
+                <v-window-item value="vits" :transition="false">
+                    <VitsSettings />
+                </v-window-item>
+
+                <v-window-item value="screenAnalysis" :transition="false">
+                    <ScreenAnalysisSettings />
                 </v-window-item>
 
                 <v-window-item value="xp" :transition="false">
@@ -53,9 +57,10 @@
 import { ref, watch, computed } from 'vue';
 import AppearanceSettings from '../components/settings/AppearanceSettings.vue';
 import AISettings from '../components/settings/AISettings.vue';
+import VitsSettings from '../components/settings/VitsSettings.vue';
 import XPSettings from '../components/settings/XPSettings.vue';
 import AboutSettings from '../components/settings/AboutSettings.vue';
-import ScreenGlancerSettings from '../components/settings/ScreenAnalysisSettings.vue';
+import ScreenAnalysisSettings from '../components/settings/ScreenAnalysisSettings.vue';
 
 const SETTINGS_TABS = [
   {
@@ -69,9 +74,14 @@ const SETTINGS_TABS = [
     icon: 'ai',
   },
   {
-    id: 'screenGlancer',
+    id: 'vits',
+    name: '语音设置',
+    icon: 'vits',
+  },
+  {
+    id: 'screenAnalysis',
     name: '屏幕分析',
-    icon: 'screenGlancer',
+    icon: 'screenAnalysis',
   },
   {
     id: 'xp',
@@ -125,7 +135,8 @@ watch(currentTab, (newTab) => {
 const iconMap: { [key: string]: string } = {
     appearance: 'mdi-palette-swatch-outline',
     ai: 'mdi-brain',
-    screenGlancer: 'mdi-monitor-screenshot',
+    vits: 'mdi-volume-high',
+    screenAnalysis: 'mdi-monitor-screenshot',
     xp: 'mdi-heart-multiple',
     about: 'mdi-information-outline'
 };

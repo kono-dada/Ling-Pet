@@ -1,20 +1,25 @@
 import { defineStore } from 'pinia'
 import { PetResponseItem } from '../types/ai';
 
+export interface PetResponseItemWithAudio extends PetResponseItem {
+  audioBlob?: Blob;
+}
+
 export const useChatBubbleStateStore = defineStore('chatBubbleState', {
   state: () => ({
     currentMessage: '',
-    responseItems: [] as PetResponseItem[],
+    responseItems: [] as PetResponseItemWithAudio[],
     isStreaming: false,
+    currentAudio: null as HTMLAudioElement | null,
   }),
   actions: {
     setCurrentMessage(message: string) {
       this.currentMessage = message;
     },
-    setItems(items: PetResponseItem[]) {
+    setItems(items: PetResponseItemWithAudio[]) {
       this.responseItems = items;
     },
-    addItem(item: PetResponseItem) {
+    addItem(item: PetResponseItemWithAudio) {
       this.responseItems.push(item);
     },
     setStreaming(isStreaming: boolean) {
@@ -23,8 +28,15 @@ export const useChatBubbleStateStore = defineStore('chatBubbleState', {
     shiftNext() {
       return this.responseItems.shift();
     },
+    setCurrentAudio(audio: HTMLAudioElement | null) {
+      this.currentAudio = audio;
+    },
     clear() {
       this.responseItems = [];
+      if (this.currentAudio) {
+        this.currentAudio.pause();
+        this.currentAudio = null;
+      }
     }
   },
 });
