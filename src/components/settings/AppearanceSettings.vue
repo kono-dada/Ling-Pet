@@ -38,16 +38,6 @@
           </div>
         </div>
 
-        <v-divider class="my-8"></v-divider>
-
-        <div>
-          <h2 class="text-h6 font-weight-bold mb-4">其他操作</h2>
-          <v-divider class="mb-6"></v-divider>
-          <v-btn @click="quitApp" color="red-darken-1" variant="flat" block size="large" prepend-icon="mdi-logout">
-            退出应用
-          </v-btn>
-        </div>
-
       </v-card-text>
     </v-card>
   </v-container>
@@ -55,7 +45,6 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { invoke } from '@tauri-apps/api/core';
 import { useAppearanceConfigStore } from '../../stores/appearanceConfig';
 
 // Constants
@@ -69,11 +58,6 @@ const ac = useAppearanceConfigStore();
 
 // Computed property to format the opacity value for display
 const formattedOpacity = computed(() => `${Math.round(ac.opacity * 100)}%`);
-
-// Quit the application
-async function quitApp() {
-  await invoke('quit_app');
-}
 
 </script>
 

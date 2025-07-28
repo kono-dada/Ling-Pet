@@ -21,7 +21,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_pinia::init())
         .plugin(tauri_plugin_screenshots::init())
-        .invoke_handler(tauri::generate_handler![quit_app])
+        .invoke_handler(tauri::generate_handler![quit_app, open_data_folder])
         .setup(|app| {
             let main_window = app.get_webview_window("main").unwrap();
             // 设置平台特定配置
