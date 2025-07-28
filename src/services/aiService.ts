@@ -75,6 +75,7 @@ export function useAIService() {
 
         while ((match = itemRegex.exec(buffer)) !== null) {
           const itemContent = match[1];
+          console.log('检测到完整item:', itemContent);
           const parsedItem = parsePetResponseItemString(itemContent);
 
           if (parsedItem) {  // 如果解析成功，调用回调函数

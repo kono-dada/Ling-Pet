@@ -42,7 +42,7 @@
             <!-- AI消息 -->
             <div v-if="message.role === 'assistant'" class="message-row ai-message mb-4">
               <template v-for="aiMsg in parseAIMessage(message.content)" :key="aiMsg.chinese + aiMsg.emotion">
-                <div class="d-flex justify-start mb-3">
+                <div class="d-flex justify-start mb-3 ai-message-item">
                   <v-avatar class="mr-3 ai-avatar" size="40">
                     <v-img :src="`/avatar/${aiMsg.emotion}.png`" :alt="aiMsg.emotion" cover />
                   </v-avatar>
@@ -51,6 +51,20 @@
                       {{ aiMsg.chinese }}
                     </v-card-text>
                   </v-card>
+                  
+                  <!-- 语音播放按钮 -->
+                  <v-btn
+                    v-if="aiMsg.japanese"
+                    icon
+                    size="small"
+                    variant="text"
+                    color="primary"
+                    class="ml-2 voice-btn"
+                    :loading="playingIndex === `${index}-${aiMsg.chinese}`"
+                    @click="playVoice(aiMsg.japanese, `${index}-${aiMsg.chinese}`)"
+                  >
+                    <v-icon size="18">mdi-volume-high</v-icon>
+                  </v-btn>
                 </div>
               </template>
             </div>
@@ -159,6 +173,7 @@ import { useChatHistoryStore } from '../stores/chatHistory';
 import { getEmotionColorTheme } from '../constants/emotionColors';
 import { isEmotionName, type EmotionName } from '../types/emotion';
 import { ref } from 'vue';
+import { voiceVits } from '../services/vitsService';
 
 const chs = useChatHistoryStore();
 
@@ -259,6 +274,7 @@ const mostFrequentEmotion = computed(() => {
 const clearDialog = ref(false);
 const deleteDialog = ref(false);
 const deleteIndex = ref(-1);
+const playingIndex = ref<string | null>(null);
 
 function handleClear() {
   chs.clear();
@@ -276,6 +292,38 @@ function handleDelete() {
   }
   deleteDialog.value = false;
   deleteIndex.value = -1;
+}
+
+async function playVoice(japaneseText: string, uniqueId: string) {
+  if (playingIndex.value === uniqueId) {
+    return; // 如果正在播放，则忽略
+  }
+  
+  try {
+    playingIndex.value = uniqueId;
+    
+    // 调用VITS服务生成语音
+    const audioBlob = await voiceVits(japaneseText);
+    
+    // 创建音频URL并播放
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    
+    audio.onended = () => {
+      playingIndex.value = null;
+      URL.revokeObjectURL(audioUrl);
+    };
+    
+    audio.onerror = () => {
+      playingIndex.value = null;
+      URL.revokeObjectURL(audioUrl);
+    };
+    
+    await audio.play();
+  } catch (error) {
+    console.error('语音播放失败:', error);
+    playingIndex.value = null;
+  }
 }
 </script>
 
@@ -301,9 +349,20 @@ function handleDelete() {
   transform: translateX(0);
 }
 
+.ai-message-item:hover .voice-btn {
+  opacity: 1;
+  transform: translateX(0);
+}
+
 .delete-btn {
   opacity: 0;
   transform: translateX(10px);
+  transition: all 0.2s ease;
+}
+
+.voice-btn {
+  opacity: 0;
+  transform: translateX(-10px);
   transition: all 0.2s ease;
 }
 

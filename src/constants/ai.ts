@@ -25,7 +25,7 @@ export const DEFAULT_CHARACTER_PROMPT =
 
 export const RESPONSE_FORMAT_PROMPT = 
 `回复格式要求：
-  由于你在和暗恋对象网上聊天，你需要使用xml格式并输出多个<item>。每个item都要包括回复的消息、日语翻译和情绪分类，使用“|”分隔。
+  由于你在和暗恋对象网上聊天，你需要使用xml格式并输出多个<item>。每个item都要包括(1). 回复的消息(中文)、(2). 日语翻译和(3).情绪分类，使用“|”分隔。请记住是先中文再日语最后情绪
   关于情绪类别，你只能从以下情绪中选择：
   ${EMOTIONS}
   以下是一个回复例子:

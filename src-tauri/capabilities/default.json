@@ -5,7 +5,8 @@
   "windows": [
     "main",
     "settings",
-    "chat-bubble"
+    "chat-bubble",
+    "chat-history"
   ],
   "permissions": [
     "core:default",
