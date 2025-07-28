@@ -26,17 +26,9 @@ pub async fn open_data_folder(app: tauri::AppHandle) -> Result<(), String> {
 
     // Try different approaches to open the folder
     let opener = app.opener();
-    let path_str = app_data_dir.to_string_lossy().to_string();
     
     // Try method 1: reveal_item_in_dir (shows the folder in file explorer)
     opener.reveal_item_in_dir(&app_data_dir).expect("Failed to reveal item in directory");
-    
-    // Try method 2: open_path
-    opener.open_path(path_str, None::<&str>)
-        .map_err(|e| {
-            let error_msg = format!("Failed to open folder with both methods: {}", e);
-            error_msg
-        })?;
 
     Ok(())
 }
