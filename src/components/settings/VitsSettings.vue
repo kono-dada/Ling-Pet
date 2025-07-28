@@ -21,6 +21,8 @@
 
           <v-text-field v-model="vc.baseURL" label="VITS API 基础地址" variant="outlined" density="compact" persistent-hint
             class="mb-4" :disabled="!vc.on" placeholder="http://localhost:23456"></v-text-field>
+          <v-text-field v-model="vc.ident" label="音色ID" variant="outlined" density="compact" persistent-hint
+            :disabled="!vc.on" hint="不同的音色ID对应不同的声音"></v-text-field>
         </div>
 
         <v-divider class="my-8"></v-divider>

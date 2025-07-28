@@ -15,7 +15,19 @@
           <template v-for="(message, index) in chs.chatHistory" :key="index">
             <!-- 用户消息 -->
             <div v-if="message.role === 'user'" class="message-row user-message mb-4">
-              <div class="d-flex justify-end">
+              <div class="d-flex justify-end align-center">
+                <!-- 删除按钮 -->
+                <v-btn
+                  icon
+                  size="small"
+                  variant="text"
+                  color="error"
+                  class="mr-2 delete-btn"
+                  @click="showDeleteDialog(index)"
+                >
+                  <v-icon size="18">mdi-delete-outline</v-icon>
+                </v-btn>
+                
                 <v-card class="message-bubble user-bubble" rounded="xl">
                   <v-card-text class="pa-3">
                     {{ message.content }}
@@ -111,6 +123,8 @@
       </v-btn>
     </v-row>
   </v-container>
+  
+  <!-- 清空确认对话框 -->
   <v-dialog v-model="clearDialog" max-width="320">
     <v-card>
       <v-card-title class="text-h6">确认清空</v-card-title>
@@ -119,6 +133,21 @@
         <v-spacer></v-spacer>
         <v-btn text @click="clearDialog = false">取消</v-btn>
         <v-btn color="error" text @click="handleClear">清空</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <!-- 删除消息确认对话框 -->
+  <v-dialog v-model="deleteDialog" max-width="360">
+    <v-card>
+      <v-card-title class="text-h6">确认删除</v-card-title>
+      <v-card-text>
+        确定要删除这条消息及其后续所有消息吗？此操作不可恢复。
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn text @click="deleteDialog = false">取消</v-btn>
+        <v-btn color="error" text @click="handleDelete">删除</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -228,9 +257,25 @@ const mostFrequentEmotion = computed(() => {
 });
 
 const clearDialog = ref(false);
+const deleteDialog = ref(false);
+const deleteIndex = ref(-1);
+
 function handleClear() {
   chs.clear();
   clearDialog.value = false;
+}
+
+function showDeleteDialog(index: number) {
+  deleteIndex.value = index;
+  deleteDialog.value = true;
+}
+
+function handleDelete() {
+  if (deleteIndex.value >= 0) {
+    chs.deleteMessageAndAfter(deleteIndex.value);
+  }
+  deleteDialog.value = false;
+  deleteIndex.value = -1;
 }
 </script>
 
@@ -248,6 +293,18 @@ function handleClear() {
 
 .message-row {
   animation: fadeInUp 0.3s ease-out;
+  position: relative;
+}
+
+.message-row:hover .delete-btn {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.delete-btn {
+  opacity: 0;
+  transform: translateX(10px);
+  transition: all 0.2s ease;
 }
 
 @keyframes fadeInUp {

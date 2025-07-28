@@ -17,6 +17,9 @@ export const useChatHistoryStore = defineStore('chatHistory', {
     },
     clear() {
       this.chatHistory = [];
+    },
+    deleteMessageAndAfter(index: number) {
+      this.chatHistory = this.chatHistory.slice(0, index);
     }
   },
   tauri: {
