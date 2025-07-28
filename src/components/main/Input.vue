@@ -71,7 +71,7 @@ function preventSendWhenThinking(event: KeyboardEvent) {
 .chat-input {
   position: absolute;
   display: flex;
-  bottom: 0;
+  bottom: 3%;
   padding: 3px 10px;
   width: 60%;
   /* align-items: center; */

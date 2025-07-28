@@ -147,7 +147,7 @@ export const EMOTION_COLOR_THEMES: Record<EmotionName, ColorTheme> = {
   },
 
   // 性奋情绪 - 深色调
-  "啊嘿颜": {
+  "高潮脸": {
     background: "rgba(245, 243, 255, 0.98)",
     border: "rgba(139, 92, 246, 0.6)",
     text: "#7c3aed",
