@@ -5,6 +5,7 @@ const MainPage = () => import('../pages/MainPage.vue')
 const SettingsPage = () => import('../pages/SettingsPage.vue')
 const ChatBubblePage = () => import('../pages/ChatBubblePage.vue')
 const ChatHistoryPage = () => import('../pages/ChatHistoryPage.vue')
+const LingChatPage = () => import('../pages/LingChatPage.vue')
 
 const routes = [
   {
@@ -26,6 +27,11 @@ const routes = [
     path: '/chat-history',
     name: 'chat-history',
     component: ChatHistoryPage
+  },
+  {
+    path: '/lingchat',
+    name: 'lingchat',
+    component: LingChatPage
   }
 ]
 

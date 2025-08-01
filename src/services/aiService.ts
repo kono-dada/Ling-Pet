@@ -38,7 +38,7 @@ export function useAIService() {
   // 流式对话，无需等待全部生成就能产生聊天气泡
   async function callAIStream(
     messages: AIMessage[],
-    onItemComplete: (item: PetResponseItem) => void
+    onItemComplete: (item: PetResponseItem) => Promise<void>
   ): Promise<{
     response: string;
     error?: string;
@@ -79,7 +79,7 @@ export function useAIService() {
           const parsedItem = parsePetResponseItemString(itemContent);
 
           if (parsedItem) {  // 如果解析成功，调用回调函数
-            onItemComplete(parsedItem);
+            await onItemComplete(parsedItem);
             console.log('解析到完整item:', parsedItem);
           } else {
             console.warn('解析item失败:', itemContent);
@@ -114,7 +114,7 @@ export function useAIService() {
 
   async function chatWithPetStream(
     userMessage: string,
-    onItemComplete: (item: PetResponseItem) => void
+    onItemComplete: (item: PetResponseItem) => Promise<void>
   ): Promise<{ success: boolean; error?: string }> {
     // 检查配置是否完整
     if (!validateAIConfig.value) {
@@ -180,6 +180,7 @@ export function useAIService() {
       }
       return { success: true, message: '连接成功，AI响应正常' };
     } catch (error) {
+      console.log('测试AI连接失败:', error);
       const errorMessage = error instanceof Error ? error.message : '未知错误';
       return { success: false, message: `连接失败: ${errorMessage}` };
     }

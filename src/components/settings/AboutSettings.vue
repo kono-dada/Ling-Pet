@@ -32,6 +32,10 @@
             <v-btn @click="openDataFolder" color="blue-darken-1" variant="flat" block size="large" prepend-icon="mdi-folder-open">
               打开数据文件夹
             </v-btn>
+
+            <v-btn @click="openLingChat" color="yellow-darken-2" variant="flat" block size="large" prepend-icon="mdi-chat">
+              打开LingChat
+            </v-btn>
             
             <v-btn @click="quitApp" color="red-darken-1" variant="flat" block size="large" prepend-icon="mdi-logout">
               退出应用
@@ -46,6 +50,7 @@
 
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core';
+import { getAllWebviewWindows, WebviewWindow } from '@tauri-apps/api/webviewWindow';
 
 // Quit the application
 async function quitApp() {
@@ -55,6 +60,33 @@ async function quitApp() {
 // Open the application data folder
 async function openDataFolder() {
   await invoke('open_data_folder');
+}
+
+async function openLingChat() {
+  const allWindows = await getAllWebviewWindows();
+  const lingChatWindow = allWindows.find(window => window.label === 'lingchat');
+  if (lingChatWindow) {
+    lingChatWindow?.close();
+    return;
+  }
+  const lingChatWindowConfig = {
+    title: 'LingChat',
+    url: '/#/lingchat',
+    label: 'lingchat',
+    width: 1080,
+    height: 720,
+    resizable: true,
+    transparent: false,
+    decorations: true,
+    alwaysOnTop: false,
+    skipTaskbar: true,
+    center: false,
+    visible: false,
+  };
+  new WebviewWindow('lingchat', {
+    ...lingChatWindowConfig,
+    visible: true
+  });
 }
 </script>
 
