@@ -35,10 +35,10 @@ export function useAIService() {
     return completion;
   }
 
-  // 流式对话，无需等待全部生成就能产生聊天气泡
+  // 流式对话，通用的流式处理函数
   async function callAIStream(
     messages: AIMessage[],
-    onItemComplete: (item: PetResponseItem) => Promise<void>
+    onChunk: (chunk: string, buffer: string) => Promise<string>
   ): Promise<{
     response: string;
     error?: string;
@@ -69,25 +69,8 @@ export function useAIService() {
         total += content;
         buffer += content;
 
-        // 检查是否有完整的 <item></item> 标签
-        const itemRegex = /<item>(.*?)<\/item>/g;
-        let match;
-
-        while ((match = itemRegex.exec(buffer)) !== null) {
-          const itemContent = match[1];
-          console.log('检测到完整item:', itemContent);
-          const parsedItem = parsePetResponseItemString(itemContent);
-
-          if (parsedItem) {  // 如果解析成功，调用回调函数
-            await onItemComplete(parsedItem);
-            console.log('解析到完整item:', parsedItem);
-          } else {
-            console.warn('解析item失败:', itemContent);
-          }
-        }
-
-        // 移除已处理的完整 item 标签
-        buffer = buffer.replace(/<item>.*?<\/item>/g, '');
+        // 调用回调函数处理chunk，返回处理后的buffer
+        buffer = await onChunk(content, buffer);
       }
 
       debug('AI流式服务完成');
@@ -109,6 +92,31 @@ export function useAIService() {
       message,
       japanese,
       emotion: emotion as EmotionName,
+    };
+  }
+
+  // 专门处理Pet响应格式的chunk处理器
+  function createPetResponseChunkHandler(onItemComplete: (item: PetResponseItem) => Promise<void>) {
+    return async (_chunk: string, buffer: string): Promise<string> => {
+      // 检查是否有完整的 <item></item> 标签
+      const itemRegex = /<item>(.*?)<\/item>/g;
+      let match;
+
+      while ((match = itemRegex.exec(buffer)) !== null) {
+        const itemContent = match[1];
+        console.log('检测到完整item:', itemContent);
+        const parsedItem = parsePetResponseItemString(itemContent);
+
+        if (parsedItem) {  // 如果解析成功，调用回调函数
+          await onItemComplete(parsedItem);
+          console.log('解析到完整item:', parsedItem);
+        } else {
+          console.warn('解析item失败:', itemContent);
+        }
+      }
+
+      // 移除已处理的完整 item 标签，返回处理后的buffer
+      return buffer.replace(/<item>.*?<\/item>/g, '');
     };
   }
 
@@ -152,7 +160,7 @@ export function useAIService() {
       content: userMessage
     });
 
-    const result = await callAIStream(messages, onItemComplete);
+    const result = await callAIStream(messages, createPetResponseChunkHandler(onItemComplete));
 
     chs.addMessage({
       role: 'assistant',
