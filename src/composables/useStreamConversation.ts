@@ -3,18 +3,20 @@ import { useChatBubbleStateStore, PetResponseItemWithAudio } from "../stores/cha
 import { usePetStateStore } from "../stores/petState";
 import { useVitsConfigStore } from "../stores/vitsConfig";
 import { DEFAULT_EMOTION } from "../constants/emotions";
-import { voiceVits } from "./vitsService";
+import { voiceVits } from "../services/vitsService";
 import { debug } from "@tauri-apps/plugin-log";
+import { ref } from "vue";
 
 export function useStreamConversation() {
     const cbs = useChatBubbleStateStore();
     const petState = usePetStateStore();
     const vitsConfig = useVitsConfigStore();
+    const isStreaming = ref(false);
+    const currentAudio = ref<HTMLAudioElement | null>(null);
 
     // 开始流式对话
     function startStreaming() {
-        cbs.clear();
-        cbs.setStreaming(true);
+        isStreaming.value = true;
         debug('开始流式对话');
     }
 
@@ -54,7 +56,7 @@ export function useStreamConversation() {
             if (nextItem.audioBlob) {
                 playAudio(nextItem.audioBlob);
             }
-        } else if (cbs.isStreaming) {
+        } else if (isStreaming.value) {
             // 如果还在流式接收但没有下一句，等待
             console.log('等待更多消息...');
         } else {
@@ -67,9 +69,9 @@ export function useStreamConversation() {
     function playAudio(audioBlob: Blob) {
         try {
             // 停止当前播放的音频
-            if (cbs.currentAudio) {
-                cbs.currentAudio.pause();
-                cbs.currentAudio = null;
+            if (currentAudio.value) {
+                currentAudio.value.pause();
+                currentAudio.value = null;
             }
             
             const audioUrl = URL.createObjectURL(audioBlob);
@@ -77,20 +79,20 @@ export function useStreamConversation() {
             
             audio.onended = () => {
                 URL.revokeObjectURL(audioUrl);
-                cbs.setCurrentAudio(null);
+                currentAudio.value = null;
             };
             
             audio.onerror = (error) => {
                 console.error('音频播放失败:', error);
                 URL.revokeObjectURL(audioUrl);
-                cbs.setCurrentAudio(null);
+                currentAudio.value = null;
             };
             
-            cbs.setCurrentAudio(audio);
+            currentAudio.value = audio;
             audio.play().catch(error => {
                 console.error('音频播放失败:', error);
                 URL.revokeObjectURL(audioUrl);
-                cbs.setCurrentAudio(null);
+                currentAudio.value = null;
             });
             
             debug('开始播放语音');
@@ -101,11 +103,13 @@ export function useStreamConversation() {
 
     // 结束对话
     function finishStreaming() {
-        cbs.setStreaming(false);
+        isStreaming.value = false;
+        currentAudio.value = null;
         debug('stream结束');
     }
 
     return {
+        isStreaming,
         startStreaming,
         addStreamItem,
         finishStreaming,

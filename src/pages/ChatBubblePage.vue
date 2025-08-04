@@ -21,7 +21,8 @@
 <style scoped>
 .continue-hint {
   position: absolute;
-  bottom: 0; /* 贴近底边线 */
+  bottom: 0;
+  /* 贴近底边线 */
   left: 0;
   width: 100%;
   text-align: center;
@@ -33,6 +34,7 @@
   pointer-events: none;
   z-index: 1;
 }
+
 .bubble-tail {
   position: absolute;
   width: 20px;
@@ -276,6 +278,9 @@ const displayedMessage = ref('');
 const isTyping = ref(false);
 const textAlign = ref<'center' | 'left'>('center');
 
+// 添加打字动画控制
+let currentTypingId = 0;
+
 // 计算颜色主题
 const colorTheme = computed(() => getEmotionColorTheme(petState.currentEmotion))
 
@@ -299,6 +304,9 @@ const typeMessage = async (message: string) => {
   const typeSpeed = 50
   if (!message) return;
 
+  // 创建新的打字任务ID，中断之前的打字动画
+  const typingId = ++currentTypingId;
+
   // 根据文字长度决定对齐方式
   textAlign.value = message.length > 30 ? 'left' : 'center';
 
@@ -306,20 +314,22 @@ const typeMessage = async (message: string) => {
   displayedMessage.value = '';
 
   for (let i = 0; i <= message.length; i++) {
+    // 检查是否被新的打字任务中断
+    if (typingId !== currentTypingId) {
+      return; // 中断当前打字动画
+    }
+    
     displayedMessage.value = message.slice(0, i);
     await new Promise(resolve => setTimeout(resolve, typeSpeed));
   }
 
-  isTyping.value = false;
+  // 只有当前任务完成时才设置 isTyping 为 false
+  if (typingId === currentTypingId) {
+    isTyping.value = false;
+  }
 };
 
-// 监听消息变化
-watch(() => cbs.currentMessage, (newMessage) => {
-  debug(`cb检测到新消息：${newMessage}`);
-  resizeAndPositionBubble();
-  typeMessage(newMessage);
-}, { immediate: true });
-
+// 跟随主窗口位置
 async function calculateBubbleWindowProps(mainWindow: WebviewWindow, message: string) {
   // 获取主窗口信息
   const [mainPosition, mainSize, scaleFactor] = await Promise.all([
@@ -363,6 +373,7 @@ async function resizeAndPositionBubble() {
   }
 }
 
+let stopChatBubbleWatcher: (() => void) | null = null;
 let stopMainWindowMoved: (() => void) | null = null;
 onMounted(async () => {
   const chatBubbleWindow = getCurrentWebviewWindow();
@@ -377,8 +388,16 @@ onMounted(async () => {
       }
     });
   }
+
+  // 监听消息变化
+  stopChatBubbleWatcher = watch(() => cbs.currentMessage, (newMessage) => {
+    debug(`cb检测到新消息：${newMessage}`);
+    resizeAndPositionBubble();
+    typeMessage(newMessage);
+  }, { immediate: true });
 });
 onUnmounted(() => {
   stopMainWindowMoved?.();
+  stopChatBubbleWatcher?.();
 });
 </script>

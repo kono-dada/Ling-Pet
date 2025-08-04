@@ -9,7 +9,6 @@ export const useChatBubbleStateStore = defineStore('chatBubbleState', {
   state: () => ({
     currentMessage: '',
     responseItems: [] as PetResponseItemWithAudio[],
-    isStreaming: false,
     currentAudio: null as HTMLAudioElement | null,
   }),
   actions: {
@@ -21,9 +20,6 @@ export const useChatBubbleStateStore = defineStore('chatBubbleState', {
     },
     addItem(item: PetResponseItemWithAudio) {
       this.responseItems.push(item);
-    },
-    setStreaming(isStreaming: boolean) {
-      this.isStreaming = isStreaming;
     },
     shiftNext() {
       return this.responseItems.shift();
