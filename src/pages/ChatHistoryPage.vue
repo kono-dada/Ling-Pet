@@ -1,5 +1,20 @@
 <template>
-  <v-container fluid class="pa-4 chat-history-container">
+  <div>
+    <transition name="slide-y-transition">
+      <v-alert
+        v-if="vitsWarning"
+        type="warning"
+        class="vits-warning-alert"
+        variant="outlined"
+        density="comfortable"
+        icon="mdi-volume-off"
+        closable
+        @click:close="vitsWarning = false"
+      >
+        VITS服务未启用，无法播放语音
+      </v-alert>
+    </transition>
+    <v-container fluid class="pa-4 chat-history-container">
     <!-- 标题区域 -->
     <div class="text-center mb-6">
       <h2 class="text-h5 font-weight-light text-grey-darken-2">
@@ -165,17 +180,20 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+  </div>
 </template>
 
 <script lang="ts" setup>
 import { computed } from 'vue';
 import { useChatHistoryStore } from '../stores/chatHistory';
+import { useVitsConfigStore } from '../stores/vitsConfig';
 import { getEmotionColorTheme } from '../constants/emotionColors';
 import { isEmotionName, type EmotionName } from '../types/emotion';
 import { ref } from 'vue';
 import { voiceVits } from '../services/vitsService';
 
 const chs = useChatHistoryStore();
+const vcs = useVitsConfigStore();
 
 interface ParsedAIMessage {
   chinese: string;
@@ -274,7 +292,9 @@ const mostFrequentEmotion = computed(() => {
 const clearDialog = ref(false);
 const deleteDialog = ref(false);
 const deleteIndex = ref(-1);
+
 const playingIndex = ref<string | null>(null);
+const vitsWarning = ref(false);
 
 function handleClear() {
   chs.clear();
@@ -298,27 +318,28 @@ async function playVoice(japaneseText: string, uniqueId: string) {
   if (playingIndex.value === uniqueId) {
     return; // 如果正在播放，则忽略
   }
-  
+  if (!vcs.on) {
+    vitsWarning.value = true;
+    setTimeout(() => {
+      vitsWarning.value = false;
+    }, 2500);
+    return;
+  }
   try {
     playingIndex.value = uniqueId;
-    
     // 调用VITS服务生成语音
     const audioBlob = await voiceVits(japaneseText);
-    
     // 创建音频URL并播放
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
-    
     audio.onended = () => {
       playingIndex.value = null;
       URL.revokeObjectURL(audioUrl);
     };
-    
     audio.onerror = () => {
       playingIndex.value = null;
       URL.revokeObjectURL(audioUrl);
     };
-    
     await audio.play();
   } catch (error) {
     console.error('语音播放失败:', error);
@@ -487,5 +508,29 @@ async function playVoice(japaneseText: string, uniqueId: string) {
   box-shadow: none;
   font-weight: 500;
   letter-spacing: 1px;
+}
+/* 优化的顶部警告浮层 */
+.vits-warning-alert {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  min-width: 240px;
+  max-width: 90vw;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px 0 rgba(255, 193, 7, 0.15), 0 2px 8px 0 rgba(0,0,0,0.06);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  background-color: #fff8e1 !important;
+  border-color: #ffc107 !important;
+}
+
+@media (max-width: 600px) {
+  .vits-warning-alert {
+    font-size: 0.9rem;
+    min-width: 0;
+    margin: 0 16px;
+  }
 }
 </style>
