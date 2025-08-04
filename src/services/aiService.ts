@@ -8,7 +8,6 @@ import { EmotionName } from '../types/emotion';
 import type { ChatCompletion } from 'openai/resources';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { OpenAI } from 'openai';
-import { debug } from '@tauri-apps/plugin-log';
 
 export function useAIService() {
   const ac = useAIConfigStore();
@@ -73,10 +72,8 @@ export function useAIService() {
         buffer = await onChunk(content, buffer);
       }
 
-      debug('AI流式服务完成');
       return { response: total, success: true };
     } catch (error: any) {
-      debug('AI流式服务错误:', error);
       return { response: total, error: error instanceof Error ? error.message : '未知错误', success: false };
     }
   }

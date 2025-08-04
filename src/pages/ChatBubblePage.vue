@@ -268,7 +268,6 @@ import { useChatBubbleStateStore } from '../stores/chatBubbleState';
 import { usePetStateStore } from '../stores/petState';
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi';
-import { debug } from '@tauri-apps/plugin-log';
 
 const cbs = useChatBubbleStateStore();
 cbs.$tauri.start();
@@ -391,7 +390,6 @@ onMounted(async () => {
 
   // 监听消息变化
   stopChatBubbleWatcher = watch(() => cbs.currentMessage, (newMessage) => {
-    debug(`cb检测到新消息：${newMessage}`);
     resizeAndPositionBubble();
     typeMessage(newMessage);
   }, { immediate: true });

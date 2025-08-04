@@ -12,12 +12,9 @@
 
 <script lang="ts" setup>
 import { getAllWebviewWindows, WebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { debug } from '@tauri-apps/plugin-log';
 
 async function openChatHistory() {
   const allWindows = await getAllWebviewWindows();
-  const allLabels = allWindows.map(window => window.label);
-  debug(allLabels.join(', '));
   const chatHistoryWindow = allWindows.find(window => window.label === 'chat-history');
   if (chatHistoryWindow) {
     chatHistoryWindow?.close();
