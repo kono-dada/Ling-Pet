@@ -1,18 +1,17 @@
 <template>
   <input type="text" v-model="inputMessage" @keyup.enter="sendMessage" @keydown.enter="preventSendWhenThinking"
-    :readonly="isStreaming || hasResponseItems" :placeholder="placeholder" class="chat-input"
-    :class="{ 'thinking': isStreaming, 'continue': hasResponseItems && !isStreaming }" />
+    :readonly="currentConfig.readonly" :placeholder="placeholder" class="chat-input"
+    :class="currentConfig.cssClass" />
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useChatBubbleStateStore } from '../../stores/chatBubbleState';
-import { useAIService } from '../../services/aiService';
 import { useScreenAnalysisService } from '../../services/screenAnalysisService';
 import { useStreamConversation } from '../../composables/useStreamConversation';
+import { chatWithPetStream } from '../../services/chatWithPet';
 
 const cbs = useChatBubbleStateStore();
-const { chatWithPetStream } = useAIService();
 const { screenAnalysis } = useScreenAnalysisService();
 const { startStreaming, finishStreaming, addStreamItem, isStreaming } = useStreamConversation();
 
@@ -21,22 +20,83 @@ const inputMessage = ref('');
 const thinkingMessages = ['正在思考中', '正在思考中.', '正在思考中..', '正在思考中...'];
 const thinkingIndex = ref(0);
 
-// 检查是否有待播放的响应项
-const hasResponseItems = computed(() => cbs.responseItems.length > 0);
+// 输入框状态枚举
+enum InputState {
+  IDLE = 'idle',
+  THINKING = 'thinking',
+  CONTINUE = 'continue',
+  // 预留未来状态示例：
+  // WAITING = 'waiting',      // 等待外部条件
+  // DISABLED = 'disabled',    // 禁用状态
+  // ERROR = 'error',          // 错误状态
+  // RECORDING = 'recording'   // 语音录制状态
+}
 
-const placeholder = computed(() => {
-  if (isStreaming.value) {
-    return thinkingMessages[thinkingIndex.value];
-  } else if (hasResponseItems.value) {
-    return '点击以继续...';
-  } else {
-    return '和我聊天吧...';
+// 状态配置
+const stateConfig = {
+  [InputState.IDLE]: {
+    placeholder: '和我聊天吧...',
+    readonly: false,
+    cssClass: '',
+    cursor: 'text'
+  },
+  [InputState.THINKING]: {
+    placeholder: () => thinkingMessages[thinkingIndex.value],
+    readonly: true,
+    cssClass: 'thinking',
+    cursor: 'not-allowed'
+  },
+  [InputState.CONTINUE]: {
+    placeholder: '点击以继续...',
+    readonly: true,
+    cssClass: 'continue',
+    cursor: 'pointer'
   }
+  // 未来添加新状态的示例：
+  // [InputState.WAITING]: {
+  //   placeholder: '请稍等...',
+  //   readonly: true,
+  //   cssClass: 'waiting',
+  //   cursor: 'wait'
+  // }
+};
+
+// 状态计算逻辑
+const currentState = computed(() => {
+  if (isStreaming.value) return InputState.THINKING;
+  if (cbs.responseItems.length > 0) return InputState.CONTINUE;
+  return InputState.IDLE;
 });
+
+// 当前状态配置
+const currentConfig = computed(() => stateConfig[currentState.value]);
+
+// 动态 placeholder
+const placeholder = computed(() => {
+  const config = currentConfig.value;
+  return typeof config.placeholder === 'function' 
+    ? config.placeholder() 
+    : config.placeholder;
+});
+
+// 状态变化监听器（为未来扩展预留）
+watch(currentState, (newState: InputState, oldState: InputState) => {
+  // 可以在这里添加状态变化时的副作用
+  // 例如：播放声音、发送事件、记录日志等
+  if (newState === InputState.THINKING && oldState === InputState.IDLE) {
+    // 开始思考时的处理
+  }
+  if (newState === InputState.CONTINUE && oldState === InputState.THINKING) {
+    // 从思考转为继续状态的处理
+  }
+  if (newState === InputState.IDLE) {
+    // 返回空闲状态的处理
+  }
+}, { immediate: false });
 
 async function sendMessage() {
   const userMessage = inputMessage.value.trim();
-  if (userMessage && !isStreaming.value && !hasResponseItems.value) {
+  if (userMessage && currentState.value === InputState.IDLE) {
     // 设置发送状态
     startStreaming();
     // 立即清空输入框，这样 placeholder 就能显示
@@ -71,7 +131,7 @@ async function sendMessage() {
 }
 
 function preventSendWhenThinking(event: KeyboardEvent) {
-  if (isStreaming.value || hasResponseItems.value) {
+  if (currentState.value !== InputState.IDLE) {
     event.preventDefault();
     event.stopPropagation();
   }
