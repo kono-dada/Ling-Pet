@@ -217,7 +217,7 @@ function parseAIMessage(content: string): ParsedAIMessage[] {
         result.push({
           chinese: parts[0].trim(),
           japanese: parts[1].trim(),
-          emotion: isEmotionName(emotion) ? emotion : '正常'
+          emotion: isEmotionName(emotion) ? emotion as EmotionName : '正常' as EmotionName
         });
       } else {
         result.push({
