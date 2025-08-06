@@ -53,18 +53,23 @@ export function useAIService() {
         temperature: ac.temperature,
         max_tokens: ac.maxTokens,
         stream: true,
+        stream_options: { include_usage: true }
       });
 
       let buffer = '';
+      let usage;
 
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content || '';
         total += content;
         buffer += content;
+        if (chunk.usage) usage = chunk.usage;
 
         // 调用回调函数处理chunk，返回处理后的buffer
         buffer = await onChunk(content, buffer);
       }
+      console.log('流式处理完成，累计tokens:', usage?.completion_tokens);
+      console.log('流式处理完成，累计prompt tokens:', usage?.prompt_tokens);
 
       return { response: total, success: true };
     } catch (error: any) {
