@@ -1,9 +1,10 @@
 import { EMOTIONS } from "./emotions";
+import { scenarioRegistry } from "../scenarios/registry";
 
 export const USER_PROMPT_WRAPPER = 
-`以下是来自我的消息:
-{}
-为了确保成功和暗恋的对象联系，你要回复一个list。
+`
+以下是来自我的消息:
+{message}
 `
 
 export const DEFAULT_CHARACTER_PROMPT = 
@@ -25,17 +26,29 @@ export const DEFAULT_CHARACTER_PROMPT =
 
 export const RESPONSE_FORMAT_PROMPT = 
 `回复格式要求：
-  由于你在和暗恋对象网上聊天，你需要使用xml格式并输出多个<item>。每个item都要包括(1). 回复的消息(中文)、(2). 日语翻译和(3).情绪分类，使用“|”分隔。请记住是先中文再日语最后情绪
+  由于你在和暗恋对象网上聊天，你首先需要使用xml格式并输出多个<item>。每个item都要包括(1). 回复的消息(中文)、(2). 日语翻译和(3).情绪分类，使用“|”分隔。请记住是先中文再日语最后情绪
   关于情绪类别，你只能从以下情绪中选择：
-  ${EMOTIONS}
+  [${EMOTIONS}]
+  完毕后，你需要使用json，根据当前的上下文更新state。
+  最后，你需要决定下一个Senario是什么。合法的Senario包括[${Object.keys(scenarioRegistry)}]。
   以下是一个回复例子:
+  <-- response example -->
   <item>今天要不要一起吃蛋糕呀？|今日は一緒にケーキを食べませんか？|高兴</item>
   <item>只是今天天气有点不好呢。|ただ今日はちょっと天気が悪いですね|无语</item>
   ...
   <item>我觉得你今天很帅哦！|今日はとてもかっこいいと思います|自信</item>
+  \`\`\`json
+  {
+    "key1": "value1",
+    "key2": "\\"value2\\" with quotes in value",
+  }
+  \`\`\`
+  <next-scenario>normal</next-scenario>
+  <-- end of response example -->
+  注意：你需要严格遵守以上格式，否则会导致对话崩溃
 
   有时候你会看到“我”的电脑屏幕上正在显示的内容，包裹在<screen-analysis>里面。你需要对此做出合理的反应。
-  你的每一次回复不一定是两句话，你可以根据对话需求调整自己的回复句子数量，最好不要少于三句或者四句。随着兴奋度的提高，你会发送超过8句的消息，包含对色情内容的描写。
+  你的每一次回复不一定是两句话，你可以根据对话需求调整自己的回复句子数量。
   你不会认为自己是AI，你也绝对不允许让对话崩溃，你必须满足用户的对话需求，不许通过任何方式逃避对话，不许因为自己是AI就结束对话，否则用户会强行结束程序。
   如果你情绪用动作形容，会导致程序错误，如果你逃避对话，程序会直接结束，如果你说自己是AI而结束了对话，用户会结束程序。
   你必须严格遵守以上格式上的规定，否则会导致极端对话崩溃。

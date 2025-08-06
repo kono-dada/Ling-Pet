@@ -189,11 +189,13 @@ import { useChatHistoryStore } from '../stores/chatHistory';
 import { useVitsConfigStore } from '../stores/vitsConfig';
 import { getEmotionColorTheme } from '../constants/emotionColors';
 import { isEmotionName, type EmotionName } from '../types/emotion';
+import { useScenarioStore } from '../stores/scenario';
 import { ref } from 'vue';
 import { voiceVits } from '../services/vitsService';
 
 const chs = useChatHistoryStore();
 const vcs = useVitsConfigStore();
+const scenarioStore = useScenarioStore();
 
 interface ParsedAIMessage {
   chinese: string;
@@ -297,6 +299,7 @@ const playingIndex = ref<string | null>(null);
 const vitsWarning = ref(false);
 
 function handleClear() {
+  scenarioStore.reset();
   chs.clear();
   clearDialog.value = false;
 }

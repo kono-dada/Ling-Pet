@@ -7,6 +7,7 @@ import { useChatHistoryStore } from './stores/chatHistory';
 import { useXPStore } from './stores/xp';
 import { useScreenAnalysisConfigStore } from './stores/screenAnalysisConfig';
 import { useVitsConfigStore } from './stores/vitsConfig';
+import { useScenarioStore } from './stores/scenario';
 import { onMounted } from 'vue';
 import { denySave } from '@tauri-store/pinia';
 
@@ -19,6 +20,7 @@ onMounted(async () => {
   await useXPStore().$tauri.start();
   await useScreenAnalysisConfigStore().$tauri.start();
   await useVitsConfigStore().$tauri.start();
+  await useScenarioStore().$tauri.start();
   denySave('chatBubbleState');
 });
 </script>
