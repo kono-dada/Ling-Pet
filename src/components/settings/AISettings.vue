@@ -58,13 +58,13 @@
         <div class="mb-8">
           <div class="d-flex justify-space-between align-center mb-4">
             <h2 class="text-h6 font-weight-bold">系统设置</h2>
-            <v-btn variant="text" size="small" @click="ac.characterPrompt = DEFAULT_CHARACTER_PROMPT;">
+            <v-btn variant="text" size="small" @click="ac.systemPrompt = DEFAULT_CHARACTER_PROMPT;">
               重置为默认
             </v-btn>
           </div>
           <v-divider class="mb-6"></v-divider>
 
-          <v-textarea v-model="ac.characterPrompt" label="系统提示词" variant="outlined" rows="6" auto-grow
+          <v-textarea v-model="ac.systemPrompt" label="系统提示词" variant="outlined" rows="6" auto-grow
             hint="定义宠物的性格和行为规则" persistent-hint></v-textarea>
         </div>
 

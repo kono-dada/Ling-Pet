@@ -10,7 +10,7 @@ export const useAIConfigStore = defineStore(
     const model = ref('deepseek-chat') // 默认模型
     const temperature = ref(0.7) // 默认温度
     const maxTokens = ref(2000) // 默认最大令牌数
-    const characterPrompt = ref(DEFAULT_CHARACTER_PROMPT) // 默认系统提示为空
+    const systemPrompt = ref(DEFAULT_CHARACTER_PROMPT) // 默认系统提示为空
     const historyMaxLength = ref(100) // 默认历史记录最大长度
 
     return {
@@ -19,7 +19,7 @@ export const useAIConfigStore = defineStore(
       model,
       temperature,
       maxTokens,
-      characterPrompt,
+      systemPrompt,
       historyMaxLength,
     }
   },
