@@ -41,6 +41,10 @@
                     <ScreenAnalysisSettings />
                 </v-window-item>
 
+                <v-window-item value="xp" :transition="false">
+                    <XPSettings />
+                </v-window-item>
+
                 <v-window-item value="about" :transition="false">
                     <AboutSettings />
                 </v-window-item>
@@ -54,6 +58,7 @@ import { ref, watch, computed } from 'vue';
 import AppearanceSettings from '../components/settings/AppearanceSettings.vue';
 import AISettings from '../components/settings/AISettings.vue';
 import VitsSettings from '../components/settings/VitsSettings.vue';
+import XPSettings from '../components/settings/XPSettings.vue';
 import AboutSettings from '../components/settings/AboutSettings.vue';
 import ScreenAnalysisSettings from '../components/settings/ScreenAnalysisSettings.vue';
 
@@ -77,6 +82,11 @@ const SETTINGS_TABS = [
     id: 'screenAnalysis',
     name: '屏幕分析',
     icon: 'screenAnalysis',
+  },
+  {
+    id: 'xp',
+    name: 'XP设置',
+    icon: 'xp',
   },
   {
     id: 'about',

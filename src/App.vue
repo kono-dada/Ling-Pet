@@ -4,6 +4,7 @@ import { usePetStateStore } from './stores/petState';
 import { useChatBubbleStateStore } from './stores/chatBubbleState';
 import { useAIConfigStore } from './stores/aiConfig';
 import { useChatHistoryStore } from './stores/chatHistory';
+import { useXPStore } from './stores/xp';
 import { useScreenAnalysisConfigStore } from './stores/screenAnalysisConfig';
 import { useVitsConfigStore } from './stores/vitsConfig';
 import { useScenarioStore } from './stores/scenario';
@@ -16,6 +17,7 @@ onMounted(async () => {
   await useChatBubbleStateStore().$tauri.start();
   await useAIConfigStore().$tauri.start();
   await useChatHistoryStore().$tauri.start();
+  await useXPStore().$tauri.start();
   await useScreenAnalysisConfigStore().$tauri.start();
   await useVitsConfigStore().$tauri.start();
   await useScenarioStore().$tauri.start();
