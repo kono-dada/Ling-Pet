@@ -117,7 +117,7 @@ const INSTALL_MANIFEST = {
       'sbv2_api_mac_arm64.zip': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/sbv2_api_mac_arm64.zip'
     },
     windows: {
-      'sbv2_api_win_x64.zip': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/binary/windows/sbv2_api_win_x64.zip'
+      'sbv2_api_win_x64.zip': 'https://www.modelscope.cn/models/konodada/PET-sbv2/resolve/master/sbv2_api_win_x64.zip'
     }
   }
 } as const

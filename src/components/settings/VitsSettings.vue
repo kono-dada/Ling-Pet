@@ -71,7 +71,7 @@
                 block
                 class="mb-2"
               >
-                {{ starting ? '启动中…' : '启动本地语音服务' }}
+                {{ starting ? '启动中…' : '启动本地语音服务（启动成功后可能还要等待一会）' }}
               </v-btn>
               <v-btn
                 color="primary"
@@ -176,6 +176,7 @@ async function testConnection() {
       message: 'VITS服务连接成功！'
     };
   } catch (error) {
+    console.error('测试连接失败:', error);
     testResult.value = {
       success: false,
       message: `连接失败：${error instanceof Error ? error.message : '未知错误'}`
