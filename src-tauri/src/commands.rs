@@ -1,9 +1,68 @@
+use std::path::PathBuf;
+use std::process::{Child, Command, Stdio};
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt; // for creation_flags
+use std::sync::Mutex;
 use tauri::Manager;
+use tauri::State;
 use tauri_plugin_opener::OpenerExt;
 
+// Global, app-managed process manager for sbv2_api to keep it unique across all webviews/windows
+pub struct Sbv2Manager {
+    child: Mutex<Option<Child>>,
+}
+
+impl Sbv2Manager {
+    pub fn new() -> Self {
+        Self {
+            child: Mutex::new(None),
+        }
+    }
+
+    fn is_running_inner(child: &mut Option<Child>) -> bool {
+        if let Some(c) = child.as_mut() {
+            match c.try_wait() {
+                Ok(Some(_status)) => {
+                    // Process has exited
+                    *child = None;
+                    false
+                }
+                Ok(None) => true,
+                Err(_) => {
+                    // On error, assume not running and clear
+                    *child = None;
+                    false
+                }
+            }
+        } else {
+            false
+        }
+    }
+}
+
+impl Drop for Sbv2Manager {
+    fn drop(&mut self) {
+        if let Ok(mut guard) = self.child.lock() {
+            if let Some(mut child) = guard.take() {
+                let _ = child.kill();
+                let _ = child.wait();
+            }
+        }
+    }
+}
+
 #[tauri::command]
-pub async fn quit_app(app: tauri::AppHandle) {
+pub fn quit_app(app: tauri::AppHandle) -> Result<(), String> {
+    // Best-effort stop before quitting
+    let state: State<Sbv2Manager> = app.state();
+    if let Ok(mut guard) = state.child.lock() {
+        if let Some(mut child) = guard.take() {
+            let _ = child.kill();
+            let _ = child.wait();
+        }
+    }
     app.exit(0);
+    Ok(())
 }
 
 #[tauri::command]
@@ -30,4 +89,91 @@ pub async fn open_data_folder(app: tauri::AppHandle) -> Result<(), String> {
         .expect("Failed to reveal item in directory");
 
     Ok(())
+}
+
+#[tauri::command]
+pub async fn sbv2_start(state: State<'_, Sbv2Manager>, install_path: String) -> Result<(), String> {
+    let mut guard = state
+        .child
+        .lock()
+        .map_err(|_| "failed to lock process state".to_string())?;
+
+    if Sbv2Manager::is_running_inner(&mut guard) {
+        return Ok(());
+    }
+
+    let install_dir = PathBuf::from(&install_path);
+    if !install_dir.is_dir() {
+        return Err("invalid install path".into());
+    }
+
+    // Determine executable name by target OS
+    #[cfg(target_os = "windows")]
+    let exe_name = "sbv2_api.exe";
+    #[cfg(not(target_os = "windows"))]
+    let exe_name = "sbv2_api";
+
+    let exec_path = install_dir.join(exe_name);
+    if !exec_path.exists() {
+        return Err(format!(
+            "sbv2 executable not found at {}",
+            exec_path.display()
+        ));
+    }
+
+    let mut cmd = Command::new(&exec_path);
+    cmd.current_dir(&install_dir)
+        .env("RUST_LOG", "info")
+        .env("BERT_MODEL_PATH", "deberta.onnx")
+        .env("MODELS_PATH", ".")
+        .env("TOKENIZER_PATH", "tokenizer.json")
+        .env("ADDR", "localhost:23456")
+        .env("HOLDER_MAX_LOADED_MODELS", "20")
+        .env("AGPL_DICT_PATH", "all.bin")
+        // keep stdio quiet but attached so we can kill properly
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+
+    // On Windows, prevent a console window from flashing when launching the child
+    // 0x08000000 = CREATE_NO_WINDOW
+    #[cfg(target_os = "windows")]
+    {
+        cmd.creation_flags(0x08000000);
+    }
+
+    let child = cmd.spawn().map_err(|e| format!("spawn failed: {}", e))?;
+    *guard = Some(child);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn sbv2_stop(state: State<'_, Sbv2Manager>) -> Result<(), String> {
+    let mut guard = state
+        .child
+        .lock()
+        .map_err(|_| "failed to lock process state".to_string())?;
+    if let Some(mut child) = guard.take() {
+        // Ignore errors to be resilient
+        let _ = child.kill();
+        let _ = child.wait();
+    }
+    Ok(())
+}
+
+#[derive(serde::Serialize, Default)]
+pub struct Sbv2Status {
+    running: bool,
+    pid: Option<u32>,
+}
+
+#[tauri::command]
+pub async fn sbv2_status(state: State<'_, Sbv2Manager>) -> Result<Sbv2Status, String> {
+    let mut guard = state
+        .child
+        .lock()
+        .map_err(|_| "failed to lock process state".to_string())?;
+    let running = Sbv2Manager::is_running_inner(&mut guard);
+    let pid = guard.as_ref().map(|c| c.id());
+    Ok(Sbv2Status { running, pid })
 }

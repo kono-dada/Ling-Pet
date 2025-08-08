@@ -8,6 +8,7 @@ use commands::*;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+    .manage(Sbv2Manager::new())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
@@ -23,7 +24,13 @@ pub fn run() {
         .plugin(tauri_plugin_pinia::init())
         .plugin(tauri_plugin_screenshots::init())
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![quit_app, open_data_folder])
+        .invoke_handler(tauri::generate_handler![
+            quit_app,
+            open_data_folder,
+            sbv2_start,
+            sbv2_stop,
+            sbv2_status
+        ])
         .setup(|app| {
             let main_window = app.get_webview_window("main").unwrap();
             // 设置平台特定配置

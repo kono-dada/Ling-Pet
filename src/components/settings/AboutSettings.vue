@@ -83,6 +83,7 @@ onMounted(async () => {
 
 // Quit the application
 async function quitApp() {
+  // 后端 quit_app 会优雅停止 sbv2
   await invoke('quit_app')
 }
 
