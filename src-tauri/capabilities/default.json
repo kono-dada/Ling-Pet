@@ -24,6 +24,7 @@
     "core:window:allow-set-size",
     "core:window:allow-show",
     "core:window:allow-set-focus",
+    "core:window:allow-destroy",
     "log:allow-log",
     "log:default",
     "core:webview:allow-create-webview-window",
@@ -31,6 +32,10 @@
     "core:window:allow-set-always-on-top",
     "core:window:allow-close",
     "screenshots:default",
+    "os:allow-locale",
+    "os:allow-hostname",
+    "os:default",
+    "dialog:default",
     "fs:default",
     {
       "identifier": "fs:read-files",
@@ -64,6 +69,54 @@
         },
         {
           "url": "http://*:*"
+        }
+      ]
+    },
+    "shell:allow-execute",
+    "shell:allow-spawn",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "exec-sh",
+          "cmd": "sh",
+          "args": [
+            "-c",
+            {
+              "validator": ".+"
+            }
+          ]
+        },
+        {
+          "name": "exec-cmd",
+          "cmd": "cmd",
+          "args": [
+            "/C",
+            {
+              "validator": ".+"
+            }
+          ]
+        },
+        {
+          "name": "exec-powershell",
+          "cmd": "powershell",
+          "args": [
+            "-NoProfile",
+            "-Command",
+            {
+              "validator": ".+"
+            }
+          ]
+        },
+        {
+          "name": "chmod",
+          "cmd": "chmod",
+          "args": [
+            "+x",
+            {
+              "validator": ".+"
+            }
+          ]
         }
       ]
     }

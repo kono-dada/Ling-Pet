@@ -8,6 +8,7 @@ import { useScreenAnalysisConfigStore } from './stores/screenAnalysisConfig';
 import { useVitsConfigStore } from './stores/vitsConfig';
 import { onMounted } from 'vue';
 import { denySave } from '@tauri-store/pinia';
+import { startSbv2 } from './services/sbv2Process';
 
 onMounted(async () => {
   await useAppearanceConfigStore().$tauri.start();
@@ -16,7 +17,11 @@ onMounted(async () => {
   await useAIConfigStore().$tauri.start();
   await useChatHistoryStore().$tauri.start();
   await useScreenAnalysisConfigStore().$tauri.start();
-  await useVitsConfigStore().$tauri.start();
+  const vitsConfig = useVitsConfigStore();
+  await vitsConfig.$tauri.start();
+  if (vitsConfig.autoStartSbv2) {
+    await startSbv2(vitsConfig.installPath);
+  }
   denySave('chatBubbleState');
 });
 </script>
@@ -40,6 +45,7 @@ body,
 }
 
 body::-webkit-scrollbar {
-  display: none; /* Windows禁止显示滚动条 */
+  display: none;
+  /* Windows禁止显示滚动条 */
 }
 </style>

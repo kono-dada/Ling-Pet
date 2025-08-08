@@ -1,16 +1,6 @@
 import { useVitsConfigStore } from '../stores/vitsConfig'
 import { fetch } from '@tauri-apps/plugin-http'
 
-export interface VitsOptions {
-  id?: number
-  format?: string
-  lang?: string
-  length?: number
-  noise?: number
-  noisew?: number
-  segmentSize?: number
-}
-
 export async function voiceVits(
   text: string,
 ): Promise<Blob> {
@@ -19,7 +9,8 @@ export async function voiceVits(
   const body = {
     text,
     ident: vitsConfig.ident, // 使用配置中的音色ID
-    // 其他参数可以加进来
+    sdp_ratio: vitsConfig.sdpRatio, // 使用配置中的SDP比率
+    length_scale: vitsConfig.lengthScale, // 使用配置中的长度缩放
   }
 
   const response = await fetch(`${vitsConfig.baseURL}/synthesize`, {

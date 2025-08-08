@@ -1,74 +1,166 @@
 <template>
   <v-container>
     <v-card flat class="pa-2">
-      <v-card-text>
-
-        <div class="mb-8">
-          <h2 class="text-h6 font-weight-bold mb-4">VITS 语音服务</h2>
-          <v-divider class="mb-6"></v-divider>
-
-          <v-alert type="info" variant="tonal" density="compact" class="mb-4">
-            <div class="d-flex align-center">
-              <span class="mr-1">注意，需要先配置好 style-bert-vits2，具体参见<a href="#" @click.prevent="openGitHubLink"
-                  class="text-primary text-decoration-underline" style="cursor: pointer;">
-                  style-bert-vits2
-                </a></span>
-            </div>
-          </v-alert>
-
-          <v-switch v-model="vc.on" label="启用VITS语音合成服务" color="primary" class="mb-4" hint="开启后，宠物的回复将会合成为语音"
-            persistent-hint></v-switch>
-
-          <v-text-field v-model="vc.baseURL" label="VITS API 基础地址" variant="outlined" density="compact" persistent-hint
-            class="mb-4" :disabled="!vc.on" placeholder="http://localhost:23456"></v-text-field>
-          <v-text-field v-model="vc.ident" label="音色ID" variant="outlined" density="compact" persistent-hint
-            :disabled="!vc.on" hint="不同的音色ID对应不同的声音"></v-text-field>
-        </div>
-
-        <v-divider class="my-8"></v-divider>
-
-        <div class="mb-8" :class="{ 'text-disabled': !vc.on }">
-          <h2 class="text-h6 font-weight-bold mb-4">语音参数</h2>
-          <v-divider class="mb-6"></v-divider>
-        </div>
-
-        <v-divider class="my-8"></v-divider>
-
+      <v-card-title class="py-3 d-flex align-center justify-space-between">
         <div>
-          <v-btn :disabled="isTesting || !vc.on || !vc.baseURL" @click="testConnection" color="primary" size="large"
-            block>
-            {{ isTesting ? '测试中...' : '测试连接' }}
-          </v-btn>
+          <div class="text-h6 font-weight-bold">VITS 语音服务</div>
+          <div class="text-caption text-medium-emphasis mt-1">基于 Style-Bert-VITS2 的本地 TTS</div>
+        </div>
+        <v-switch
+          v-model="vc.on"
+          color="primary"
+          hide-details
+          inset
+          :label="vc.on ? '已启用' : '未启用'"
+        />
+      </v-card-title>
+      <v-divider></v-divider>
 
-          <v-alert v-if="testResult" :type="testResult.success ? 'success' : 'error'" :text="testResult.message"
-            variant="tonal" density="compact" class="mt-4" closable @click:close="testResult = null"></v-alert>
+      <v-card-text>
+        <v-alert type="info" variant="tonal" density="compact" class="mb-6">
+          <div class="d-flex align-center">
+            <span class="mr-1">请先正确配置或安装sbv2_api</span>
+          </div>
+        </v-alert>
+
+        <!-- 连接与服务 -->
+        <div :class="{ 'text-disabled': disabled }">
+          <h3 class="text-subtitle-1 font-weight-medium mb-3">连接与服务</h3>
+          <v-row>
+            <v-col cols="12" md="7">
+              <v-text-field
+                v-model="vc.baseURL"
+                label="VITS API 基础地址"
+                variant="outlined"
+                density="compact"
+                class="mb-4"
+                persistent-hint
+                :disabled="disabled"
+                placeholder="http://127.0.0.1:23456"
+              />
+            </v-col>
+            <v-col cols="12" md="5">
+              <v-text-field
+                v-model="vc.ident"
+                label="音色 ID"
+                variant="outlined"
+                density="compact"
+                persistent-hint
+                :disabled="disabled"
+                hint="ID 应与 onnx 模型一致"
+              />
+            </v-col>
+          </v-row>
+
+          <v-row class="align-center">
+            <v-col cols="12" md="6">
+              <v-switch
+                v-model="vc.autoStartSbv2"
+                color="secondary"
+                :disabled="disabled"
+                hide-details
+                label="应用启动时自动启动本地 sbv2_api"
+              />
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-btn
+                color="secondary"
+                variant="tonal"
+                @click="startSbv2Api"
+                :disabled="starting || disabled"
+                block
+                class="mb-2"
+              >
+                {{ starting ? '启动中…' : '启动本地语音服务' }}
+              </v-btn>
+              <v-btn
+                color="primary"
+                @click="testConnection"
+                :disabled="isTesting || disabled || !vc.baseURL"
+                block
+              >
+                {{ isTesting ? '测试中…' : '测试连接' }}
+              </v-btn>
+            </v-col>
+          </v-row>
+
+          <v-alert
+            v-if="testResult"
+            :type="testResult.success ? 'success' : 'error'"
+            :text="testResult.message"
+            variant="tonal"
+            density="compact"
+            class="mt-3"
+            closable
+            @click:close="testResult = null"
+          />
         </div>
 
+        <v-divider class="my-6"></v-divider>
+
+        <!-- 语音参数 -->
+        <div :class="{ 'text-disabled': disabled }">
+          <h3 class="text-subtitle-1 font-weight-medium mb-3">语音参数</h3>
+          <v-row>
+            <v-col cols="12" md="6">
+              <div class="d-flex justify-space-between align-center mb-1">
+                <v-label>SDP Ratio</v-label>
+                <span class="text-primary font-weight-medium">{{ vc.sdpRatio }}</span>
+              </div>
+              <p class="text-caption text-medium-emphasis">数值越大，情感越丰富</p>
+              <v-slider
+                v-model="vc.sdpRatio"
+                :min="0"
+                :max="1"
+                :step="0.1"
+                thumb-label
+                color="orange"
+                :disabled="disabled"
+              />
+            </v-col>
+            <v-col cols="12" md="6">
+              <div class="d-flex justify-space-between align-center mb-1">
+                <v-label>Length Scale</v-label>
+                <span class="text-primary font-weight-medium">{{ vc.lengthScale }}</span>
+              </div>
+              <p class="text-caption text-medium-emphasis">控制语音时长与语速</p>
+              <v-slider
+                v-model="vc.lengthScale"
+                :min="0.1"
+                :max="2.0"
+                :step="0.1"
+                thumb-label
+                color="primary"
+                :disabled="disabled"
+              />
+            </v-col>
+          </v-row>
+        </div>
       </v-card-text>
     </v-card>
+
+    <!-- VITS 安装组件 -->
+    <VitsInstaller class="mt-6" />
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useVitsConfigStore } from '../../stores/vitsConfig';
-import { voiceVits } from '../../services/vitsService';
-import { openUrl } from '@tauri-apps/plugin-opener';
+import { probeSbv2 } from '../../services/sbv2Process';
+import { startSbv2 } from '../../services/sbv2Process';
+import VitsInstaller from './VitsInstaller.vue';
 
 // 测试相关
 const testResult = ref<{ success: boolean; message: string } | null>(null);
 const isTesting = ref(false);
+const starting = ref(false);
 
 const vc = useVitsConfigStore();
+// 使用 plugin-shell，无需事件总线
 
-// 打开GitHub链接
-async function openGitHubLink() {
-  try {
-    await openUrl('https://github.com/litagin02/Style-Bert-VITS2');
-  } catch (error) {
-    console.error('Failed to open link:', error);
-  }
-}
+// 统一禁用态
+const disabled = computed(() => !vc.on)
 
 // 测试连接
 async function testConnection() {
@@ -77,8 +169,7 @@ async function testConnection() {
 
   try {
     // 使用简短的测试文本
-    const testText = "テスト";
-    await voiceVits(testText);
+    await probeSbv2()
 
     testResult.value = {
       success: true,
@@ -93,6 +184,26 @@ async function testConnection() {
     isTesting.value = false;
   }
 }
+
+// 启动本地 sbv2_api 服务，并设置 vc.baseURL
+async function startSbv2Api() {
+  try {
+    starting.value = true
+
+    // 选择可执行文件路径：
+    // macOS: 期待在 installPath 或 installPath 下解压产生 `sbv2_api` 二进制
+    // Windows: 期待产生 `sbv2_api.exe`
+  const base = vc.installPath
+  if (!base) throw new Error('请先完成安装并选择安装目录')
+  await startSbv2(base)
+  testResult.value = { success: true, message: '启动成功！' }
+
+  } catch (e: any) {
+    testResult.value = { success: false, message: `启动失败：${e?.message || e}` }
+  } finally {
+    starting.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -105,4 +216,19 @@ async function testConnection() {
 .text-disabled {
   opacity: 0.6;
 }
+
+.log-box {
+  max-height: 200px;
+  overflow: hidden;
+}
+.log-scroll {
+  max-height: 196px;
+  overflow-y: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+.log-line { color: rgba(0,0,0,.8); }
+:deep(.v-theme--dark) .log-line { color: rgba(255,255,255,.85); }
 </style>

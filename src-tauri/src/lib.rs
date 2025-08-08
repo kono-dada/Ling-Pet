@@ -9,6 +9,7 @@ use commands::*;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
         .plugin(
             tauri_plugin_log::Builder::new()
@@ -21,6 +22,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_pinia::init())
         .plugin(tauri_plugin_screenshots::init())
+        .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![quit_app, open_data_folder])
         .setup(|app| {
             let main_window = app.get_webview_window("main").unwrap();
