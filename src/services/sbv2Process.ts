@@ -4,6 +4,7 @@ import { debug } from '@tauri-apps/plugin-log';
 import { useVitsConfigStore } from '../stores/vitsConfig';
 import { platform } from '@tauri-apps/plugin-os';
 import { Child } from '@tauri-apps/plugin-shell';
+import { path } from '@tauri-apps/api';
 
 let child: Child | null = null;
 
@@ -23,14 +24,20 @@ export async function startSbv2(installPath: string) {// 防止重复启动（�
   if (!installPath) throw new Error('缺少安装路径');
   const os = await platform();
   const name = os === 'windows' ? 'sbv2-win' : 'sbv2-nix';
-
   const command = Command.create(name, [], {
-    cwd: installPath,                 // 关键：动态目录
-    env: { RUST_LOG: 'info' },
-  } as any);
-
+    cwd: await path.normalize(installPath),                 // 关键：动态目录
+    env: { 
+      RUST_LOG: 'info',
+      BERT_MODEL_PATH: 'deberta.onnx',
+      MODELS_PATH: '.',
+      TOKENIZER_PATH: 'tokenizer.json',
+      ADDR: 'localhost:23456',
+      HOLDER_MAX_LOADED_MODELS: '20',
+      AGPL_DICT_PATH: 'all.bin'
+    },
+  });
+  console.log(`sbv2_api 启动命令`, command);
   child = await command.spawn(); // 直接就是 sbv2_api 本体的进程
-  debug(`sbv2_api 启动命令：${command}`)
   debug(`sbv2 pid: ${child.pid}`);
   return true
 }

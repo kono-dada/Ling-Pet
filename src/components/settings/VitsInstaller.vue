@@ -81,6 +81,7 @@ import { useDownloader } from '../../composables/useDownloader';
 import { type as osType } from '@tauri-apps/plugin-os';
 import { unzipSync } from 'fflate';
 import { Command } from '@tauri-apps/plugin-shell';
+import { debug } from '@tauri-apps/plugin-log';
 
 // 类型定义
 type ItemStatus = 'pending' | 'downloading' | 'extracting' | 'done' | 'error' | 'canceled'
@@ -239,6 +240,7 @@ async function downloadOne(item: DownloadItem) {
     const stop = watch(progress, (v) => { item.progress = v ?? null })
     const blob = await download(item.url)
     stop()
+    debug(`下载完成: ${item.name}, ${item.kind}`)
 
     if (item.kind === 'zip') {
       // 先保存 zip，再解压

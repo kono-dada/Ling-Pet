@@ -200,6 +200,7 @@ async function startSbv2Api() {
   testResult.value = { success: true, message: '启动成功！' }
 
   } catch (e: any) {
+    console.error('启动失败:', e);
     testResult.value = { success: false, message: `启动失败：${e?.message || e}` }
   } finally {
     starting.value = false

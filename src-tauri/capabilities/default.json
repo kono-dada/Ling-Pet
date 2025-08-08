@@ -79,8 +79,11 @@
       "allow": [
         {
           "name": "sbv2-win",
-          "cmd": ".\\sbv2_api.exe",
-          "args": true
+          "cmd": "cmd",
+          "args": [
+            "/C",
+            "sbv2_api.exe"
+          ]
         },
         {
           "name": "sbv2-nix",
