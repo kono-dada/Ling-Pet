@@ -2,42 +2,36 @@ import { Command } from '@tauri-apps/plugin-shell'
 import { voiceVits } from './vitsService'
 import { debug } from '@tauri-apps/plugin-log';
 import { useVitsConfigStore } from '../stores/vitsConfig';
+import { platform } from '@tauri-apps/plugin-os';
+import { Child } from '@tauri-apps/plugin-shell';
+
+let child: Child | null = null;
 
 export async function startSbv2(installPath: string) {// 防止重复启动（内存 + 探活）
-const vc = useVitsConfigStore();
+  const vc = useVitsConfigStore();
   debug('准备启动sbv2')
   vc.baseURL = 'http://localhost:23456'
   try {
-    await probeSbv2()
+    if (!child) {
+      await probeSbv2()
+    }
     debug('sbv2_api 已在运行，跳过启动');
     return true
   } catch (error) {
     debug('sbv2_api 探活失败，准备启动');
   }
-  if (!installPath) throw new Error('缺少安装路径')
+  if (!installPath) throw new Error('缺少安装路径');
+  const os = await platform();
+  const name = os === 'windows' ? 'sbv2-win' : 'sbv2-nix';
 
-  // 组装不同平台命令
-  const isWindows = navigator.userAgent.includes('Windows')
-  const exe = isWindows ? 'sbv2_api.exe' : 'sbv2_api'
-  const exePath = `${installPath.replace(/[\\/]+$/, '')}/${exe}`
+  const command = Command.create(name, [], {
+    cwd: installPath,                 // 关键：动态目录
+    env: { RUST_LOG: 'info' },
+  } as any);
 
-  // 使用 shell 插件，统一处理 stdout/stderr、退出事件
-  let command: any
-  if (isWindows) {
-    // cmd /C "<exePath>"
-    command = Command.create('exec-cmd', ['/C', `"${exePath}"`], {
-      cwd: installPath,
-      env: { RUST_LOG: 'info' },
-    } as any)
-  } else {
-    // sh -c 'exec "/path/sbv2_api"' 确保 shell 被替换，便于 kill
-    command = Command.create('exec-sh', ['-c', `exec "${exePath}"`], {
-      cwd: installPath,
-      env: { RUST_LOG: 'info' },
-    } as any)
-  }
-  await command.spawn()
+  child = await command.spawn(); // 直接就是 sbv2_api 本体的进程
   debug(`sbv2_api 启动命令：${command}`)
+  debug(`sbv2 pid: ${child.pid}`);
   return true
 }
 

@@ -78,35 +78,14 @@
       "identifier": "shell:allow-spawn",
       "allow": [
         {
-          "name": "exec-sh",
-          "cmd": "sh",
-          "args": [
-            "-c",
-            {
-              "validator": ".+"
-            }
-          ]
+          "name": "sbv2-win",
+          "cmd": ".\\sbv2_api.exe",
+          "args": true
         },
         {
-          "name": "exec-cmd",
-          "cmd": "cmd",
-          "args": [
-            "/C",
-            {
-              "validator": ".+"
-            }
-          ]
-        },
-        {
-          "name": "exec-powershell",
-          "cmd": "powershell",
-          "args": [
-            "-NoProfile",
-            "-Command",
-            {
-              "validator": ".+"
-            }
-          ]
+          "name": "sbv2-nix",
+          "cmd": "./sbv2_api",
+          "args": true
         },
         {
           "name": "chmod",
