@@ -6,12 +6,13 @@ export const useAppearanceConfigStore = defineStore(
   () => {
     const petSize = ref(200) // Default size in pixels
     const opacity = ref(1) // Default transparency
-    const showDecorations = ref(true) // Default to showing decorations
+  // 当前装饰类型: 'none' | 'circle' | 未来扩展其它名字
+  const decorationType = ref<'none' | 'circle'>('circle')
 
     return {
       petSize,
       opacity,
-      showDecorations,
+  decorationType,
     }
   },
   {

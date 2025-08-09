@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref, watchEffect, nextTick, onUnmounted, } from 'vue';
+import { onMounted, ref, watchEffect, onUnmounted, } from 'vue';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { LogicalSize } from '@tauri-apps/api/dpi';
 import Avatar from '../components/main/Avatar.vue';
 import Input from '../components/main/Input.vue';
 import SettingButton from '../components/main/SettingButton.vue';
 import ChatHistoryButton from '../components/main/ChatHistoryButton.vue';
-import decorations from '../components/main/Decorations.vue';
+import DecorationsHost from '../components/main/decorations/DecorationsHost.vue';
 import { useAppearanceConfigStore } from '../stores/appearanceConfig';
 import { useChatBubbleStateStore } from '../stores/chatBubbleState';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
@@ -44,12 +44,6 @@ onMounted(async () => {
   await setWindowToSquare();
   stopPetSizeWatcher = watchEffect(async () => {  // 监听 petSize 的变化， 确保窗口大小同步更新
     await window.setSize(new LogicalSize(ac.petSize, ac.petSize + 30));
-    // 触发装饰元素的重新渲染，否则位置会出问题
-    if (ac.showDecorations) {
-      ac.showDecorations = false;
-      await nextTick();
-      ac.showDecorations = true;
-    }
   });
   // 管理聊天气泡的打开和关闭
   stopChatBubbleWatcher = watchEffect(async () => {
@@ -71,7 +65,8 @@ onUnmounted(() => {
 
 <template>
   <div class="main-wrapper" :style="{ opacity: ac.opacity }" @wheel.prevent> <!-- 防止滚轮事件导致滚动 -->
-    <decorations />
+  <!-- 装饰组件调度 -->
+  <DecorationsHost />
     <ChatHistoryButton class="button" />
     <Avatar ref="avatarRef" />
     <SettingButton class="button" />

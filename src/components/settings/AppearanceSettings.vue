@@ -25,16 +25,20 @@
               color="orange"></v-slider>
           </div>
 
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <v-label>显示光圈装饰</v-label>
+          <div class="mb-6">
+            <div class="d-flex justify-space-between align-center mb-1">
+              <v-label>装饰效果</v-label>
+              <span class="text-primary font-weight-medium">{{ decorationLabel }}</span>
             </div>
-            <v-switch
-              v-model="ac.showDecorations"
-              color="success"
-              inset
+            <v-select
+              v-model="ac.decorationType"
+              :items="decorationOptions"
+              item-title="label"
+              item-value="value"
+              density="comfortable"
+              variant="outlined"
               hide-details
-            ></v-switch>
+            />
           </div>
         </div>
 
@@ -55,6 +59,17 @@ const MAX_OPACITY = 1.0;
 
 // State management
 const ac = useAppearanceConfigStore();
+
+// 装饰选项（未来可在此扩展）
+const decorationOptions = [
+  { label: '无', value: 'none' },
+  { label: '光圈 (Circle)', value: 'circle' },
+];
+
+const decorationLabel = computed(() => {
+  const found = decorationOptions.find(o => o.value === ac.decorationType);
+  return found ? found.label : '无';
+});
 
 // Computed property to format the opacity value for display
 const formattedOpacity = computed(() => `${Math.round(ac.opacity * 100)}%`);
