@@ -180,11 +180,5 @@ watch(active, v => {
   }
 }
 
-/* 减少动态: 遵循用户系统的动态减少设置 */
-@media (prefers-reduced-motion: reduce) {
-  .star {
-    animation: none;
-    opacity: 0.4;
-  }
-}
+/* 强制开启动画：忽略系统的减少动态设置 */
 </style>
