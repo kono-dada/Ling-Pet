@@ -19,7 +19,7 @@
       <v-card-text>
         <v-alert type="info" variant="tonal" density="compact" class="mb-6">
           <div class="d-flex align-center">
-            <span class="mr-1">请先正确配置或安装sbv2_api</span>
+            <span class="mr-1">请先正确配置或安装sbv2_api（在页面底部）</span>
           </div>
         </v-alert>
 
