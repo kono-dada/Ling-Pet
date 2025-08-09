@@ -64,6 +64,7 @@ const ac = useAppearanceConfigStore();
 const decorationOptions = [
   { label: '无', value: 'none' },
   { label: '光圈 (Circle)', value: 'circle' },
+  { label: '飘落星光 (Falling Stars)', value: 'fallingStars' },
 ];
 
 const decorationLabel = computed(() => {
