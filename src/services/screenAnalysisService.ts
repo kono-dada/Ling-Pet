@@ -3,13 +3,39 @@ import type { AIMessage } from '../types/ai';
 import type { ChatCompletion } from 'openai/resources';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import {
-  getScreenshotableMonitors,
-  getMonitorScreenshot,
+  getScreenshotableWindows,
+  getWindowScreenshot,
+  clearScreenshots
 } from "tauri-plugin-screenshots-api";
 import { readFile } from "@tauri-apps/plugin-fs";
 import { BaseDirectory } from "@tauri-apps/plugin-fs";
 import { debug } from '@tauri-apps/plugin-log';
 import { OpenAI } from 'openai';
+
+async function resizeImage(base64: string, targetHeight: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const aspectRatio = img.width / img.height;
+      const targetWidth = targetHeight * aspectRatio;
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Failed to get canvas 2D context'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+      const resizedBase64 = canvas.toDataURL('image/png');
+      resolve(resizedBase64);
+    };
+    img.onerror = () => {
+      reject(new Error('Failed to load image for resizing'));
+    };
+    img.src = base64;
+  });
+}
 
 export function useScreenAnalysisService() {
   const sgc = useScreenAnalysisConfigStore();
@@ -35,12 +61,13 @@ export function useScreenAnalysisService() {
   }
 
   function toBase64(array: Uint8Array): Promise<string> {
-    const blob = new Blob([array]);
+    // 复制成使用 ArrayBuffer 的视图，避免 SharedArrayBuffer 类型不匹配
+    const bytes = new Uint8Array(array);
+    const blob = new Blob([bytes.buffer]);
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const dataUrl = reader.result as string;
-        // 去掉前缀 data:...base64,
         resolve(dataUrl.split(',')[1]);
       };
       reader.onerror = reject;
@@ -49,45 +76,76 @@ export function useScreenAnalysisService() {
   }
 
   async function screenAnalysis(): Promise<string> {
-    try {
-      const monitors = await getScreenshotableMonitors();
-      const path = await getMonitorScreenshot(monitors[0].id);
-      debug(`获取屏幕截图路径: ${path}`);
-      // 读取文件二进制
-      const binary = await readFile(path, { baseDir: BaseDirectory.AppCache });
-      // 将 Uint8Array 转为 base64
-      const base64 = await toBase64(binary);
+    const windows = await getScreenshotableWindows();
+    const usedWindowIds: number[] = [];
+    const uriList: (string|null)[] = await Promise.all(
+      windows.map(async (win) => {
+        const start = Date.now();
+        const path = await getWindowScreenshot(win.id);
+        const duration = Date.now() - start;
+        debug(`getWindowScreenshot 用时: ${duration}ms`);
+        debug(`获取窗口截图路径: ${path}`);
+        const binary = await readFile(path, { baseDir: BaseDirectory.AppCache });
+        const tempBase64 = await toBase64(binary);
+        const tempDataUri = `data:image/png;base64,${tempBase64}`;
 
-      // 搭配 data URI 使用
-      const dataUri = `data:image/png;base64,${base64}`;
-      const messages: AIMessage[] = [
-        {
-          role: 'system',
-          content: sgc.systemPrompt
-        },
-        {
-          role: 'user',
-          content: [
-            {
-              "type": "image_url",
-              "image_url": {
-                "url": dataUri,
-                "detail": sgc.imageDetail
-              }
-            },
-          ]
+        // 获取图片尺寸
+        const img = new Image();
+        img.src = tempDataUri;
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+        const w = img.width;
+        const h = img.height;
+        const pixelCount = w * h;
+        const aspectRatio = w / h;
+        const aspectRatioInv = h / w;
+
+        // 过滤条件
+        if (
+          pixelCount < 40000 ||
+          aspectRatio > 10 ||
+          aspectRatioInv > 10
+        ) {
+          debug(`过滤掉窗口截图: id=${win.id}, 尺寸=${w}x${h}, 像素=${pixelCount}, 宽高比=${aspectRatio}`);
+          return null;
         }
-      ];
-      const response = await callAI(messages);
-      const aiMessage = response.choices[0]?.message;
-      if (!aiMessage || !aiMessage.content || typeof aiMessage.content !== 'string') {
-        return 'AI服务未返回有效响应';
+
+        usedWindowIds.push(win.id);
+        const resizedDataUri = await resizeImage(tempDataUri, 480);
+        return resizedDataUri;
+      })
+    );
+    // 过滤掉 null
+    const filteredUriList = uriList.filter((uri): uri is string => !!uri);
+    clearScreenshots()
+
+    debug(`最终实际使用到的窗口截图id: ${JSON.stringify(usedWindowIds)}`);
+
+    // 将 uriList 中的每个 dataUri 作为 content 的一个元素
+    const messages: AIMessage[] = [
+      {
+      role: 'system',
+      content: sgc.systemPrompt
+      },
+      {
+      role: 'user',
+      content: filteredUriList.map((dataUri) => ({
+        type: "image_url",
+        image_url: {
+        url: dataUri,
+        detail: sgc.imageDetail
+        }
+      }))
       }
-      return aiMessage.content;
-    } catch (error) {
-      console.error(error);
-      return '';
+    ];
+    const response = await callAI(messages);
+    const aiMessage = response.choices[0]?.message;
+    if (!aiMessage || !aiMessage.content || typeof aiMessage.content !== 'string') {
+      return 'AI服务未返回有效响应';
     }
+    return aiMessage.content;
   }
 
   async function testScreenAnalysis(): Promise<{ success: boolean; message: string }> {

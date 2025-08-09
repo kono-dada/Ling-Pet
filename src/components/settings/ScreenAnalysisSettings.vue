@@ -50,12 +50,6 @@
             <v-select v-model="sc.imageDetail" :items="imageDetailOptions" variant="outlined" density="compact"
               class="mt-2"></v-select>
           </div>
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <v-label>开启思考（可能会变得很慢）</v-label>
-            </div>
-            <v-switch v-model="sc.enableThinking" color="success" inset hide-details></v-switch>
-          </div>
         </div>
 
         <v-divider class="my-8"></v-divider>
