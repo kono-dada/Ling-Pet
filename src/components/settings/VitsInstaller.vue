@@ -79,7 +79,8 @@ import { exists, mkdir, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useDownloader } from '../../composables/useDownloader';
 import { type as osType } from '@tauri-apps/plugin-os';
-import { unzipSync } from 'fflate';
+// 保留 fflate 仅用于小文件（若未来需要），大文件改为系统原生命令解压
+// import { unzipSync } from 'fflate';
 import { Command } from '@tauri-apps/plugin-shell';
 import { debug } from '@tauri-apps/plugin-log';
 
@@ -223,7 +224,7 @@ function openItemUrl(item: DownloadItem) {
 async function downloadOne(item: DownloadItem) {
   item.status = 'downloading'
   item.error = undefined
-  const { progress, download, cancel } = useDownloader()
+  const { progress, downloadToFile, cancel } = useDownloader()
   item.cancel = () => cancel()
 
   try {
@@ -236,38 +237,26 @@ async function downloadOne(item: DownloadItem) {
       return
     }
 
-    // 绑定进度
+    // 绑定进度并直接写入磁盘
     const stop = watch(progress, (v) => { item.progress = v ?? null })
-    const blob = await download(item.url)
+    await downloadToFile(item.url, fullPath)
     stop()
     debug(`下载完成: ${item.name}, ${item.kind}`)
 
     if (item.kind === 'zip') {
-      // 先保存 zip，再解压
-      const zipBuf = await blob.arrayBuffer()
-      await writeFile(fullPath, new Uint8Array(zipBuf))
       item.status = 'extracting'
       item.progress = null
-      const extracted = await extractZipToDir(new Uint8Array(zipBuf), vc.installPath)
-      // macOS / Linux: 给予可执行权限
+      await extractZipFile(fullPath, vc.installPath)
+      // macOS/Linux: 给予可执行权限
       if (currentOs === 'macos' || currentOs === 'linux') {
-        const exe = extracted.find(p => p.split('/').pop() === 'sbv2_api')
-        if (exe) {
-          try {
-            await Command.create('chmod', ['+x', exe]).spawn()
-          } catch (err) {
-            console.warn('设置可执行权限失败，请手动 chmod +x：', exe, err)
-          }
+        const exePath = joinPath(vc.installPath, 'sbv2_api')
+        try { await Command.create('chmod', ['+x', exePath]).spawn() } catch (err) {
+          console.warn('设置可执行权限失败，请手动 chmod +x：', exePath, err)
         }
       }
-      item.status = 'done'
-      item.progress = 100
-    } else {
-      const buf = await blob.arrayBuffer()
-      await writeFile(fullPath, new Uint8Array(buf))
-      item.status = 'done'
-      item.progress = 100
     }
+    item.status = 'done'
+    item.progress = 100
   } catch (e: any) {
     if (String(e?.name || e).includes('Abort')) {
       item.status = 'canceled'
@@ -302,19 +291,25 @@ function cancelBatch() {
   for (const it of items.value) it.cancel?.()
 }
 
-async function extractZipToDir(data: Uint8Array, destDir: string): Promise<string[]> {
-  const files = unzipSync(data) as Record<string, Uint8Array>
-  const entries = Object.entries(files)
-  const written: string[] = []
-  for (const [path, content] of entries) {
-    if (path.endsWith('/')) continue // 目录占位
-    const fullPath = joinPath(destDir, path)
-    const dir = fullPath.split('/').slice(0, -1).join('/')
-    if (dir) await mkdir(dir, { recursive: true })
-    await writeFile(fullPath, new Uint8Array(content))
-    written.push(fullPath)
+// 使用系统原生命令解压磁盘上的 zip 文件，避免将压缩包解到内存
+async function extractZipFile(zipPath: string, destDir: string): Promise<void> {
+  await ensureDir(destDir)
+  if (currentOs === 'windows') {
+    // 使用 PowerShell Expand-Archive -Force
+    await Command.create('powershell', [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      `Expand-Archive -LiteralPath \"${zipPath}\" -DestinationPath \"${destDir}\" -Force`
+    ]).execute()
+  } else {
+    // macOS / Linux 常见为 unzip，部分环境也可用 tar -xf
+    try {
+      await Command.create('unzip', ['-o', zipPath, '-d', destDir]).execute()
+    } catch {
+      await Command.create('tar', ['-xf', zipPath, '-C', destDir]).execute()
+    }
   }
-  return written
 }
 
 async function writeEnvFile() {

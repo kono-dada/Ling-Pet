@@ -1,5 +1,6 @@
 import { ref, onUnmounted } from 'vue'
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
+import { open as fsOpen, remove as fsRemove, rename as fsRename } from '@tauri-apps/plugin-fs'
 
 export interface DownloadOptions {
   headers?: Record<string, string>
@@ -13,6 +14,8 @@ export interface UseDownloader {
   error: ReturnType<typeof ref<string | null>>
   // 通过 URL 下载文件并返回 Blob
   download: (url: string, options?: DownloadOptions) => Promise<Blob>
+  // 通过 URL 以流式写入的方式直接保存到文件，避免占用内存
+  downloadToFile: (url: string, destPath: string, options?: DownloadOptions & { tmpSuffix?: string }) => Promise<void>
   // 取消当前下载
   cancel: () => void
 }
@@ -108,6 +111,83 @@ export function useDownloader(): UseDownloader {
     }
   }
 
+  // 以流的方式直接写入磁盘文件，避免将完整内容保存在内存
+  async function downloadToFile(
+    url: string,
+    destPath: string,
+    options: DownloadOptions & { tmpSuffix?: string } = {}
+  ): Promise<void> {
+    isDownloading.value = true
+    error.value = null
+    progress.value = 0
+
+    // 允许外部传入 signal，否则内部创建
+    abortController = options.signal ? null : new AbortController()
+    const signal = options.signal ?? abortController?.signal
+
+    // 临时文件，避免半文件命名冲突
+    const tmpPath = `${destPath}${options.tmpSuffix ?? '.part'}`
+
+    try {
+      const response = await unifiedFetch(url, {
+        method: 'GET',
+        headers: options.headers,
+        signal,
+      })
+      if (!response.ok) {
+        throw new Error(`下载失败: ${response.status} ${response.statusText}`)
+      }
+
+      const contentLengthHeader = response.headers.get('content-length') || response.headers.get('Content-Length')
+      const total = contentLengthHeader ? Number(contentLengthHeader) : NaN
+      const canMeasure = Number.isFinite(total) && total > 0
+      if (!canMeasure) progress.value = null
+
+      // 打开文件句柄（创建/截断）
+      const file = await fsOpen(tmpPath, { write: true, create: true, truncate: true })
+      try {
+        const reader = (response as any).body?.getReader?.()
+        if (!reader || typeof reader.read !== 'function') {
+          // 回退方案：一次性读入（不推荐），但保持兼容性
+          const buffer = await (response as any).arrayBuffer?.()
+          if (!buffer) throw new Error('不支持的响应类型：无法读取数据')
+          await file.write(new Uint8Array(buffer))
+          progress.value = 100
+        } else {
+          let received = 0
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+            if (value) {
+              await file.write(value)
+              received += value.length
+              if (canMeasure) {
+                progress.value = Math.min(100, Math.round((received / total) * 100))
+              }
+            }
+          }
+          if (canMeasure) progress.value = 100
+        }
+      } finally {
+        await file.close()
+      }
+
+      // 写入完成后原子移动为目标文件
+      await fsRename(tmpPath, destPath)
+    } catch (e: any) {
+      // 出错或取消，尝试清理临时文件
+      try { await fsRemove(tmpPath) } catch (_) { /* noop */ }
+      if (e?.name === 'AbortError') {
+        error.value = '下载已取消'
+      } else {
+        error.value = e instanceof Error ? e.message : String(e)
+      }
+      throw e
+    } finally {
+      isDownloading.value = false
+    }
+  }
+
   function cancel() {
     abortController?.abort()
   }
@@ -121,6 +201,7 @@ export function useDownloader(): UseDownloader {
     isDownloading,
     error,
     download,
+    downloadToFile,
     cancel,
   }
 }

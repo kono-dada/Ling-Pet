@@ -75,6 +75,34 @@
     "shell:allow-execute",
     "shell:allow-spawn",
     {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "powershell",
+          "cmd": "powershell",
+          "args": true
+        },
+        {
+          "name": "unzip",
+          "cmd": "unzip",
+          "args": true
+        },
+        {
+          "name": "tar",
+          "cmd": "tar",
+          "args": true
+        },
+        {
+          "name": "chmod",
+          "cmd": "chmod",
+          "args": [
+            "+x",
+            { "validator": ".+" }
+          ]
+        }
+      ]
+    },
+    {
       "identifier": "shell:allow-spawn",
       "allow": [
         {
@@ -88,6 +116,21 @@
         {
           "name": "sbv2-nix",
           "cmd": "./sbv2_api",
+          "args": true
+        },
+        {
+          "name": "powershell",
+          "cmd": "powershell",
+          "args": true
+        },
+        {
+          "name": "unzip",
+          "cmd": "unzip",
+          "args": true
+        },
+        {
+          "name": "tar",
+          "cmd": "tar",
           "args": true
         },
         {
