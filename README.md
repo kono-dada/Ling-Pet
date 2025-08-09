@@ -1,6 +1,8 @@
 # LingPet 灵宠
 
-![LingPet 头像](./public/头像.png)
+<p align="center">
+  <img src="./public/头像.png" alt="LingPet 头像" width="200">
+</p>
 
 LingPet 是一款开源的桌宠。
 
