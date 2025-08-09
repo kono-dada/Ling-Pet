@@ -3,7 +3,9 @@ use tauri::Manager;
 
 mod commands;
 mod os;
+mod sbv2_manager;
 use commands::*;
+use sbv2_manager::Sbv2Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

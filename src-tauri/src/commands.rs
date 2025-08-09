@@ -1,55 +1,11 @@
-use std::path::PathBuf;
-use std::process::{Child, Command, Stdio};
+use crate::sbv2_manager::Sbv2Manager;
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt; // for creation_flags
-use std::sync::Mutex;
+use std::path::PathBuf;
+use std::process::{Command, Stdio};
 use tauri::Manager;
 use tauri::State;
 use tauri_plugin_opener::OpenerExt;
-
-// Global, app-managed process manager for sbv2_api to keep it unique across all webviews/windows
-pub struct Sbv2Manager {
-    child: Mutex<Option<Child>>,
-}
-
-impl Sbv2Manager {
-    pub fn new() -> Self {
-        Self {
-            child: Mutex::new(None),
-        }
-    }
-
-    fn is_running_inner(child: &mut Option<Child>) -> bool {
-        if let Some(c) = child.as_mut() {
-            match c.try_wait() {
-                Ok(Some(_status)) => {
-                    // Process has exited
-                    *child = None;
-                    false
-                }
-                Ok(None) => true,
-                Err(_) => {
-                    // On error, assume not running and clear
-                    *child = None;
-                    false
-                }
-            }
-        } else {
-            false
-        }
-    }
-}
-
-impl Drop for Sbv2Manager {
-    fn drop(&mut self) {
-        if let Ok(mut guard) = self.child.lock() {
-            if let Some(mut child) = guard.take() {
-                let _ = child.kill();
-                let _ = child.wait();
-            }
-        }
-    }
-}
 
 #[tauri::command]
 pub fn quit_app(app: tauri::AppHandle) -> Result<(), String> {
@@ -97,7 +53,6 @@ pub async fn sbv2_start(state: State<'_, Sbv2Manager>, install_path: String) -> 
         .child
         .lock()
         .map_err(|_| "failed to lock process state".to_string())?;
-
     if Sbv2Manager::is_running_inner(&mut guard) {
         return Ok(());
     }
@@ -154,7 +109,6 @@ pub async fn sbv2_stop(state: State<'_, Sbv2Manager>) -> Result<(), String> {
         .lock()
         .map_err(|_| "failed to lock process state".to_string())?;
     if let Some(mut child) = guard.take() {
-        // Ignore errors to be resilient
         let _ = child.kill();
         let _ = child.wait();
     }
