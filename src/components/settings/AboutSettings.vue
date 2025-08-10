@@ -109,7 +109,7 @@ async function openLingChat() {
     transparent: false,
     decorations: true,
     alwaysOnTop: false,
-    skipTaskbar: true,
+    skipTaskbar: false,
     center: false,
     visible: false,
   }
