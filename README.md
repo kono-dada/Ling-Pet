@@ -66,10 +66,9 @@ LingPet 是一款开源的桌宠。
 
 ### 2. 克隆项目
 ```bash
-git clone https://github.com/your-username/LingPet.git
-cd LingPet
+git clone https://github.com/kono-dada/Ling-Pet.git
+cd Ling-Pet
 ```
-*请将 `your-username/LingPet.git` 替换为实际的仓库地址。*
 
 ### 3. 安装依赖
 ```bash
