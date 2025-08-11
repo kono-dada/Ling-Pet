@@ -71,7 +71,7 @@ export async function chatWithPetStream(
   if (ac.systemPrompt) {
     messages.push({
       role: 'system',
-      content: ac.systemPrompt + '\n\n' + RESPONSE_FORMAT_PROMPT
+      content: RESPONSE_FORMAT_PROMPT + '\n\n' + ac.systemPrompt
     });
   }
   // 添加历史消息的最末尾的ac.maxHistoryLength条消息
