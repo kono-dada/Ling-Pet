@@ -24,8 +24,8 @@
       <div class="d-flex align-center gap-2 mb-4" style="gap: 8px" :class="{ 'text-disabled': !osSupported }">
         <v-switch :disabled="!osSupported" v-model="overwrite" color="primary" label="覆盖已存在文件" hide-details></v-switch>
         <v-spacer />
-        <v-btn :disabled="!osSupported || !vc.installPath || isBatchDownloading" color="primary" @click="startInstall">
-          {{ isBatchDownloading ? '安装中…' : `安装（${items.length} 项）` }}
+        <v-btn :disabled="!osSupported || !vc.installPath || isBatchDownloading" :color="!isBatchDownloading ? 'primary' : 'warning'" @click="startInstall">
+          {{ isBatchDownloading ? '安装中...请勿关闭本页面' : `安装（${items.length} 项）` }}
         </v-btn>
         <v-btn :disabled="!isBatchDownloading" color="error" variant="outlined" @click="cancelBatch">取消</v-btn>
       </div>
