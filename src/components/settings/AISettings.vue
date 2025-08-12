@@ -13,10 +13,10 @@
             class="mb-4"></v-text-field>
 
           <v-text-field v-model="ac.baseURL" label="API 基础地址" variant="outlined" density="compact"
-            persistent-hint class="mb-4"></v-text-field>
+            class="mb-4" hint="如：https://api.deepseek.com/v1"></v-text-field>
 
           <v-text-field v-model="ac.model" label="模型" variant="outlined" density="compact"
-            persistent-hint></v-text-field>
+            hint="如：deepseek-chat"></v-text-field>
         </div>
 
         <v-divider class="my-8"></v-divider>

@@ -34,9 +34,10 @@
                 variant="outlined"
                 density="compact"
                 class="mb-4"
-                persistent-hint
                 :disabled="disabled"
                 placeholder="http://127.0.0.1:23456"
+                hint="本地服务请填写：http://localhost:23456"
+                persistent-hint
               />
             </v-col>
             <v-col cols="12" md="5">
@@ -45,9 +46,9 @@
                 label="音色 ID"
                 variant="outlined"
                 density="compact"
-                persistent-hint
                 :disabled="disabled"
-                hint="ID 应与 onnx 模型一致"
+                hint="ID 应与 onnx 模型一致，如：Murasame"
+                persistent-hint
               />
             </v-col>
           </v-row>

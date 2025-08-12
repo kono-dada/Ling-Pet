@@ -109,10 +109,9 @@ const INSTALL_MANIFEST = {
   files: {
     'configuration.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/configuration.json',
     'deberta.onnx': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/deberta.onnx',
-    'model_Anneli.onnx': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/model_Anneli.onnx',
-    'style_vectors_Anneli.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/style_vectors_Anneli.json',
+    'model_Murasame.onnx': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/model_Murasame.onnx',
+    'style_vectors_Murasame.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/style_vectors_Murasame.json',
     'tokenizer.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/tokenizer.json',
-    'all.bin.zip': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/all.bin.zip'
   },
   binary: {
     macos: {

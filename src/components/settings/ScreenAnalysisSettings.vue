@@ -2,7 +2,11 @@
   <v-container>
     <v-card flat class="pa-2">
       <v-card-text>
-
+        <v-alert type="info" variant="tonal" density="compact" class="mb-6">
+          <div class="d-flex align-center">
+            <span class="mr-1">（测试中）以“.”开头的输入会自动激活屏幕分析，让灵灵看到你的屏幕后回复</span>
+          </div>
+        </v-alert>
         <div class="mb-8">
           <h2 class="text-h6 font-weight-bold mb-4">API 配置</h2>
           <v-divider class="mb-6"></v-divider>

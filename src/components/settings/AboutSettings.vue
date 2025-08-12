@@ -10,7 +10,7 @@
         <div class="app-desc">一个可爱的桌面宠物应用，基于 Tauri 与 Vue 构建。</div>
       </div>
       <v-chip class="ml-auto version-chip" color="primary" variant="flat" size="small" prepend-icon="mdi-tag-outline">
-        v1.0.0
+        v0.1.4
       </v-chip>
     </div>
 
