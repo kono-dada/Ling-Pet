@@ -3,7 +3,7 @@ import type { AIMessage } from '../types/ai';
 import type { ChatCompletion } from 'openai/resources';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import {
-  getScreenshotableWindows,
+  getScreenshotableWindows as rawGetScreenshotableWindows,
   getWindowScreenshot,
   clearScreenshots
 } from "tauri-plugin-screenshots-api";
@@ -11,7 +11,23 @@ import { readFile } from "@tauri-apps/plugin-fs";
 import { BaseDirectory } from "@tauri-apps/plugin-fs";
 import { debug } from '@tauri-apps/plugin-log';
 import { OpenAI } from 'openai';
+import { ScreenshotableWindow } from 'tauri-plugin-screenshots-api';
 
+const ignoreList = ['控制中心', '通知中心', 'Window Server', '搜狗输入法', 'lingpet'];
+
+// 由于macOS可能会有一些状态栏图标之类的被当成窗口，在这里过滤掉。lingpet自己也过滤掉。
+export async function getScreenshotableWindows(): Promise<ScreenshotableWindow[]> {
+  const list = await rawGetScreenshotableWindows()
+  return list.filter(w => {
+    const app = w.appName ?? ''
+    const name = (w as any).name ?? ''
+    const title = (w as any).title ?? ''
+    // 任何一个字段命中忽略列表即过滤
+    return !ignoreList.some(ig => app.includes(ig) || name.includes(ig) || title.includes(ig))
+  })
+}
+
+// 调整到480p再上传给LLM
 async function resizeImage(base64: string, targetHeight: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -75,13 +91,17 @@ export function useScreenAnalysisService() {
     });
   }
 
-  async function screenAnalysis(): Promise<string> {
-    const windows = await getScreenshotableWindows();
+  // 使用视觉语言模型，获取多个窗口的描述
+  async function screenAnalysis(windowIds: number[] | null = null): Promise<string> {
+    if (!windowIds) {
+      windowIds = (await getScreenshotableWindows()).map(win => win.id);
+    }
     const usedWindowIds: number[] = [];
-    const uriList: (string|null)[] = await Promise.all(
-      windows.map(async (win) => {
+    // 截图时异步并发截图
+    const uriList: string[] = await Promise.all(
+      windowIds.map(async (id) => {
         const start = Date.now();
-        const path = await getWindowScreenshot(win.id);
+        const path = await getWindowScreenshot(id);
         const duration = Date.now() - start;
         debug(`getWindowScreenshot 用时: ${duration}ms`);
         debug(`获取窗口截图路径: ${path}`);
@@ -89,55 +109,30 @@ export function useScreenAnalysisService() {
         const tempBase64 = await toBase64(binary);
         const tempDataUri = `data:image/png;base64,${tempBase64}`;
 
-        // 获取图片尺寸
-        const img = new Image();
-        img.src = tempDataUri;
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-        });
-        const w = img.width;
-        const h = img.height;
-        const pixelCount = w * h;
-        const aspectRatio = w / h;
-        const aspectRatioInv = h / w;
-
-        // 过滤条件
-        if (
-          pixelCount < 40000 ||
-          aspectRatio > 10 ||
-          aspectRatioInv > 10
-        ) {
-          debug(`过滤掉窗口截图: id=${win.id}, 尺寸=${w}x${h}, 像素=${pixelCount}, 宽高比=${aspectRatio}`);
-          return null;
-        }
-
-        usedWindowIds.push(win.id);
+        usedWindowIds.push(id);
         const resizedDataUri = await resizeImage(tempDataUri, 480);
         return resizedDataUri;
       })
     );
-    // 过滤掉 null
-    const filteredUriList = uriList.filter((uri): uri is string => !!uri);
-    clearScreenshots()
+    clearScreenshots();
 
     debug(`最终实际使用到的窗口截图id: ${JSON.stringify(usedWindowIds)}`);
 
     // 将 uriList 中的每个 dataUri 作为 content 的一个元素
     const messages: AIMessage[] = [
       {
-      role: 'system',
-      content: sgc.systemPrompt
+        role: 'system',
+        content: sgc.systemPrompt
       },
       {
-      role: 'user',
-      content: filteredUriList.map((dataUri) => ({
-        type: "image_url",
-        image_url: {
-        url: dataUri,
-        detail: sgc.imageDetail
-        }
-      }))
+        role: 'user',
+        content: uriList.map((dataUri) => ({
+          type: "image_url",
+          image_url: {
+            url: dataUri,
+            detail: sgc.imageDetail
+          }
+        }))
       }
     ];
     const response = await callAI(messages);
@@ -148,13 +143,16 @@ export function useScreenAnalysisService() {
     return aiMessage.content;
   }
 
-  async function testScreenAnalysis(): Promise<{ success: boolean; message: string }> {
+  async function testScreenAnalysis(ids: number[] | null = null): Promise<{ success: boolean; message: string }> {
     if (!sgc.apiKey || !sgc.baseURL || !sgc.model) {
       return { success: false, message: '请正确配置屏幕分析AI服务' };
     }
 
     try {
-      const result = await screenAnalysis();
+      if (!ids || ids.length === 0) {
+        ids = [(await getScreenshotableWindows())[0].id];
+      }
+      const result = await screenAnalysis(ids);
       return { success: true, message: `屏幕分析成功: ${result}` };
     } catch (error) {
       console.error(error);
