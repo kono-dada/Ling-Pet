@@ -7,12 +7,11 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
 import { useChatBubbleStateStore } from '../../stores/chatBubbleState';
-import { useScreenAnalysisService } from '../../services/screenAnalysisService';
+import { screenAnalysis } from '../../services/screenAnalysisService';
 import { useStreamConversation } from '../../composables/useStreamConversation';
 import { chatWithPetStream } from '../../services/chatWithPet';
 
 const cbs = useChatBubbleStateStore();
-const { screenAnalysis } = useScreenAnalysisService();
 const { startStreaming, finishStreaming, addStreamItem, isStreaming } = useStreamConversation();
 
 

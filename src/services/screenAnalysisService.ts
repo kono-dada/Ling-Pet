@@ -13,6 +13,8 @@ import { debug } from '@tauri-apps/plugin-log';
 import { OpenAI } from 'openai';
 import { ScreenshotableWindow } from 'tauri-plugin-screenshots-api';
 
+const sgc = useScreenAnalysisConfigStore();
+
 const ignoreList = ['控制中心', '通知中心', 'Window Server', '搜狗输入法', 'lingpet'];
 
 // 由于macOS可能会有一些状态栏图标之类的被当成窗口，在这里过滤掉。lingpet自己也过滤掉。
@@ -53,116 +55,108 @@ async function resizeImage(base64: string, targetHeight: number): Promise<string
   });
 }
 
-export function useScreenAnalysisService() {
-  const sgc = useScreenAnalysisConfigStore();
 
-  async function callAI(messages: AIMessage[]): Promise<ChatCompletion> {
-    const client = new OpenAI({
-      apiKey: sgc.apiKey,
-      baseURL: sgc.baseURL,
-      fetch: tauriFetch, // 使用 Tauri 的 fetch，防止CORS问题
-      dangerouslyAllowBrowser: true, // 允许浏览器环境
-    });
+async function callAI(messages: AIMessage[]): Promise<ChatCompletion> {
+  const client = new OpenAI({
+    apiKey: sgc.apiKey,
+    baseURL: sgc.baseURL,
+    fetch: tauriFetch, // 使用 Tauri 的 fetch，防止CORS问题
+    dangerouslyAllowBrowser: true, // 允许浏览器环境
+  });
 
-    console.log('调用AI服务，消息:', messages);
-    const completion = await client.chat.completions.create({
-      model: sgc.model,
-      messages: messages,
-      temperature: sgc.temperature,
-      max_tokens: sgc.maxTokens,
-    });
-    console.log('AI服务响应:', completion);
+  console.log('调用AI服务，消息:', messages);
+  const completion = await client.chat.completions.create({
+    model: sgc.model,
+    messages: messages,
+    temperature: sgc.temperature,
+    max_tokens: sgc.maxTokens,
+  });
+  console.log('AI服务响应:', completion);
 
-    return completion;
+  return completion;
+}
+
+function toBase64(array: Uint8Array): Promise<string> {
+  // 复制成使用 ArrayBuffer 的视图，避免 SharedArrayBuffer 类型不匹配
+  const bytes = new Uint8Array(array);
+  const blob = new Blob([bytes.buffer]);
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      resolve(dataUrl.split(',')[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+// 使用视觉语言模型，获取多个窗口的描述
+export async function screenAnalysis(windowIds: number[] | null = null): Promise<string> {
+  if (!windowIds) {
+    windowIds = (await getScreenshotableWindows()).map(win => win.id);
+  }
+  const usedWindowIds: number[] = [];
+  // 截图时异步并发截图
+  const uriList: string[] = await Promise.all(
+    windowIds.map(async (id) => {
+      const start = Date.now();
+      const path = await getWindowScreenshot(id);
+      const duration = Date.now() - start;
+      debug(`getWindowScreenshot 用时: ${duration}ms`);
+      debug(`获取窗口截图路径: ${path}`);
+      const binary = await readFile(path, { baseDir: BaseDirectory.AppCache });
+      const tempBase64 = await toBase64(binary);
+      const tempDataUri = `data:image/png;base64,${tempBase64}`;
+
+      usedWindowIds.push(id);
+      const resizedDataUri = await resizeImage(tempDataUri, 480);
+      return resizedDataUri;
+    })
+  );
+  clearScreenshots();
+
+  debug(`最终实际使用到的窗口截图id: ${JSON.stringify(usedWindowIds)}`);
+
+  // 将 uriList 中的每个 dataUri 作为 content 的一个元素
+  const messages: AIMessage[] = [
+    {
+      role: 'system',
+      content: sgc.systemPrompt
+    },
+    {
+      role: 'user',
+      content: uriList.map((dataUri) => ({
+        type: "image_url",
+        image_url: {
+          url: dataUri,
+          detail: sgc.imageDetail
+        }
+      }))
+    }
+  ];
+  const response = await callAI(messages);
+  const aiMessage = response.choices[0]?.message;
+  if (!aiMessage || !aiMessage.content || typeof aiMessage.content !== 'string') {
+    return 'AI服务未返回有效响应';
+  }
+  return aiMessage.content;
+}
+
+export async function testScreenAnalysis(ids: number[] | null = null): Promise<{ success: boolean; message: string }> {
+  if (!sgc.apiKey || !sgc.baseURL || !sgc.model) {
+    return { success: false, message: '请正确配置屏幕分析AI服务' };
   }
 
-  function toBase64(array: Uint8Array): Promise<string> {
-    // 复制成使用 ArrayBuffer 的视图，避免 SharedArrayBuffer 类型不匹配
-    const bytes = new Uint8Array(array);
-    const blob = new Blob([bytes.buffer]);
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        resolve(dataUrl.split(',')[1]);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+  try {
+    if (!ids || ids.length === 0) {
+      ids = [(await getScreenshotableWindows())[0].id];
+    }
+    const result = await screenAnalysis(ids);
+    return { success: true, message: `屏幕分析成功: ${result}` };
+  } catch (error) {
+    console.error(error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    return { success: false, message: `屏幕分析失败: ${errorMessage}` };
   }
-
-  // 使用视觉语言模型，获取多个窗口的描述
-  async function screenAnalysis(windowIds: number[] | null = null): Promise<string> {
-    if (!windowIds) {
-      windowIds = (await getScreenshotableWindows()).map(win => win.id);
-    }
-    const usedWindowIds: number[] = [];
-    // 截图时异步并发截图
-    const uriList: string[] = await Promise.all(
-      windowIds.map(async (id) => {
-        const start = Date.now();
-        const path = await getWindowScreenshot(id);
-        const duration = Date.now() - start;
-        debug(`getWindowScreenshot 用时: ${duration}ms`);
-        debug(`获取窗口截图路径: ${path}`);
-        const binary = await readFile(path, { baseDir: BaseDirectory.AppCache });
-        const tempBase64 = await toBase64(binary);
-        const tempDataUri = `data:image/png;base64,${tempBase64}`;
-
-        usedWindowIds.push(id);
-        const resizedDataUri = await resizeImage(tempDataUri, 480);
-        return resizedDataUri;
-      })
-    );
-    clearScreenshots();
-
-    debug(`最终实际使用到的窗口截图id: ${JSON.stringify(usedWindowIds)}`);
-
-    // 将 uriList 中的每个 dataUri 作为 content 的一个元素
-    const messages: AIMessage[] = [
-      {
-        role: 'system',
-        content: sgc.systemPrompt
-      },
-      {
-        role: 'user',
-        content: uriList.map((dataUri) => ({
-          type: "image_url",
-          image_url: {
-            url: dataUri,
-            detail: sgc.imageDetail
-          }
-        }))
-      }
-    ];
-    const response = await callAI(messages);
-    const aiMessage = response.choices[0]?.message;
-    if (!aiMessage || !aiMessage.content || typeof aiMessage.content !== 'string') {
-      return 'AI服务未返回有效响应';
-    }
-    return aiMessage.content;
-  }
-
-  async function testScreenAnalysis(ids: number[] | null = null): Promise<{ success: boolean; message: string }> {
-    if (!sgc.apiKey || !sgc.baseURL || !sgc.model) {
-      return { success: false, message: '请正确配置屏幕分析AI服务' };
-    }
-
-    try {
-      if (!ids || ids.length === 0) {
-        ids = [(await getScreenshotableWindows())[0].id];
-      }
-      const result = await screenAnalysis(ids);
-      return { success: true, message: `屏幕分析成功: ${result}` };
-    } catch (error) {
-      console.error(error);
-      const errorMessage = error instanceof Error ? error.message : '未知错误';
-      return { success: false, message: `屏幕分析失败: ${errorMessage}` };
-    }
-  }
-
-  return {
-    screenAnalysis,
-    testScreenAnalysis,
-  };
 }
