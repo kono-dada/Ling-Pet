@@ -88,12 +88,11 @@
 import { ref  } from 'vue';
 import { DEFAULT_CHARACTER_PROMPT } from '../../constants/ai';
 import { useAIConfigStore } from '../../stores/aiConfig';
-import { useAIService } from '../../services/aiService';
+import { testAIConnection } from '../../services/aiService';
 
 // 测试相关
 const testResult = ref<{ success: boolean; message: string } | null>(null);
 const isTesting = ref(false);
-const {testAIConnection} = useAIService();
 
 const ac = useAIConfigStore();
 
