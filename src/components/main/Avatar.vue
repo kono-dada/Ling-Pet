@@ -22,6 +22,7 @@ function onDragStart() {
 }
 
 function onClick() {
+  state.updateLastClickTimestamp();
   playNext();
 }
 
