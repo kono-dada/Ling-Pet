@@ -109,7 +109,7 @@
       <script setup lang="ts">
       import { ref, computed } from 'vue';
       import { useScreenAnalysisConfigStore } from '../../stores/screenAnalysisConfig';
-      import { useScreenAnalysisService, getScreenshotableWindows } from '../../services/screenAnalysisService';
+      import { testScreenAnalysis, getScreenshotableWindows } from '../../services/screenAnalysisService';
 
       // 默认系统提示词
       const DEFAULT_SCREEN_PROMPT = '描述此屏幕截图的内容';
@@ -119,7 +119,6 @@
       const isTesting = ref(false);
 
       const sc = useScreenAnalysisConfigStore();
-      const { testScreenAnalysis } = useScreenAnalysisService();
 
       const showApiKey = ref(false);
 
