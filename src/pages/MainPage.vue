@@ -10,16 +10,30 @@ import DecorationsHost from '../components/main/decorations/DecorationsHost.vue'
 import { useAppearanceConfigStore } from '../stores/appearanceConfig';
 import { useChatBubbleStateStore } from '../stores/chatBubbleState';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { useCurrentWindowListStore } from '../stores/currentWindowList';
+import { getScreenshotableWindows } from '../services/screenAnalysisService';
 
 const avatarRef = ref();
 const ac = useAppearanceConfigStore();
 const cbs = useChatBubbleStateStore();
+const currentWindowList = useCurrentWindowListStore()
 const window = getCurrentWebviewWindow();
 
 // 设置窗口为正方形
 async function setWindowToSquare() {
   window.setSize(new LogicalSize(ac.petSize, ac.petSize + 30));
 }
+
+// 每五秒刷新窗口状态
+async function updataWindowState() {
+  const windows = await getScreenshotableWindows();
+  const newWindows = currentWindowList.update(windows);
+  // 如果非空就log
+  if (newWindows.length > 0) {
+    console.log('新增窗口列表:', newWindows);
+  }
+}
+let intervalId: number | undefined;
 
 function openChatBubble() {
   const chatBubbleConfig = {
@@ -54,11 +68,15 @@ onMounted(async () => {
       else if (!await chatBubbleWindow.isVisible()) await chatBubbleWindow.show();  // 如果有消息且窗口不可见，显示气泡窗口
     } else if (currentMessage) openChatBubble();  // 如果没有窗口但有消息，创建新的气泡窗口
   });
+  intervalId = setInterval(() => {
+    updataWindowState();
+  }, 5000);
 });
 
 onUnmounted(() => {
   stopPetSizeWatcher?.();
   stopChatBubbleWatcher?.();
+  if (intervalId !== undefined) clearInterval(intervalId);
 });
 
 </script>
