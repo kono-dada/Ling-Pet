@@ -84,7 +84,7 @@ pub async fn sbv2_start(state: State<'_, Sbv2Manager>, install_path: String) -> 
         .env("TOKENIZER_PATH", "tokenizer.json")
         .env("ADDR", "localhost:23456")
         .env("HOLDER_MAX_LOADED_MODELS", "20")
-        .env("AGPL_DICT_PATH", "all.bin")
+        .env("SBV2_FORCE_STEREO", "true")
         // keep stdio quiet but attached so we can kill properly
         .stdin(Stdio::null())
         .stdout(Stdio::null())
