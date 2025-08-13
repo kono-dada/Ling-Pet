@@ -6,14 +6,13 @@ import { RESPONSE_FORMAT_PROMPT } from "../constants/ai";
 import { USER_PROMPT_WRAPPER } from "../constants/ai";
 import { useAIConfigStore } from "../stores/aiConfig";
 import { useChatHistoryStore } from "../stores/chatHistory";
-import { useAIService } from "./aiService";
+import { callAIStream } from "./aiService";
 import { computed } from "vue";
 
 
 const ac = useAIConfigStore();
 const chs = useChatHistoryStore();
 const validateAIConfig = computed(() => Boolean(ac.apiKey && ac.baseURL && ac.model));
-const { callAIStream } = useAIService();
 
 function parsePetResponseItemString(response: string): PetResponseItem | null {
   const parts = response.split('|');
