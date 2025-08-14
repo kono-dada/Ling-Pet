@@ -1,6 +1,4 @@
-import { EmotionName } from "../types/emotion";
 import { PetResponseItem } from "../types/ai";
-import { EMOTIONS } from "../constants/emotions";
 import { AIMessage } from "../types/ai";
 import { RESPONSE_FORMAT_PROMPT } from "../constants/ai";
 import { USER_PROMPT_WRAPPER } from "../constants/ai";
@@ -17,15 +15,11 @@ const validateAIConfig = computed(() => Boolean(ac.apiKey && ac.baseURL && ac.mo
 function parsePetResponseItemString(response: string): PetResponseItem | null {
   const parts = response.split('|');
   if (parts.length !== 3) return null;
-  const [message, japanese, emotion] = parts.map(part => part.trim());
-  if (!message || !japanese || !EMOTIONS.includes(emotion as EmotionName)) {
-    return null;
-  }
-  return {
-    message,
-    japanese,
-    emotion: emotion as EmotionName,
-  };
+  const [message, japanese, emotionPart] = parts.map(part => part.trim());
+  if (!message || !japanese) return null;
+  const code = Number(emotionPart);
+  if (!Number.isInteger(code)) return null;
+  return { message, japanese, emotion: code };
 }
 
 // 专门处理Pet响应格式的chunk处理器

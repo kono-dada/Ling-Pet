@@ -21,12 +21,9 @@ export enum EmotionName {
   疑惑 = "疑惑",
 }
 
-// 检查字符串是否为有效的 EmotionName
-export function isEmotionName(str: string): str is EmotionName {
-  return Object.values(EmotionName).includes(str as EmotionName);
-}
+// 仅供颜色映射与展示使用的名称枚举；内部状态使用编号
 
 export interface EmotionState {
-  currentEmotion: EmotionName;
+  currentEmotion: number; // 使用编号
   isShaking: boolean;
 }
