@@ -2,7 +2,7 @@ import { PetResponseItem } from "../types/ai";
 import { useChatBubbleStateStore, PetResponseItemWithAudio } from "../stores/chatBubbleState";
 import { usePetStateStore } from "../stores/petState";
 import { useVitsConfigStore } from "../stores/vitsConfig";
-import { DEFAULT_EMOTION } from "../constants/emotions";
+import { DEFAULT_EMOTION, EMOTION_CODE_MAP } from "../constants/emotions";
 import { voiceVits } from "../services/vitsService";
 import { debug } from "@tauri-apps/plugin-log";
 import { ref } from "vue";
@@ -49,7 +49,7 @@ export function useStreamConversation() {
 
     if (nextItem) {
       cbs.setCurrentMessage(nextItem.message);
-      petState.setPetEmotion(nextItem.emotion);
+  petState.setPetEmotion(nextItem.emotion);
 
       // 播放语音（如果有）
       if (nextItem.audioBlob) {
@@ -60,7 +60,7 @@ export function useStreamConversation() {
       console.log('等待更多消息...');
     } else {
       cbs.setCurrentMessage('');
-      petState.setPetEmotion(DEFAULT_EMOTION);
+  petState.setPetEmotion(EMOTION_CODE_MAP[DEFAULT_EMOTION]);
     }
   }
 

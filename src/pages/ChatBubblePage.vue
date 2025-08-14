@@ -264,6 +264,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import { getEmotionColorTheme } from '../constants/emotionColors';
+import { codeToEmotion } from '../constants/emotions';
 import { useChatBubbleStateStore } from '../stores/chatBubbleState';
 import { usePetStateStore } from '../stores/petState';
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow';
@@ -281,7 +282,7 @@ const textAlign = ref<'center' | 'left'>('center');
 let currentTypingId = 0;
 
 // 计算颜色主题
-const colorTheme = computed(() => getEmotionColorTheme(petState.currentEmotion))
+const colorTheme = computed(() => getEmotionColorTheme(codeToEmotion(petState.currentEmotion)))
 
 // 计算气泡样式
 const bubbleStyles = computed(() => {

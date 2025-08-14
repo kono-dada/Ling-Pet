@@ -59,7 +59,7 @@
               <template v-for="aiMsg in parseAIMessage(message.content)" :key="aiMsg.chinese + aiMsg.emotion">
                 <div class="d-flex justify-start mb-3 ai-message-item">
                   <v-avatar class="mr-3 ai-avatar" size="40">
-                    <v-img :src="`/avatar/${aiMsg.emotion}.png`" :alt="aiMsg.emotion" cover />
+                    <v-img :src="`/avatar/${codeToEmotion(aiMsg.emotion)}.png`" :alt="codeToEmotion(aiMsg.emotion)" cover />
                   </v-avatar>
                   <v-card class="message-bubble ai-bubble" rounded="xl" :style="getEmotionStyle(aiMsg.emotion)">
                     <v-card-text class="pa-3">
@@ -188,7 +188,7 @@ import { computed } from 'vue';
 import { useChatHistoryStore } from '../stores/chatHistory';
 import { useVitsConfigStore } from '../stores/vitsConfig';
 import { getEmotionColorTheme } from '../constants/emotionColors';
-import { isEmotionName, type EmotionName } from '../types/emotion';
+import { codeToEmotion } from '../constants/emotions';
 import { ref } from 'vue';
 import { voiceVits } from '../services/vitsService';
 
@@ -198,7 +198,7 @@ const vcs = useVitsConfigStore();
 interface ParsedAIMessage {
   chinese: string;
   japanese: string;
-  emotion: EmotionName;
+  emotion: number; // 保存编号
 }
 
 // 解析AI消息
@@ -213,17 +213,20 @@ function parseAIMessage(content: string): ParsedAIMessage[] {
       const item = match[1];
       const parts = item.split('|');
       if (parts.length === 3) {
-        const emotion = parts[2].trim();
-        result.push({
-          chinese: parts[0].trim(),
-          japanese: parts[1].trim(),
-          emotion: isEmotionName(emotion) ? emotion as EmotionName : '正常' as EmotionName
-        });
+        const raw = parts[2].trim();
+        const num = Number(raw);
+        if (Number.isInteger(num)) {
+          result.push({
+            chinese: parts[0].trim(),
+            japanese: parts[1].trim(),
+            emotion: num
+          });
+        }
       } else {
         result.push({
           chinese: item,
           japanese: '',
-          emotion: '正常' as EmotionName
+          emotion: 0
         });
       }
     }
@@ -235,8 +238,8 @@ function parseAIMessage(content: string): ParsedAIMessage[] {
 }
 
 // 获取情绪样式
-function getEmotionStyle(emotion: EmotionName) {
-  const theme = getEmotionColorTheme(emotion);
+function getEmotionStyle(emotionCode: number) {
+  const theme = getEmotionColorTheme(codeToEmotion(emotionCode));
   return {
     backgroundColor: theme.background,
     borderColor: theme.border,
@@ -271,7 +274,8 @@ const emotionCounts = computed(() => {
     if (msg.role === 'assistant') {
       const parsed = parseAIMessage(msg.content);
       parsed.forEach(item => {
-        counts[item.emotion] = (counts[item.emotion] || 0) + 1;
+        const name = codeToEmotion(item.emotion) as string;
+        counts[name] = (counts[name] || 0) + 1;
       });
     }
   });

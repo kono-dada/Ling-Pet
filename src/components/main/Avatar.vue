@@ -1,12 +1,13 @@
 <template>
-  <img :src="`/avatar/${state.currentEmotion + '.png'}`" :alt="state.currentEmotion" class="pet-avatar"
+  <img :src="`/avatar/${emotionName}.png`" :alt="emotionName" class="pet-avatar"
     :class="{ 'shaking': isShaking }" draggable="false" @mousedown="onDragStart" @click.stop="onClick" />
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { usePetStateStore } from '../../stores/petState';
+import { codeToEmotion } from '../../constants/emotions';
 import { useStreamConversation } from '../../composables/useStreamConversation';
 
 const state = usePetStateStore()
@@ -14,6 +15,7 @@ const appWindow = getCurrentWebviewWindow();
 const { playNext } = useStreamConversation();
 
 const isShaking = ref(false);
+const emotionName = computed(() => codeToEmotion(state.currentEmotion));
 
 function onDragStart() {
   setTimeout(() => {

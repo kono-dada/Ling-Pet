@@ -72,22 +72,22 @@ export const EMOTION_COLOR_THEMES: Record<EmotionName, ColorTheme> = {
     shadow: "rgba(239, 68, 68, 0.2)"
   },
   "害怕": {
-    background: "rgba(247, 247, 247, 0.98)",
-    border: "rgba(115, 115, 115, 0.6)",
-    text: "#525252",
-    shadow: "rgba(115, 115, 115, 0.15)"
+  background: "rgba(238, 242, 255, 0.98)",
+  border: "rgba(99, 102, 241, 0.6)",
+  text: "#3730a3",
+  shadow: "rgba(99, 102, 241, 0.18)"
   },
   "担心": {
-    background: "rgba(245, 245, 244, 0.98)",
-    border: "rgba(168, 162, 158, 0.6)",
-    text: "#78716c",
-    shadow: "rgba(168, 162, 158, 0.15)"
+  background: "rgba(240, 249, 255, 0.98)",
+  border: "rgba(56, 189, 248, 0.6)",
+  text: "#075985",
+  shadow: "rgba(56, 189, 248, 0.18)"
   },
   "无奈": {
-    background: "rgba(250, 250, 249, 0.98)",
-    border: "rgba(214, 211, 209, 0.6)",
-    text: "#a8a29e",
-    shadow: "rgba(214, 211, 209, 0.15)"
+  background: "rgba(236, 254, 255, 0.98)",
+  border: "rgba(6, 182, 212, 0.6)",
+  text: "#0e7490",
+  shadow: "rgba(6, 182, 212, 0.18)"
   },
 
   // 惊讶情绪 - 亮色调
