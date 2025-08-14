@@ -69,6 +69,17 @@
 
           <v-textarea v-model="sc.systemPrompt" label="系统提示词" variant="outlined" rows="6" auto-grow hint="定义屏幕分析的提示和规则"
             persistent-hint></v-textarea>
+
+          <v-divider class="my-6"></v-divider>
+
+          <v-switch
+            v-model="sc.enableNewWindowAutoReply"
+            color="primary"
+            inset
+            :label="`自动响应新窗口：${sc.enableNewWindowAutoReply ? '开启' : '关闭'}`"
+            hide-details
+          />
+          <p class="text-caption text-medium-emphasis mt-1">开启后，当检测到新的可截图窗口时，自动进行屏幕分析并生成回复。</p>
         </div>
 
         <v-divider class="my-8"></v-divider>

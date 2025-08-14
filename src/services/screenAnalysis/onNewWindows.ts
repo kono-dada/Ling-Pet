@@ -4,9 +4,12 @@ import { useAIConfigStore } from "../../stores/aiConfig";
 import { useChatBubbleStateStore } from "../../stores/chatBubbleState";
 import { chatWithPetStream } from "../chatWithPet";
 import { useStreamConversation } from "../../composables/useStreamConversation";
+import { usePetStateStore } from "../../stores/petState";
+// Handler now exported as a plain function. Listener registration is managed centrally.
 
 const aiConfig = useAIConfigStore();
 const chatBubbleState = useChatBubbleStateStore();
+const petState = usePetStateStore();
 const { addStreamItem } = useStreamConversation();
 
 const USERPROMPT =
@@ -17,7 +20,10 @@ const USERPROMPT =
 你要对他说些什么呢？
 `
 
-export async function onNewWindows(newWindows: ScreenshotableWindow[]) {
+export async function handleNewWindows(newWindows: ScreenshotableWindow[]) {
+  if (!Array.isArray(newWindows) || newWindows.length === 0) return;
+
+  // Basic guards
   if (!aiConfig.apiKey || !aiConfig.baseURL || !aiConfig.model) {
     console.warn("AI服务配置不完整，无法进行屏幕分析");
     return;
@@ -26,6 +32,14 @@ export async function onNewWindows(newWindows: ScreenshotableWindow[]) {
     console.log("当前有未完成的对话，放弃");
     return;
   }
-  const analysisResult = await describeScreens(newWindows.map(window => window.id));
-  await chatWithPetStream(USERPROMPT.replace('{screenContent}', analysisResult), addStreamItem);
+  if (Date.now() - petState.lastClickTimestamp < 10000) {
+    // 与之前逻辑保持一致：最近10秒有交互则跳过
+    return;
+  }
+
+  const analysisResult = await describeScreens(newWindows.map((w) => w.id));
+  await chatWithPetStream(
+    USERPROMPT.replace('{screenContent}', analysisResult),
+    addStreamItem
+  );
 }

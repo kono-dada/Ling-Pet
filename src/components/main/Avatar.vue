@@ -9,6 +9,7 @@ import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { usePetStateStore } from '../../stores/petState';
 import { codeToEmotion } from '../../constants/emotions';
 import { useStreamConversation } from '../../composables/useStreamConversation';
+import { registerAvatarClick } from '../../services/interactions/avatarMultiClickEmitter';
 
 const state = usePetStateStore()
 const appWindow = getCurrentWebviewWindow();
@@ -26,6 +27,7 @@ function onDragStart() {
 function onClick() {
   state.updateLastClickTimestamp();
   playNext();
+  registerAvatarClick();
 }
 
 function triggerShakeEffect() {

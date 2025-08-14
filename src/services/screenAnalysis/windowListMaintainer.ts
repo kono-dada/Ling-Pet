@@ -1,17 +1,17 @@
 import { getScreenshotableWindows } from "./screenDescription";
 import { useCurrentWindowListStore } from "../../stores/currentWindowList";
-import { onNewWindows } from "./onNewWindows";
-import { usePetStateStore } from "../../stores/petState";
+import { AppEvents, emitEvent } from "../events/appEvents";
 
 const currentWindowList = useCurrentWindowListStore();
-const petState = usePetStateStore();
 
 async function updateWindowState() {
   const windows = await getScreenshotableWindows();
   const newWindows = currentWindowList.update(windows);
-  if (newWindows.length > 0 && Date.now() - petState.lastClickTimestamp > 10000) {
+  // Always emit updates for extensibility
+  emitEvent(AppEvents.WINDOWS_UPDATED, windows);
+  if (newWindows.length > 0) {
     console.log('新增窗口列表:', newWindows);
-    onNewWindows(newWindows);
+    emitEvent(AppEvents.NEW_WINDOWS, newWindows);
   }
 }
 

@@ -14,6 +14,7 @@ export const useScreenAnalysisConfigStore = defineStore(
     const systemPrompt = ref('描述此屏幕截图的内容') // 默认系统提示为空
     const imageDetail = ref<ImageDetail>('low') // 默认图像细节级别
     const enableThinking = ref(false) // 是否启用思考模式
+    const enableNewWindowAutoReply = ref(false) // 新窗口出现时自动分析并回复
 
     return {
       apiKey,
@@ -24,6 +25,7 @@ export const useScreenAnalysisConfigStore = defineStore(
       systemPrompt,
       imageDetail,
       enableThinking,
+      enableNewWindowAutoReply,
     }
   },
   {
