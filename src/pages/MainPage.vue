@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watchEffect, onUnmounted, } from 'vue';
+import { onMounted, ref, watchEffect, onUnmounted } from 'vue';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { LogicalSize } from '@tauri-apps/api/dpi';
 import Avatar from '../components/main/Avatar.vue';
@@ -10,23 +10,27 @@ import DecorationsHost from '../components/main/decorations/DecorationsHost.vue'
 import { useAppearanceConfigStore } from '../stores/appearanceConfig';
 import { windowListMaintainer } from '../services/screenAnalysis/windowListMaintainer';
 import { chatBubbleManager } from '../services/chatBubbleManager/chatBubbleManager';
+import { createGlobalHandlersManager } from '../services/events/globalHandlers';
 
 const avatarRef = ref();
 const ac = useAppearanceConfigStore();
 const window = getCurrentWebviewWindow();
 const { startWindowListMaintaining, stopWindowListMaintaining } = windowListMaintainer();
 const { startChatBubbleWatching, stopChatBubbleWatching } = chatBubbleManager();
+const globalHandlersManager = createGlobalHandlersManager();
 
 
 onMounted(async () => {
   startPetSizeWatching();  // 监听设置中的宠物大小以实时调整窗口
   startChatBubbleWatching();  // 监听聊天气泡状态以打开或关闭
+  await globalHandlersManager.start(); // 根据设置注册/管理全局事件处理
   startWindowListMaintaining();  // 实时更新当前窗口状态
 });
 
 onUnmounted(() => {
   stopPetSizeWatcher?.();
   stopChatBubbleWatching();
+  globalHandlersManager.stop();
   stopWindowListMaintaining();
 });
 
