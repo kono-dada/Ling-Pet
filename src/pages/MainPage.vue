@@ -19,9 +19,9 @@ const { startChatBubbleWatching, stopChatBubbleWatching } = chatBubbleManager();
 
 
 onMounted(async () => {
-  startPetSizeWatching();
-  startChatBubbleWatching();
-  startWindowListMaintaining()
+  startPetSizeWatching();  // 监听设置中的宠物大小以实时调整窗口
+  startChatBubbleWatching();  // 监听聊天气泡状态以打开或关闭
+  startWindowListMaintaining();  // 实时更新当前窗口状态
 });
 
 onUnmounted(() => {
