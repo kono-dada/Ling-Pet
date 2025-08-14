@@ -15,7 +15,7 @@ import { ScreenshotableWindow } from 'tauri-plugin-screenshots-api';
 
 const sgc = useScreenAnalysisConfigStore();
 
-const ignoreList = ['控制中心', '通知中心', 'Window Server', '搜狗输入法', 'lingpet'];
+const ignoreList = ['控制中心', '通知中心', 'Window Server', '搜狗输入法', 'lingpet', '程序坞'];
 
 // 由于macOS可能会有一些状态栏图标之类的被当成窗口，在这里过滤掉。lingpet自己也过滤掉。
 export async function getScreenshotableWindows(): Promise<ScreenshotableWindow[]> {

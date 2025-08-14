@@ -7,6 +7,7 @@ import { debug } from '@tauri-apps/plugin-log';
 export const usePetStateStore = defineStore('state', {
   state: () => ({
     currentEmotion: ref<EmotionName>(DEFAULT_EMOTION), // 默认情绪
+    lastClickTimestamp: ref<number>(Date.now()), // 上次点击时间戳
   }),
   actions: {
     setPetEmotion(emotion: string) {
@@ -18,5 +19,13 @@ export const usePetStateStore = defineStore('state', {
         this.currentEmotion = DEFAULT_EMOTION; // 设置为默认情绪
       }
     },
+    updateLastClickTimestamp() {
+      this.lastClickTimestamp = Date.now();
+    },
   },
+  getters: {
+    millisecondsSinceLastClick(): number {
+      return Date.now() - this.lastClickTimestamp;
+    }
+  }
 });
