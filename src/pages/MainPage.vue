@@ -8,76 +8,43 @@ import SettingButton from '../components/main/SettingButton.vue';
 import ChatHistoryButton from '../components/main/ChatHistoryButton.vue';
 import DecorationsHost from '../components/main/decorations/DecorationsHost.vue';
 import { useAppearanceConfigStore } from '../stores/appearanceConfig';
-import { useChatBubbleStateStore } from '../stores/chatBubbleState';
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { useCurrentWindowListStore } from '../stores/currentWindowList';
-import { getScreenshotableWindows } from '../services/screenAnalysisService';
+import { windowListMaintainer } from '../services/screenAnalysis/windowListMaintainer';
+import { chatBubbleManager } from '../services/chatBubbleManager/chatBubbleManager';
 
 const avatarRef = ref();
 const ac = useAppearanceConfigStore();
-const cbs = useChatBubbleStateStore();
-const currentWindowList = useCurrentWindowListStore()
 const window = getCurrentWebviewWindow();
+const { startWindowListMaintaining, stopWindowListMaintaining } = windowListMaintainer();
+const { startChatBubbleWatching, stopChatBubbleWatching } = chatBubbleManager();
 
+
+onMounted(async () => {
+  startPetSizeWatching();
+  startChatBubbleWatching();
+  startWindowListMaintaining()
+});
+
+onUnmounted(() => {
+  stopPetSizeWatcher?.();
+  stopChatBubbleWatching();
+  stopWindowListMaintaining();
+});
+
+
+let stopPetSizeWatcher: (() => void) | null = null;
 // 设置窗口为正方形
 async function setWindowToSquare() {
   window.setSize(new LogicalSize(ac.petSize, ac.petSize + 30));
 }
 
-// 每五秒刷新窗口状态
-async function updataWindowState() {
-  const windows = await getScreenshotableWindows();
-  const newWindows = currentWindowList.update(windows);
-  // 如果非空就log
-  if (newWindows.length > 0) {
-    console.log('新增窗口列表:', newWindows);
+async function startPetSizeWatching() {
+  await setWindowToSquare();
+  if (!stopPetSizeWatcher) {
+    stopPetSizeWatcher = watchEffect(async () => {
+      await setWindowToSquare();
+    });
   }
 }
-let intervalId: number | undefined;
-
-function openChatBubble() {
-  const chatBubbleConfig = {
-    title: '聊天气泡',
-    url: '/#/chat-bubble',
-    label: 'chat-bubble',
-    resizable: false,
-    transparent: true,
-    decorations: false,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    center: false,
-    visible: false,
-    shadow: false
-  };
-  new WebviewWindow('chat-bubble', chatBubbleConfig);
-}
-
-let stopPetSizeWatcher: (() => void) | null = null;
-let stopChatBubbleWatcher: (() => void) | null = null;
-onMounted(async () => {
-  await setWindowToSquare();
-  stopPetSizeWatcher = watchEffect(async () => {  // 监听 petSize 的变化， 确保窗口大小同步更新
-    await window.setSize(new LogicalSize(ac.petSize, ac.petSize + 30));
-  });
-  // 管理聊天气泡的打开和关闭
-  stopChatBubbleWatcher = watchEffect(async () => {
-    const currentMessage = cbs.currentMessage;
-    const chatBubbleWindow = await WebviewWindow.getByLabel('chat-bubble')
-    if (chatBubbleWindow) {
-      if (!currentMessage) await chatBubbleWindow.close();  // 如果没有消息，关闭气泡窗口
-      else if (!await chatBubbleWindow.isVisible()) await chatBubbleWindow.show();  // 如果有消息且窗口不可见，显示气泡窗口
-    } else if (currentMessage) openChatBubble();  // 如果没有窗口但有消息，创建新的气泡窗口
-  });
-  intervalId = setInterval(() => {
-    updataWindowState();
-  }, 5000);
-});
-
-onUnmounted(() => {
-  stopPetSizeWatcher?.();
-  stopChatBubbleWatcher?.();
-  if (intervalId !== undefined) clearInterval(intervalId);
-});
 
 </script>
 

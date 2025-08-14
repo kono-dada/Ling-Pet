@@ -1,5 +1,5 @@
-import { useScreenAnalysisConfigStore } from '../stores/screenAnalysisConfig';
-import type { AIMessage } from '../types/ai';
+import { useScreenAnalysisConfigStore } from '../../stores/screenAnalysisConfig';
+import type { AIMessage } from '../../types/ai';
 import type { ChatCompletion } from 'openai/resources';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import {
@@ -92,7 +92,7 @@ function toBase64(array: Uint8Array): Promise<string> {
 }
 
 // 使用视觉语言模型，获取多个窗口的描述
-export async function screenAnalysis(windowIds: number[] | null = null): Promise<string> {
+export async function describeScreens(windowIds: number[] | null = null): Promise<string> {
   if (!windowIds) {
     windowIds = (await getScreenshotableWindows()).map(win => win.id);
   }
@@ -152,7 +152,7 @@ export async function testScreenAnalysis(ids: number[] | null = null): Promise<{
     if (!ids || ids.length === 0) {
       ids = [(await getScreenshotableWindows())[0].id];
     }
-    const result = await screenAnalysis(ids);
+    const result = await describeScreens(ids);
     return { success: true, message: `屏幕分析成功: ${result}` };
   } catch (error) {
     console.error(error);

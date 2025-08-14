@@ -7,7 +7,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
 import { useChatBubbleStateStore } from '../../stores/chatBubbleState';
-import { screenAnalysis } from '../../services/screenAnalysisService';
+import { describeScreens } from '../../services/screenAnalysis/screenDescription';
 import { useStreamConversation } from '../../composables/useStreamConversation';
 import { chatWithPetStream } from '../../services/chatWithPet';
 
@@ -109,7 +109,7 @@ async function sendMessage() {
     if (userMessage.startsWith('.')) { // 使用屏幕分析
       screenAnalysisOn = true;
     }
-    const screenAnalysisResponse = screenAnalysisOn ? await screenAnalysis() : '';
+    const screenAnalysisResponse = screenAnalysisOn ? await describeScreens() : '';
     const screenAnalysisBlock = `<screen-analysis>${screenAnalysisResponse}</screen-analysis>`;
 
     const petResponse = await chatWithPetStream(
