@@ -105,15 +105,11 @@ async function sendMessage() {
       thinkingIndex.value = (thinkingIndex.value + 1) % thinkingMessages.length;
     }, 500);
 
-    let screenAnalysisOn = false;
-    if (userMessage.startsWith('.')) { // 使用屏幕分析
-      screenAnalysisOn = true;
-    }
-    const screenAnalysisResponse = screenAnalysisOn ? await describeScreens() : '';
+    const screenAnalysisResponse = userMessage.startsWith('.') ? await describeScreens() : '';
     const screenAnalysisBlock = `<screen-analysis>${screenAnalysisResponse}</screen-analysis>`;
 
     const petResponse = await chatWithPetStream(
-      userMessage + (screenAnalysisOn ? screenAnalysisBlock : ''),
+      userMessage + (userMessage.startsWith('.') ? screenAnalysisBlock : ''),
       addStreamItem
     );
 
