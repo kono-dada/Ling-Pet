@@ -3,10 +3,7 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": [
-    "main",
-    "settings",
-    "chat-bubble",
-    "chat-history"
+    "*"
   ],
   "permissions": [
     "core:default",

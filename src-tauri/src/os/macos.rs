@@ -48,6 +48,7 @@ pub fn setup_app() {
             NSApplicationActivationPolicy::NSApplicationActivationPolicyAccessory,
         );
     }
+    request_screen_recording_permission();
 }
 
 /// 设置 macOS 窗口的特定行为
@@ -73,6 +74,24 @@ pub fn setup_window(window: &WebviewWindow) -> Result<(), Box<dyn std::error::Er
     }
 
     Ok(())
+}
+
+#[cfg(target_os = "macos")]
+#[link(name = "CoreGraphics", kind = "framework")]
+unsafe extern "C" {
+    unsafe fn CGPreflightScreenCaptureAccess() -> bool;
+    unsafe fn CGRequestScreenCaptureAccess();
+}
+
+#[cfg(target_os = "macos")]
+pub fn request_screen_recording_permission() {
+    unsafe {
+        if !CGPreflightScreenCaptureAccess() {
+            CGRequestScreenCaptureAccess();
+            // 可在这里弹个对话框提示用户去 系统设置 → 隐私与安全性 → 屏幕录制 勾选你的 App，
+            // 并重启 App 生效。
+        }
+    }
 }
 
 /// 在非 macOS 平台上的空实现
