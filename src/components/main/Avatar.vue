@@ -50,7 +50,7 @@ function onImgError() {
 function onDragStart() {
   setTimeout(() => {
     appWindow.startDragging();
-  }, 100); // 防止拖拽阻挡点击事件的形成
+  }, 300); // 防止拖拽阻挡点击事件的形成
 }
 
 function onClick() {
