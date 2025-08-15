@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
-import { voiceVits } from './chatAndVoice/vitsService'
+import { voiceVits } from './vitsService'
 import { debug } from '@tauri-apps/plugin-log';
-import { useVitsConfigStore } from '../stores/vitsConfig';
+import { useVitsConfigStore } from '../../stores/vitsConfig';
 
 // Rust 侧统一管理子进程，保证多窗口/多 webview 全局唯一
 
