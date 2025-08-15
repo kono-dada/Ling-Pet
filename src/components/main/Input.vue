@@ -9,7 +9,7 @@ import { ref, computed, watch } from 'vue';
 import { useChatBubbleStateStore } from '../../stores/chatBubbleState';
 import { describeScreens } from '../../services/screenAnalysis/screenDescription';
 import { useStreamConversation } from '../../composables/useStreamConversation';
-import { chatWithPetStream } from '../../services/chatWithPet';
+import { chatWithPetStream } from '../../services/chatAndVoice/chatWithPet';
 
 const cbs = useChatBubbleStateStore();
 const { startStreaming, finishStreaming, addStreamItem, isStreaming } = useStreamConversation();

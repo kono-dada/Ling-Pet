@@ -88,7 +88,7 @@
 import { ref  } from 'vue';
 import { DEFAULT_CHARACTER_PROMPT } from '../../constants/ai';
 import { useAIConfigStore } from '../../stores/aiConfig';
-import { testAIConnection } from '../../services/aiService';
+import { testAIConnection } from '../../services/chatAndVoice/aiService';
 
 // 测试相关
 const testResult = ref<{ success: boolean; message: string } | null>(null);

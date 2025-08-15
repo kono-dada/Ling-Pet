@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
-import { voiceVits } from './vitsService'
+import { voiceVits } from './chatAndVoice/vitsService'
 import { debug } from '@tauri-apps/plugin-log';
 import { useVitsConfigStore } from '../stores/vitsConfig';
 
