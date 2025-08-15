@@ -72,35 +72,17 @@
 
           <v-divider class="my-6"></v-divider>
 
-          <v-switch
-            v-model="sc.enableNewWindowAutoReply"
-            color="primary"
-            inset
-            :label="`自动响应新窗口：${sc.enableNewWindowAutoReply ? '开启' : '关闭'}`"
-            hide-details
-          />
+          <v-switch v-model="sc.enableNewWindowAutoReply" color="primary" inset
+            :label="`自动响应新窗口：${sc.enableNewWindowAutoReply ? '开启' : '关闭'}`" hide-details />
           <p class="text-caption text-medium-emphasis mt-1">开启后，当检测到新的可截图窗口时，自动进行屏幕分析并生成回复。</p>
         </div>
 
         <v-divider class="my-8"></v-divider>
 
         <div class="mb-6">
-          <v-select
-            v-model="selectedWindowIds"
-            v-model:menu="windowMenuOpen"
-            :items="windowOptions"
-            item-title="label"
-            item-value="id"
-            label="选择窗口"
-            variant="outlined"
-            density="compact"
-            :loading="windowsLoading"
-            clearable
-            multiple
-            chips
-            class="mb-4"
-            @update:menu="onWindowMenuUpdate"
-          />
+          <v-select v-model="selectedWindowIds" v-model:menu="windowMenuOpen" :items="windowOptions" item-title="label"
+            item-value="id" label="选择窗口" variant="outlined" density="compact" :loading="windowsLoading" clearable
+            multiple chips class="mb-4" @update:menu="onWindowMenuUpdate" />
         </div>
 
         <div>
@@ -112,73 +94,73 @@
             variant="tonal" density="compact" class="mt-4" closable @click:close="testResult = null"></v-alert>
         </div>
 
-            </v-card-text>
-          </v-card>
-        </v-container>
-      </template>
+      </v-card-text>
+    </v-card>
+  </v-container>
+</template>
 
-      <script setup lang="ts">
-      import { ref, computed } from 'vue';
-      import { useScreenAnalysisConfigStore } from '../../stores/screenAnalysisConfig';
-      import { testScreenAnalysis, getScreenshotableWindows } from '../../services/screenAnalysis/screenDescription';
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { useScreenAnalysisConfigStore } from '../../stores/screenAnalysisConfig';
+import { testScreenAnalysis, getScreenshotableWindows } from '../../services/screenAnalysis/screenDescription';
 
-      // 默认系统提示词
-      const DEFAULT_SCREEN_PROMPT = '描述此屏幕截图的内容';
+// 默认系统提示词
+const DEFAULT_SCREEN_PROMPT = '描述此屏幕截图的内容';
 
-      // 测试相关
-      const testResult = ref<{ success: boolean; message: string } | null>(null);
-      const isTesting = ref(false);
+// 测试相关
+const testResult = ref<{ success: boolean; message: string } | null>(null);
+const isTesting = ref(false);
 
-      const sc = useScreenAnalysisConfigStore();
+const sc = useScreenAnalysisConfigStore();
 
-      const showApiKey = ref(false);
+const showApiKey = ref(false);
 
-      // 图像细节选项
-      const imageDetailOptions = [
-        { title: '低 (Low)', value: 'low' },
-        { title: '高 (High)', value: 'high' },
-        { title: '自动 (Auto)', value: 'auto' }
-      ];
+// 图像细节选项
+const imageDetailOptions = [
+  { title: '低 (Low)', value: 'low' },
+  { title: '高 (High)', value: 'high' },
+  { title: '自动 (Auto)', value: 'auto' }
+];
 
-      const windowsLoading = ref(false)
-      const windowMenuOpen = ref(false)
-      const selectedWindowIds = ref<number[]>([])
-      const windowsRaw = ref<Array<{ id: number; name: string; title: string; appName: string }>>([])
+const windowsLoading = ref(false)
+const windowMenuOpen = ref(false)
+const selectedWindowIds = ref<number[]>([])
+const windowsRaw = ref<Array<{ id: number; name: string; title: string; appName: string }>>([])
 
-      const windowOptions = computed(() =>
-        windowsRaw.value.map(w => ({
-          id: w.id,
-          label: `${w.name || w.title || '未命名'} — ${w.appName || ''}`.trim(),
-        }))
-      )
+const windowOptions = computed(() =>
+  windowsRaw.value.map(w => ({
+    id: w.id,
+    label: `${w.name || w.title || '未命名'} — ${w.appName || ''}`.trim(),
+  }))
+)
 
-      async function refreshWindowsOptions() {
-        try {
-          windowsLoading.value = true
-          const list = await getScreenshotableWindows()
-          // 直接使用返回值作为选项来源
-          windowsRaw.value = Array.isArray(list) ? list : []
-        } catch (e) {
-          windowsRaw.value = []
-        } finally {
-          windowsLoading.value = false
-        }
-      }
+async function refreshWindowsOptions() {
+  try {
+    windowsLoading.value = true
+    const list = await getScreenshotableWindows()
+    // 直接使用返回值作为选项来源
+    windowsRaw.value = Array.isArray(list) ? list : []
+  } catch (e) {
+    windowsRaw.value = []
+  } finally {
+    windowsLoading.value = false
+  }
+}
 
-      function onWindowMenuUpdate(open: boolean) {
-        windowMenuOpen.value = open
-        if (open) {
-          refreshWindowsOptions()
-        }
-      }
+function onWindowMenuUpdate(open: boolean) {
+  windowMenuOpen.value = open
+  if (open) {
+    refreshWindowsOptions()
+  }
+}
 
-      // 测试连接
-      async function testConnection() {
-        isTesting.value = true;
-        const result = await testScreenAnalysis(selectedWindowIds.value);
-        isTesting.value = false;
-        testResult.value = result;
-      }
+// 测试连接
+async function testConnection() {
+  isTesting.value = true;
+  const result = await testScreenAnalysis(selectedWindowIds.value);
+  isTesting.value = false;
+  testResult.value = result;
+}
 </script>
 
 <style scoped>
