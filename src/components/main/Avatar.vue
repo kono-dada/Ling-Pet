@@ -1,6 +1,11 @@
 <template>
-  <img :src="emotionSrc" :alt="emotionName" class="pet-avatar"
-    :class="{ 'shaking': isShaking }" draggable="false" @mousedown="onDragStart" @click.stop="onClick" />
+  <div class="avatar-wrapper">
+    <img v-show="isReady" :src="emotionSrc" :alt="emotionName" class="pet-avatar"
+      :class="{ 'shaking': isShaking }" draggable="false" @load="onImgLoad" @error="onImgError"
+      @mousedown="onDragStart" @click.stop="onClick" />
+    <div v-if="!isReady" class="avatar-loading">首次加载，请稍等……</div>
+  </div>
+  
 </template>
 
 <script lang="ts" setup>
@@ -18,15 +23,29 @@ const appWindow = getCurrentWebviewWindow();
 const { playNext } = useStreamConversation();
 
 const isShaking = ref(false);
+const isReady = ref(false);
 const emotionName = computed(() => codeToEmotion(state.currentEmotion));
 // 依赖 store 中的版本号和当前包名（服务内部会附加 v/pack 查询参数）
 const ac = useAppearanceConfigStore()
 const emotionSrc = computed(() => {
   // 建立依赖：当包名或版本变化时重新计算
-  void ac.activeEmotionPackName
-  void ac.emotionPackVersion
-  return getEmotionImageSrcByName(emotionName.value)
+  try {
+    void ac.activeEmotionPackName
+    void ac.emotionPackVersion
+    return getEmotionImageSrcByName(emotionName.value)
+  } catch (e) {
+    // 在资源尚未就绪时返回空字符串，保持占位视图
+    return ''
+  }
 })
+
+function onImgLoad() {
+  isReady.value = true;
+}
+
+function onImgError() {
+  isReady.value = false;
+}
 
 function onDragStart() {
   setTimeout(() => {
@@ -54,6 +73,13 @@ watch(() => state.currentEmotion, () => {
 </script>
 
 <style scoped>
+.avatar-wrapper {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .pet-avatar {
   object-fit: contain;
   border-radius: 50%;
@@ -65,6 +91,20 @@ watch(() => state.currentEmotion, () => {
   width: 80%;
   cursor: pointer;
   image-rendering: auto; /* 或 smooth，auto 通常效果更好 */
+}
+
+.avatar-loading {
+  width: 80%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.4); /* 灰色半透明背景 */
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  user-select: none;
 }
 
 /* 一惊一乍的伸缩动画 */

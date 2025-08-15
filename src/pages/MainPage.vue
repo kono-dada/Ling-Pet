@@ -11,6 +11,9 @@ import { useAppearanceConfigStore } from '../stores/appearanceConfig';
 import { windowListMaintainer } from '../services/screenAnalysis/windowListMaintainer';
 import { chatBubbleManager } from '../services/chatBubbleManager/chatBubbleManager';
 import { createGlobalHandlersManager } from '../services/events/globalHandlers';
+import { useVitsConfigStore } from '../stores/vitsConfig';
+import { startSbv2 } from '../services/chatAndVoice/sbv2Process';
+import { initEmotionPack, ensureDefaultEmotionPack } from '../services/emotionPack.ts';
 
 const avatarRef = ref();
 const ac = useAppearanceConfigStore();
@@ -18,13 +21,20 @@ const window = getCurrentWebviewWindow();
 const { startWindowListMaintaining, stopWindowListMaintaining } = windowListMaintainer();
 const { startChatBubbleWatching, stopChatBubbleWatching } = chatBubbleManager();
 const globalHandlersManager = createGlobalHandlersManager();
-
+const vitsConfig = useVitsConfigStore();
 
 onMounted(async () => {
   startPetSizeWatching();  // 监听设置中的宠物大小以实时调整窗口
   startChatBubbleWatching();  // 监听聊天气泡状态以打开或关闭
   await globalHandlersManager.start(); // 根据设置注册/管理全局事件处理
   startWindowListMaintaining();  // 实时更新当前窗口状态
+  if (vitsConfig.autoStartSbv2) {
+    await startSbv2(vitsConfig.installPath);
+  }
+  try {
+    await ensureDefaultEmotionPack()
+    await initEmotionPack()
+  } catch (err) { console.error('初始化情绪包失败：', err) }
 });
 
 onUnmounted(() => {
