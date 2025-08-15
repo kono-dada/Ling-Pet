@@ -34,7 +34,6 @@ onUnmounted(() => {
   stopWindowListMaintaining();
 });
 
-
 let stopPetSizeWatcher: (() => void) | null = null;
 // 设置窗口为正方形
 async function setWindowToSquare() {
@@ -54,8 +53,8 @@ async function startPetSizeWatching() {
 
 <template>
   <div class="main-wrapper" :style="{ opacity: ac.opacity }" @wheel.prevent> <!-- 防止滚轮事件导致滚动 -->
-  <!-- 装饰组件调度 -->
-  <DecorationsHost />
+    <!-- 装饰组件调度 -->
+    <DecorationsHost />
     <ChatHistoryButton class="button" />
     <Avatar ref="avatarRef" />
     <SettingButton class="button" />
