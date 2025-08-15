@@ -10,12 +10,12 @@ export async function handleAvatarMultiClick(_payload: { ts: number; threshold: 
   const items: PetResponseItem[] = [
     {
       message: '别戳啦，我会痒的！',
-  emotion: EMOTION_CODE_MAP['生气'],
+      emotion: EMOTION_CODE_MAP['生气'],
       japanese: '',
     },
     {
       message: '好啦好啦，有什么事嘛？',
-  emotion: EMOTION_CODE_MAP['正常'],
+      emotion: EMOTION_CODE_MAP['正常'],
       japanese: '',
     },
   ];

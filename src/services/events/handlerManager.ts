@@ -1,13 +1,13 @@
 import { watch } from 'vue';
 import type { UnlistenFn } from '@tauri-apps/api/event';
-import { listenEvent, type AppEventName } from './appEvents';
+import { listenEvent, type AppEventName, type EventPayloadMap } from './appEvents';
 
-export interface HandlerDescriptor<T = unknown> {
+export interface HandlerDescriptor<E extends AppEventName = AppEventName> {
   key: string; // unique id for this handler
-  event: AppEventName;
+  event: E;
   blocking?: boolean;
   isEnabled: () => boolean; // reactive getter from a store or computed
-  handle: (payload: T) => void | Promise<void>;
+  handle: (payload: EventPayloadMap[E]) => void | Promise<void>;
 }
 
 export function createHandlerManager(descriptors: HandlerDescriptor[]) {

@@ -1,11 +1,10 @@
 import { ScreenshotableWindow } from "tauri-plugin-screenshots-api";
-import { describeScreens } from "./screenDescription";
+import { describeScreens } from "../../services/screenAnalysis/screenDescription";
 import { useAIConfigStore } from "../../stores/aiConfig";
 import { useChatBubbleStateStore } from "../../stores/chatBubbleState";
-import { chatWithPetStream } from "../chatWithPet";
+import { chatWithPetStream } from "../../services/chatWithPet";
 import { useStreamConversation } from "../../composables/useStreamConversation";
 import { usePetStateStore } from "../../stores/petState";
-// Handler now exported as a plain function. Listener registration is managed centrally.
 
 const aiConfig = useAIConfigStore();
 const chatBubbleState = useChatBubbleStateStore();
@@ -43,3 +42,4 @@ export async function handleNewWindows(newWindows: ScreenshotableWindow[]) {
     addStreamItem
   );
 }
+

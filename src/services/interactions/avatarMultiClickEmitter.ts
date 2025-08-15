@@ -1,4 +1,4 @@
-import { emitEvent, AppEvents } from '../events/appEvents';
+import { emitAvatarMultiClick } from '../events/emitters';
 
 // Emits AVATAR_MULTI_CLICK when user clicks the avatar rapidly N times in a time window.
 // Defaults: 3 clicks within 1200ms.
@@ -16,8 +16,7 @@ export function registerAvatarClick(): void {
   if (clicks.length >= THRESHOLD) {
     // reset to avoid repeated firing on every subsequent click in the window
     clicks = [];
-    void emitEvent(AppEvents.AVATAR_MULTI_CLICK, { ts: now, threshold: THRESHOLD, windowMs: WINDOW_MS });
+    void emitAvatarMultiClick({ ts: now, threshold: THRESHOLD, windowMs: WINDOW_MS });
     console.log(`[avatar] 多次点击事件触发: ${THRESHOLD} 次点击在 ${WINDOW_MS}ms 内`);
   }
 }
-

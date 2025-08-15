@@ -1,17 +1,15 @@
 import { getScreenshotableWindows } from "./screenDescription";
 import { useCurrentWindowListStore } from "../../stores/currentWindowList";
-import { AppEvents, emitEvent } from "../events/appEvents";
+import { emitNewWindows } from "../events/emitters";
 
 const currentWindowList = useCurrentWindowListStore();
 
 async function updateWindowState() {
   const windows = await getScreenshotableWindows();
   const newWindows = currentWindowList.update(windows);
-  // Always emit updates for extensibility
-  emitEvent(AppEvents.WINDOWS_UPDATED, windows);
   if (newWindows.length > 0) {
     console.log('新增窗口列表:', newWindows);
-    emitEvent(AppEvents.NEW_WINDOWS, newWindows);
+    emitNewWindows(newWindows);
   }
 }
 
