@@ -1,8 +1,12 @@
 <template>
   <div class="avatar-wrapper">
-    <img v-show="isReady" :src="emotionSrc" :alt="emotionName" class="pet-avatar"
-      :class="{ 'shaking': isShaking }" draggable="false" @load="onImgLoad" @error="onImgError"
-      @mousedown="onDragStart" @click.stop="onClick" />
+    <div class="avatar-border">
+      <div class="avatar-anim" :class="{ shaking: isShaking, breathing: !isShaking }">
+        <img v-show="isReady" :src="emotionSrc" :alt="emotionName" class="pet-avatar"
+          draggable="false" @load="onImgLoad" @error="onImgError"
+          @mousedown="onDragStart" @click.stop="onClick" />
+      </div>
+    </div>
     <div v-if="!isReady" class="avatar-loading">首次加载，请稍等……</div>
   </div>
   
@@ -78,33 +82,30 @@ watch(() => state.currentEmotion, () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  --glow-color: 80 180 255; /* RGB values, e.g., cyan-blue */
 }
 
-.pet-avatar {
-  object-fit: contain;
+.avatar-border {
   border-radius: 50%;
-  /* 默认显示轮廓：阴影 + 边框 */
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   border: none;
-  transition: all 0.3s ease;
   background: transparent;
   width: 80%;
-  cursor: pointer;
-  image-rendering: auto; /* 或 smooth，auto 通常效果更好 */
-}
-
-.avatar-loading {
-  width: 80%;
   aspect-ratio: 1 / 1;
-  border-radius: 50%;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-  background: rgba(0, 0, 0, 0.4); /* 灰色半透明背景 */
-  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  user-select: none;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.avatar-anim {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
 }
 
 /* 一惊一乍的伸缩动画 */
@@ -134,16 +135,58 @@ watch(() => state.currentEmotion, () => {
   }
 }
 
+@keyframes breathe {
+  0%, 100% {
+    transform: scaleX(1) scaleY(1) translateY(0);
+  }
+  50% {
+    transform: scaleX(1.02) scaleY(1.02) translateY(-2px);
+  }
+}
+
 .shaking {
   animation: startled 0.6s ease-out;
   transform-origin: center bottom;
 }
 
-.pet-avatar:hover {
+.breathing {
+  animation: breathe 6s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+.pet-avatar {
+  object-fit: contain;
+  width: 100%;
+  cursor: pointer;
+  image-rendering: auto; /* 或 smooth，auto 通常效果更好 */
+  filter: drop-shadow(0 0 6px rgb(var(--glow-color) / 0.6))
+          drop-shadow(0 0 12px rgb(var(--glow-color) / 0.35));
+  transition: filter 0.2s ease;
+}
+
+.avatar-loading {
+  width: 80%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.4); /* 灰色半透明背景 */
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  user-select: none;
+}
+
+.avatar-border:hover {
   transform: scale(1.05);
   transform-origin: center bottom;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  border-color: rgba(255, 255, 255, 1);
+}
+
+.avatar-border:hover .pet-avatar {
+  filter: drop-shadow(0 0 8px rgb(var(--glow-color) / 0.75))
+          drop-shadow(0 0 18px rgb(var(--glow-color) / 0.5));
 }
 
 </style>
