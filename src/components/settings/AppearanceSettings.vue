@@ -45,21 +45,29 @@
 
           <div class="mb-3 d-flex justify-space-between align-center">
             <h3 class="text-subtitle-1 font-weight-bold">表情包管理</h3>
-            <v-chip size="small" color="secondary" label>当前：{{ currentPack || '未选择' }}</v-chip>
+            <div class="d-flex align-center" style="gap: 8px">
+              <v-chip size="small" color="secondary" label>当前：{{ currentPack || '未选择' }}</v-chip>
+              <v-btn color="secondary" variant="outlined" @click="importPack">导入 ZIP...</v-btn>
+            </div>
           </div>
-          <div class="d-flex align-center" style="gap: 8px">
-            <v-select
-              v-model="selectedPack"
-              :items="packOptions"
-              label="可用表情包"
-              density="comfortable"
-              variant="outlined"
-              hide-details
-              style="max-width: 280px"
-            />
-            <v-btn color="primary" @click="applyPack" :disabled="!selectedPack">应用</v-btn>
-            <v-btn color="secondary" variant="outlined" @click="importPack">导入 ZIP...</v-btn>
-          </div>
+
+          <v-row dense>
+            <v-col v-for="p in previews" :key="p.name" cols="6" sm="4" md="3" lg="2">
+              <v-card
+                class="pack-card"
+                :class="{ active: currentPack === p.name }"
+                elevation="0"
+                rounded="lg"
+                variant="outlined"
+                @click="activatePack(p.name)"
+              >
+                <v-img :src="p.src" :alt="p.name" aspect-ratio="1" cover class="pack-img" />
+                <v-card-subtitle class="py-2 text-center" style="background: #e6e7e9">
+                  <span class="text-truncate" style="max-width: 100%; display: inline-block;">{{ p.name }}</span>
+                </v-card-subtitle>
+              </v-card>
+            </v-col>
+          </v-row>
         </div>
       </v-card-text>
     </v-card>
@@ -71,6 +79,9 @@ import { computed, ref, onMounted } from 'vue';
 import { useAppearanceConfigStore } from '../../stores/appearanceConfig';
 import { listEmotionPacks, getActiveEmotionPack, importEmotionPackFromZip, setActiveEmotionPack } from '../../services/emotionPack'
 import { open } from '@tauri-apps/plugin-dialog'
+import { appDataDir } from '@tauri-apps/api/path'
+import { readTextFile } from '@tauri-apps/plugin-fs'
+import { convertFileSrc } from '@tauri-apps/api/core'
 
 // Constants
 const MIN_SIZE = 100;
@@ -97,26 +108,47 @@ const decorationLabel = computed(() => {
 const formattedOpacity = computed(() => `${Math.round(ac.opacity * 100)}%`);
 
 // 表情包管理状态
-const packOptions = ref<string[]>([])
-const selectedPack = ref<string>('')
 const currentPack = ref<string | null>(null)
+type PackPreview = { name: string; src: string; code: number; defaultName: string }
+const previews = ref<PackPreview[]>([])
 
-async function refreshPacks() {
-  packOptions.value = await listEmotionPacks()
-  currentPack.value = await getActiveEmotionPack()
-  if (currentPack.value && packOptions.value.includes(currentPack.value)) {
-    selectedPack.value = currentPack.value
-  } else {
-    selectedPack.value = packOptions.value[0] ?? ''
+function joinPath(a: string, b: string) {
+  if (!a) return b
+  return a.replace(/[\/]+$/, '') + '/' + b.replace(/^[\/]+/, '')
+}
+
+async function buildPreview(name: string): Promise<PackPreview | null> {
+  try {
+    const base = await appDataDir()
+    const root = joinPath(joinPath(base, 'emotion_packs'), name)
+    const cfgText = await readTextFile(joinPath(root, 'config.json'))
+    const cfg = JSON.parse(cfgText) as { map: Record<string, number>; default: string }
+    const def = cfg.default
+    const code = cfg.map[def]
+    if (typeof code !== 'number') return null
+    const img = convertFileSrc(joinPath(root, `${code}.png`))
+    return { name, src: img, code, defaultName: def }
+  } catch (e) {
+    console.warn('构建预览失败: ', name, e)
+    return null
   }
 }
 
-async function applyPack() {
-  if (!selectedPack.value) return
-  // 仅写入全局 store，交由主窗口监听后切换
-  setActiveEmotionPack(selectedPack.value)
-  ac.activeEmotionPackName = selectedPack.value
-  await refreshPacks()
+async function refreshPacks() {
+  const names = await listEmotionPacks()
+  currentPack.value = await getActiveEmotionPack()
+  const built = await Promise.all(names.map(buildPreview))
+  previews.value = built.filter((x): x is PackPreview => !!x)
+}
+
+async function activatePack(name: string) {
+  try {
+    await setActiveEmotionPack(name)
+    ac.activeEmotionPackName = name
+    currentPack.value = name
+  } catch (e) {
+    console.error('切换表情包失败: ', e)
+  }
 }
 
 async function importPack() {
@@ -125,7 +157,6 @@ async function importPack() {
   if (!file) return
   await importEmotionPackFromZip(file)
   await refreshPacks()
-  if (selectedPack.value) ac.activeEmotionPackName = selectedPack.value
 }
 
 onMounted(() => { refreshPacks() })
@@ -139,4 +170,13 @@ onMounted(() => { refreshPacks() })
   font-weight: 500;
   opacity: 1;
 }
+
+.pack-card {
+  cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease;
+  border: 1px solid color-mix(in oklab, rgb(var(--v-theme-outline-variant)) 60%, transparent);
+}
+.pack-card:hover { background-color: color-mix(in oklab, rgb(var(--v-theme-primary)) 6%, transparent); }
+.pack-card.active { border-color: rgb(var(--v-theme-primary)); }
+.pack-img { background: #f6f7f9; }
 </style>
