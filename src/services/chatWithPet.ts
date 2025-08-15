@@ -1,6 +1,6 @@
 import { PetResponseItem } from "../types/ai";
 import { AIMessage } from "../types/ai";
-import { RESPONSE_FORMAT_PROMPT } from "../constants/ai";
+import { getResponseFormatPrompt } from "../constants/ai";
 import { USER_PROMPT_WRAPPER } from "../constants/ai";
 import { useAIConfigStore } from "../stores/aiConfig";
 import { useChatHistoryStore } from "../stores/chatHistory";
@@ -64,7 +64,7 @@ export async function chatWithPetStream(
   if (ac.systemPrompt) {
     messages.push({
       role: 'system',
-      content: RESPONSE_FORMAT_PROMPT + '\n\n' + ac.systemPrompt
+  content: getResponseFormatPrompt() + '\n\n' + ac.systemPrompt
     });
   }
   // 添加历史消息的最末尾的ac.maxHistoryLength条消息

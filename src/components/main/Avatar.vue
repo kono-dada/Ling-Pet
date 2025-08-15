@@ -1,5 +1,5 @@
 <template>
-  <img :src="`/avatar/${emotionName}.png`" :alt="emotionName" class="pet-avatar"
+  <img :src="emotionSrc" :alt="emotionName" class="pet-avatar"
     :class="{ 'shaking': isShaking }" draggable="false" @mousedown="onDragStart" @click.stop="onClick" />
 </template>
 
@@ -8,8 +8,10 @@ import { ref, watch, computed } from 'vue';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { usePetStateStore } from '../../stores/petState';
 import { codeToEmotion } from '../../constants/emotions';
+import { getEmotionImageSrcByName } from '../../services/emotionPack'
 import { useStreamConversation } from '../../composables/useStreamConversation';
 import { registerAvatarClick } from '../../services/interactions/avatarMultiClickEmitter';
+import { useAppearanceConfigStore } from '../../stores/appearanceConfig'
 
 const state = usePetStateStore()
 const appWindow = getCurrentWebviewWindow();
@@ -17,6 +19,14 @@ const { playNext } = useStreamConversation();
 
 const isShaking = ref(false);
 const emotionName = computed(() => codeToEmotion(state.currentEmotion));
+// 依赖 store 中的版本号和当前包名（服务内部会附加 v/pack 查询参数）
+const ac = useAppearanceConfigStore()
+const emotionSrc = computed(() => {
+  // 建立依赖：当包名或版本变化时重新计算
+  void ac.activeEmotionPackName
+  void ac.emotionPackVersion
+  return getEmotionImageSrcByName(emotionName.value)
+})
 
 function onDragStart() {
   setTimeout(() => {

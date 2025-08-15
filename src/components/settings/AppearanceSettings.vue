@@ -40,6 +40,26 @@
               hide-details
             />
           </div>
+
+          <v-divider class="my-6"></v-divider>
+
+          <div class="mb-3 d-flex justify-space-between align-center">
+            <h3 class="text-subtitle-1 font-weight-bold">表情包管理</h3>
+            <v-chip size="small" color="secondary" label>当前：{{ currentPack || '未选择' }}</v-chip>
+          </div>
+          <div class="d-flex align-center" style="gap: 8px">
+            <v-select
+              v-model="selectedPack"
+              :items="packOptions"
+              label="可用表情包"
+              density="comfortable"
+              variant="outlined"
+              hide-details
+              style="max-width: 280px"
+            />
+            <v-btn color="primary" @click="applyPack" :disabled="!selectedPack">应用</v-btn>
+            <v-btn color="secondary" variant="outlined" @click="importPack">导入 ZIP...</v-btn>
+          </div>
         </div>
       </v-card-text>
     </v-card>
@@ -47,8 +67,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useAppearanceConfigStore } from '../../stores/appearanceConfig';
+import { listEmotionPacks, getActiveEmotionPack, importEmotionPackFromZip, setActiveEmotionPack } from '../../services/emotionPack'
+import { open } from '@tauri-apps/plugin-dialog'
 
 // Constants
 const MIN_SIZE = 100;
@@ -73,6 +95,40 @@ const decorationLabel = computed(() => {
 
 // Computed property to format the opacity value for display
 const formattedOpacity = computed(() => `${Math.round(ac.opacity * 100)}%`);
+
+// 表情包管理状态
+const packOptions = ref<string[]>([])
+const selectedPack = ref<string>('')
+const currentPack = ref<string | null>(null)
+
+async function refreshPacks() {
+  packOptions.value = await listEmotionPacks()
+  currentPack.value = await getActiveEmotionPack()
+  if (currentPack.value && packOptions.value.includes(currentPack.value)) {
+    selectedPack.value = currentPack.value
+  } else {
+    selectedPack.value = packOptions.value[0] ?? ''
+  }
+}
+
+async function applyPack() {
+  if (!selectedPack.value) return
+  // 仅写入全局 store，交由主窗口监听后切换
+  setActiveEmotionPack(selectedPack.value)
+  ac.activeEmotionPackName = selectedPack.value
+  await refreshPacks()
+}
+
+async function importPack() {
+  const picked = await open({ multiple: false, directory: false, filters: [{ name: 'Zip', extensions: ['zip'] }] })
+  const file = Array.isArray(picked) ? picked[0] : picked
+  if (!file) return
+  await importEmotionPackFromZip(file)
+  await refreshPacks()
+  if (selectedPack.value) ac.activeEmotionPackName = selectedPack.value
+}
+
+onMounted(() => { refreshPacks() })
 
 </script>
 

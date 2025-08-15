@@ -9,6 +9,7 @@ import { useVitsConfigStore } from './stores/vitsConfig';
 import { onMounted } from 'vue';
 import { denySave } from '@tauri-store/pinia';
 import { startSbv2 } from './services/sbv2Process';
+import { initEmotionPack, ensureDefaultEmotionPack } from './services/emotionPack';
 
 onMounted(async () => {
   await useAppearanceConfigStore().$tauri.start();
@@ -22,6 +23,10 @@ onMounted(async () => {
   if (vitsConfig.autoStartSbv2) {
     await startSbv2(vitsConfig.installPath);
   }
+  try {
+    await ensureDefaultEmotionPack()
+    await initEmotionPack()
+  } catch (err) { console.error('初始化情绪包失败：', err) }
   denySave('chatBubbleState');
 });
 </script>
