@@ -191,7 +191,7 @@ import { getEmotionColorTheme } from '../constants/emotionColors';
 import { codeToEmotion } from '../constants/emotions';
 import { getEmotionImageSrcByName } from '../services/emotionPack';
 import { ref } from 'vue';
-import { voiceVits } from '../services/vitsService';
+import { voiceVits } from '../services/chatAndVoice/vitsService';
 
 const chs = useChatHistoryStore();
 const vcs = useVitsConfigStore();

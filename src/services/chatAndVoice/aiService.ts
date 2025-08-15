@@ -1,7 +1,7 @@
-import { useAIConfigStore } from '../stores/aiConfig';
+import { useAIConfigStore } from '../../stores/aiConfig';
 import { computed } from 'vue';
-import type { AIMessage } from '../types/ai';
-import { DEFAULT_CHARACTER_PROMPT } from '../constants/ai';
+import type { AIMessage } from '../../types/ai';
+import { DEFAULT_CHARACTER_PROMPT } from '../../constants/ai';
 import type { ChatCompletion } from 'openai/resources';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { OpenAI } from 'openai';

@@ -3,7 +3,7 @@ import { useChatBubbleStateStore, PetResponseItemWithAudio } from "../stores/cha
 import { usePetStateStore } from "../stores/petState";
 import { useVitsConfigStore } from "../stores/vitsConfig";
 import { getDefaultEmotion, EMOTION_CODE_MAP } from "../constants/emotions";
-import { voiceVits } from "../services/vitsService";
+import { voiceVits } from "../services/chatAndVoice/vitsService";
 import { debug } from "@tauri-apps/plugin-log";
 import { ref } from "vue";
 

@@ -1,4 +1,4 @@
-import { useVitsConfigStore } from '../stores/vitsConfig'
+import { useVitsConfigStore } from '../../stores/vitsConfig'
 import { fetch } from '@tauri-apps/plugin-http'
 
 export async function voiceVits(

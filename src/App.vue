@@ -8,7 +8,7 @@ import { useScreenAnalysisConfigStore } from './stores/screenAnalysisConfig';
 import { useVitsConfigStore } from './stores/vitsConfig';
 import { onMounted } from 'vue';
 import { denySave } from '@tauri-store/pinia';
-import { startSbv2 } from './services/sbv2Process';
+import { startSbv2 } from './services/chatAndVoice/sbv2Process';
 import { initEmotionPack, ensureDefaultEmotionPack } from './services/emotionPack';
 
 onMounted(async () => {

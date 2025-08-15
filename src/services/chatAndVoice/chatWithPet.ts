@@ -1,9 +1,9 @@
-import { PetResponseItem } from "../types/ai";
-import { AIMessage } from "../types/ai";
-import { getResponseFormatPrompt } from "../constants/ai";
-import { USER_PROMPT_WRAPPER } from "../constants/ai";
-import { useAIConfigStore } from "../stores/aiConfig";
-import { useChatHistoryStore } from "../stores/chatHistory";
+import { PetResponseItem } from "../../types/ai";
+import { AIMessage } from "../../types/ai";
+import { getResponseFormatPrompt } from "../../constants/ai";
+import { USER_PROMPT_WRAPPER } from "../../constants/ai";
+import { useAIConfigStore } from "../../stores/aiConfig";
+import { useChatHistoryStore } from "../../stores/chatHistory";
 import { callAIStream } from "./aiService";
 import { computed } from "vue";
 
