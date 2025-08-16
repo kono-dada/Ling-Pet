@@ -12,6 +12,7 @@ export const useAIConfigStore = defineStore(
     const maxTokens = ref(2000) // 默认最大令牌数
     const systemPrompt = ref(DEFAULT_CHARACTER_PROMPT) // 默认系统提示为空
     const historyMaxLength = ref(100) // 默认历史记录最大长度
+    const autoPlay = ref(true) // 默认自动播放开启
 
     return {
       apiKey,
@@ -21,6 +22,7 @@ export const useAIConfigStore = defineStore(
       maxTokens,
       systemPrompt,
       historyMaxLength,
+      autoPlay,
     }
   },
   {

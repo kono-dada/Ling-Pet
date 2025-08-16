@@ -51,6 +51,17 @@
             <v-slider v-model="ac.historyMaxLength" :min="10" :max="1000" :step="10" thumb-label color="green"></v-slider>
           </div>
 
+          <!-- 自动播放开关 -->
+          <div class="mt-6">
+            <v-switch
+              v-model="ac.autoPlay"
+              label="自动播放下一句话"
+              color="primary"
+              hint="开启后将自动播放下一句对话，无需手动点击头像"
+              persistent-hint
+            ></v-switch>
+          </div>
+
         </div>
 
         <v-divider class="my-8"></v-divider>

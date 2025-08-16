@@ -24,7 +24,7 @@ import { useAppearanceConfigStore } from '../../stores/appearanceConfig'
 
 const state = usePetStateStore()
 const appWindow = getCurrentWebviewWindow();
-const { playNext } = useStreamConversation();
+const { playNext, autoPlayManager } = useStreamConversation();
 
 const isShaking = ref(false);
 const isReady = ref(false);
@@ -58,6 +58,9 @@ function onDragStart() {
 }
 
 function onClick() {
+  // 取消可能存在的自动播放定时器
+  autoPlayManager.cancel();
+  
   state.updateLastClickTimestamp();
   playNext();
   registerAvatarClick();

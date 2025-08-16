@@ -11,12 +11,12 @@ export async function handleAvatarMultiClick(_payload: { ts: number; threshold: 
     {
       message: '别戳啦，我会痒的！',
       emotion: EMOTION_CODE_MAP['生气'],
-      japanese: '',
+      japanese: 'つつかないで、くすぐったいよ！',
     },
     {
       message: '好啦好啦，有什么事嘛？',
       emotion: EMOTION_CODE_MAP['正常'],
-      japanese: '',
+      japanese: 'わかったって、わかったって。何なの？',
     },
   ];
 
