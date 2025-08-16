@@ -5,47 +5,13 @@ import { USER_PROMPT_WRAPPER } from "../../constants/ai";
 import { useAIConfigStore } from "../../stores/aiConfig";
 import { useChatHistoryStore } from "../../stores/chatHistory";
 import { callAIStream } from "./aiService";
+import { createPetResponseChunkHandler } from "./chunkHandlers";
 import { computed } from "vue";
 
 
 const ac = useAIConfigStore();
 const chs = useChatHistoryStore();
 const validateAIConfig = computed(() => Boolean(ac.apiKey && ac.baseURL && ac.model));
-
-function parsePetResponseItemString(response: string): PetResponseItem | null {
-  const parts = response.split('|');
-  if (parts.length !== 3) return null;
-  const [message, japanese, emotionPart] = parts.map(part => part.trim());
-  if (!message || !japanese) return null;
-  const code = Number(emotionPart);
-  if (!Number.isInteger(code)) return null;
-  return { message, japanese, emotion: code };
-}
-
-// 专门处理Pet响应格式的chunk处理器
-function createPetResponseChunkHandler(onItemComplete: (item: PetResponseItem) => Promise<void>) {
-  return async (_chunk: string, buffer: string): Promise<string> => {
-    // 检查是否有完整的 <item></item> 标签
-    const itemRegex = /<item>(.*?)<\/item>/g;
-    let match;
-
-    while ((match = itemRegex.exec(buffer)) !== null) {
-      const itemContent = match[1];
-      console.log('检测到完整item:', itemContent);
-      const parsedItem = parsePetResponseItemString(itemContent);
-
-      if (parsedItem) {  // 如果解析成功，调用回调函数
-        await onItemComplete(parsedItem);
-        console.log('解析到完整item:', parsedItem);
-      } else {
-        console.warn('解析item失败:', itemContent);
-      }
-    }
-
-    // 移除已处理的完整 item 标签，返回处理后的buffer
-    return buffer.replace(/<item>.*?<\/item>/g, '');
-  };
-}
 
 export async function chatWithPetStream(
   userMessage: string,
@@ -87,7 +53,7 @@ export async function chatWithPetStream(
     content: userMessage
   });
 
-  const result = await callAIStream(messages, createPetResponseChunkHandler(onItemComplete));
+  const result = await callAIStream(messages, [createPetResponseChunkHandler(onItemComplete)]);
 
   chs.addMessage({
     role: 'assistant',

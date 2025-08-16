@@ -5,6 +5,8 @@ import { DEFAULT_CHARACTER_PROMPT } from '../../constants/ai';
 import type { ChatCompletion } from 'openai/resources';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { OpenAI } from 'openai';
+import type { ChunkHandler } from './chunkHandlers';
+import { createMultiChunkHandler } from './chunkHandlers';
 
 const ac = useAIConfigStore();
 const validateAIConfig = computed(() => Boolean(ac.apiKey && ac.baseURL && ac.model));
@@ -35,7 +37,7 @@ export async function callAI(messages: AIMessage[]): Promise<ChatCompletion> {
 // 流式对话，通用的流式处理函数
 export async function callAIStream(
   messages: AIMessage[],
-  onChunk: (chunk: string, buffer: string) => Promise<string>
+  onChunks: ChunkHandler[]
 ): Promise<{
   response: string;
   error?: string;
@@ -57,6 +59,7 @@ export async function callAIStream(
 
     let buffer = '';
     let usage;
+    const handler: ChunkHandler = createMultiChunkHandler(onChunks);
 
     for await (const chunk of stream) {
       const content = chunk.choices[0]?.delta?.content || '';
@@ -64,8 +67,8 @@ export async function callAIStream(
       buffer += content;
       if (chunk.usage) usage = chunk.usage;
 
-      // 调用回调函数处理chunk，返回处理后的buffer
-      buffer = await onChunk(content, buffer);
+      // 顺序执行 handlers，逐个接收上一个返回的 buffer
+      buffer = await handler(buffer);
     }
     console.log('流式处理完成，累计tokens:', usage?.completion_tokens);
     console.log('流式处理完成，累计prompt tokens:', usage?.prompt_tokens);
