@@ -1,5 +1,4 @@
 import { useAIConfigStore } from '../../stores/aiConfig';
-import { computed } from 'vue';
 import type { AIMessage } from '../../types/ai';
 import { DEFAULT_CHARACTER_PROMPT } from '../../constants/ai';
 import type { ChatCompletion } from 'openai/resources';
@@ -8,10 +7,8 @@ import { OpenAI } from 'openai';
 import type { ChunkHandler } from './chunkHandlers';
 import { createMultiChunkHandler } from './chunkHandlers';
 
-const ac = useAIConfigStore();
-const validateAIConfig = computed(() => Boolean(ac.apiKey && ac.baseURL && ac.model));
-
 function createNewClient() {
+  const ac = useAIConfigStore();
   return new OpenAI({
     apiKey: ac.apiKey,
     baseURL: ac.baseURL,
@@ -21,6 +18,7 @@ function createNewClient() {
 }
 
 export async function callAI(messages: AIMessage[]): Promise<ChatCompletion> {
+  const ac = useAIConfigStore();
   const client = createNewClient();
 
   console.log('调用AI服务，消息:', messages);
@@ -49,10 +47,10 @@ export async function callAIStream(
   try {
     console.log('调用AI流式服务，消息:', messages);
     const stream = await client.chat.completions.create({
-      model: ac.model,
+      model: useAIConfigStore().model,
       messages: messages,
-      temperature: ac.temperature,
-      max_tokens: ac.maxTokens,
+      temperature: useAIConfigStore().temperature,
+      max_tokens: useAIConfigStore().maxTokens,
       stream: true,
       stream_options: { include_usage: true }
     });
@@ -80,7 +78,9 @@ export async function callAIStream(
 }
 
 export async function testAIConnection(): Promise<{ success: boolean; message: string }> {
-  if (!validateAIConfig.value) {
+  const ac = useAIConfigStore();
+  const hasConfig = Boolean(ac.apiKey && ac.baseURL && ac.model)
+  if (!hasConfig) {
     return { success: false, message: '请正确配置AI服务' };
   }
 

@@ -4,7 +4,7 @@ import { listTools } from "../services/tools/registry";
 export const USER_PROMPT_WRAPPER = 
 `以下是来自我的消息:
 {}
-为了确保成功和暗恋的对象联系，你要回复一个list。
+为了确保对话成功，你需要严格按照规则回复。
 `
 
 export const DEFAULT_CHARACTER_PROMPT = 
@@ -57,3 +57,12 @@ ${toolList}
 你必须严格遵守以上格式上的规定，否则会导致极端对话崩溃。
 `;
 }
+
+// 针对调度任务（schedule）触发的用户消息包装
+// 将任务上下文明确告知助手，避免其将该消息误认为普通聊天输入
+export const SCHEDULE_PROMPT_WRAPPER =
+`以下是来自一个计划任务的提醒（非即时聊天输入）。
+你需要基于任务内容进行自然的提醒与互动，但请避免重复询问是否需要创建提醒（任务已创建并到时触发）。
+任务内容如下：
+{}
+`
