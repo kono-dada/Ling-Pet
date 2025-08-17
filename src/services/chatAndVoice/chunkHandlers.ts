@@ -55,3 +55,43 @@ export function createPetResponseChunkHandler(
     return buffer.replace(/<item>.*?<\/item>/g, '');
   };
 }
+
+// 工具调用解析器：解析 <tool><name>..</name><arguments>..</arguments></tool>
+export function createToolCallChunkHandler(
+  onItemComplete: (name: string, args: string[]) => Promise<{ success: boolean; result?: unknown; error?: string }>
+): ChunkHandler {
+  return async (buffer: string): Promise<string> => {
+    const toolRegex = /<tool>([\s\S]*?)<\/tool>/g;
+    let match: RegExpExecArray | null;
+
+    while ((match = toolRegex.exec(buffer)) !== null) {
+      const toolContent = match[1] ?? '';
+      const nameMatch = /<name>([\s\S]*?)<\/name>/.exec(toolContent);
+      const argsMatch = /<arguments>([\s\S]*?)<\/arguments>/.exec(toolContent);
+
+      const rawName = nameMatch?.[1]?.trim() ?? '';
+      const rawArgs = argsMatch?.[1]?.trim() ?? '';
+
+      if (rawName) {
+        // 多参数以英文逗号分隔，修剪前后空白与引号
+        const args = rawArgs
+          .split(',')
+          .map((s) => s.trim())
+          .map((s) => s.replace(/^['"“”‘’]|['"“”‘’]$/g, ''))
+          .filter((s) => s.length > 0);
+
+        try {
+          console.log('解析到工具调用:', { name: rawName, args });
+          await onItemComplete(rawName, args);
+        } catch (e) {
+          console.warn('处理工具调用回调时出错:', e);
+        }
+      } else {
+        console.warn('解析工具调用失败，缺少 <name> 或 <arguments>');
+      }
+    }
+
+    // 去除已处理的 <tool> 区块
+    return buffer.replace(/<tool>[\s\S]*?<\/tool>/g, '');
+  };
+}
