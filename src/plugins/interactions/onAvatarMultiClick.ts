@@ -1,11 +1,11 @@
-import { useStreamConversation } from '../../composables/useStreamConversation';
+import { useConversationStore } from '../../stores/conversation';
 import type { PetResponseItem } from '../../types/ai';
 import { EMOTION_CODE_MAP } from '../../constants/emotions';
 
 // A simple demo handler for avatar multi-click event.
 // It injects two messages to the chat bubble without calling any model.
 export async function handleAvatarMultiClick(_payload: { ts: number; threshold: number; windowMs: number }) {
-  const { addStreamItem } = useStreamConversation();
+  const conversation = useConversationStore();
 
   const items: PetResponseItem[] = [
     {
@@ -22,7 +22,6 @@ export async function handleAvatarMultiClick(_payload: { ts: number; threshold: 
 
   for (const it of items) {
     // eslint-disable-next-line no-await-in-loop
-    await addStreamItem(it);
+    await conversation.addItem(it);
   }
 }
-

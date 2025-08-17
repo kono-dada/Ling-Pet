@@ -18,13 +18,13 @@ import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { usePetStateStore } from '../../stores/petState';
 import { codeToEmotion } from '../../constants/emotions';
 import { getEmotionImageSrcByName } from '../../services/emotionPack'
-import { useStreamConversation } from '../../composables/useStreamConversation';
+import { useConversationStore } from '../../stores/conversation';
 import { registerAvatarClick } from '../../services/interactions/avatarMultiClickEmitter';
 import { useAppearanceConfigStore } from '../../stores/appearanceConfig'
 
 const state = usePetStateStore()
 const appWindow = getCurrentWebviewWindow();
-const { playNext, autoPlayManager } = useStreamConversation();
+const conversation = useConversationStore();
 
 const isShaking = ref(false);
 const isReady = ref(false);
@@ -57,14 +57,14 @@ function onDragStart() {
   }, 300); // 防止拖拽阻挡点击事件的形成
 }
 
-function onClick() {
+  function onClick() {
   // 取消可能存在的自动播放定时器
-  autoPlayManager.cancel();
+  conversation.cancelAutoPlay();
   
   state.updateLastClickTimestamp();
-  playNext();
+  conversation.playNext();
   registerAvatarClick();
-}
+  }
 
 function triggerShakeEffect() {
   isShaking.value = true;

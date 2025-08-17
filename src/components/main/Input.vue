@@ -5,14 +5,14 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
-import { useChatBubbleStateStore } from '../../stores/chatBubbleState';
 import { describeScreens } from '../../services/screenAnalysis/screenDescription';
-import { useStreamConversation } from '../../composables/useStreamConversation';
+import { useConversationStore } from '../../stores/conversation';
+import { storeToRefs } from 'pinia';
 import { chatWithPetStream } from '../../services/chatAndVoice/chatWithPet';
 import { callToolByName } from '../../services/tools';
 
-const cbs = useChatBubbleStateStore();
-const { startStreaming, finishStreaming, addStreamItem, isStreaming } = useStreamConversation();
+const conversation = useConversationStore();
+const { isStreaming } = storeToRefs(conversation);
 
 
 const inputMessage = ref('');
@@ -63,7 +63,7 @@ const stateConfig = {
 // 状态计算逻辑
 const currentState = computed(() => {
   if (isStreaming.value) return InputState.THINKING;
-  if (cbs.responseItems.length > 0) return InputState.CONTINUE;
+  if (conversation.responseItems.length > 0) return InputState.CONTINUE;
   return InputState.IDLE;
 });
 
@@ -105,7 +105,7 @@ async function sendMessage() {
     }
 
     // 设置发送状态
-    startStreaming();
+    conversation.start();
     // 立即清空输入框，这样 placeholder 就能显示
     inputMessage.value = '';
     // 启动思考动画
@@ -122,18 +122,18 @@ async function sendMessage() {
     }
     const petResponse = await chatWithPetStream(
       userMessage + (userMessage.startsWith('.') ? screenAnalysisBlock : ''),
-      addStreamItem
+      conversation.addItem
     );
 
     if (!petResponse.success) {
-      cbs.setCurrentMessage(petResponse.error || '发生错误，请稍后再试。');
+      conversation.currentMessage = petResponse.error || '发生错误，请稍后再试。'
     }
 
     clearInterval(thinkingTimer);
     thinkingIndex.value = 0;
 
     // 无论成功还是失败，都要重置发送状态
-    finishStreaming();
+    conversation.finish();
   }
 }
 

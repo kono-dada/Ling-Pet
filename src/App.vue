@@ -1,24 +1,25 @@
 <script setup lang="ts">
 import { useAppearanceConfigStore } from './stores/appearanceConfig';
 import { usePetStateStore } from './stores/petState';
-import { useChatBubbleStateStore } from './stores/chatBubbleState';
 import { useAIConfigStore } from './stores/aiConfig';
 import { useChatHistoryStore } from './stores/chatHistory';
 import { useScreenAnalysisConfigStore } from './stores/screenAnalysisConfig';
 import { useVitsConfigStore } from './stores/vitsConfig';
+import { useConversationStore } from './stores/conversation';
 import { onMounted } from 'vue';
 import { denySave } from '@tauri-store/pinia';
 
 onMounted(async () => {
   await useAppearanceConfigStore().$tauri.start();
   await usePetStateStore().$tauri.start();
-  await useChatBubbleStateStore().$tauri.start();
   await useAIConfigStore().$tauri.start();
   await useChatHistoryStore().$tauri.start();
   await useScreenAnalysisConfigStore().$tauri.start();
+  await useConversationStore().$tauri.start();
   const vitsConfig = useVitsConfigStore();
   await vitsConfig.$tauri.start();
-  denySave('chatBubbleState');
+  // 会话编排使用非持久化的会话 store（conversation），无需 denySave
+  denySave('conversation');
 });
 </script>
 

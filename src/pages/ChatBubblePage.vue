@@ -265,13 +265,14 @@
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import { getEmotionColorTheme } from '../constants/emotionColors';
 import { codeToEmotion } from '../constants/emotions';
-import { useChatBubbleStateStore } from '../stores/chatBubbleState';
+import { useConversationStore } from '../stores/conversation';
+import { storeToRefs } from 'pinia';
 import { usePetStateStore } from '../stores/petState';
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi';
 
-const cbs = useChatBubbleStateStore();
-cbs.$tauri.start();
+const cs = useConversationStore();
+const { currentMessage } = storeToRefs(cs)
 const petState = usePetStateStore();
 
 const displayedMessage = ref('');
@@ -367,7 +368,7 @@ async function resizeAndPositionBubble() {
   const chatBubbleWindow = getCurrentWebviewWindow();
   const mainWindow = await WebviewWindow.getByLabel('main');
   if (chatBubbleWindow && mainWindow) {
-    const props = await calculateBubbleWindowProps(mainWindow, cbs.currentMessage);
+    const props = await calculateBubbleWindowProps(mainWindow, currentMessage.value);
     await chatBubbleWindow.setSize(new LogicalSize(props.width, props.height));
     await chatBubbleWindow.setPosition(new LogicalPosition(props.x, props.y));
   }
@@ -383,14 +384,14 @@ onMounted(async () => {
   if (mainWindow) {
     stopMainWindowMoved = await mainWindow?.onMoved(async () => {
       if (chatBubbleWindow) {
-        const props = await calculateBubbleWindowProps(mainWindow, cbs.currentMessage);
+        const props = await calculateBubbleWindowProps(mainWindow, currentMessage.value);
         chatBubbleWindow.setPosition(new LogicalPosition(props.x, props.y));
       }
     });
   }
 
   // 监听消息变化
-  stopChatBubbleWatcher = watch(() => cbs.currentMessage, (newMessage) => {
+  stopChatBubbleWatcher = watch(currentMessage, (newMessage) => {
     resizeAndPositionBubble();
     typeMessage(newMessage);
   }, { immediate: true });

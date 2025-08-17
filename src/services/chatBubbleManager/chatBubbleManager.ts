@@ -1,8 +1,10 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { watchEffect } from "vue";
-import { useChatBubbleStateStore } from "../../stores/chatBubbleState";
+import { useConversationStore } from "../../stores/conversation";
+import { storeToRefs } from 'pinia'
 
-const cbs = useChatBubbleStateStore();
+const cs = useConversationStore();
+const { currentMessage } = storeToRefs(cs)
 
 function openChatBubble() {
   const chatBubbleConfig = {
@@ -21,19 +23,19 @@ function openChatBubble() {
   new WebviewWindow('chat-bubble', chatBubbleConfig);
 }
 
-// 聊天气泡管理。如果chatBubbleStateStore中有当前消息，则打开气泡窗口；如果没有消息，则关闭气泡窗口。
+// 聊天气泡管理：有当前消息则打开/显示气泡窗口，无消息则关闭。
 export function chatBubbleManager() {
   let stopChatBubbleWatcher: (() => void) | null = null;
 
   function startChatBubbleWatching() {
     if (!stopChatBubbleWatcher) {
       stopChatBubbleWatcher = watchEffect(async () => {
-        const currentMessage = cbs.currentMessage;
+        const msg = currentMessage.value;
         const chatBubbleWindow = await WebviewWindow.getByLabel('chat-bubble')
         if (chatBubbleWindow) {
-          if (!currentMessage) await chatBubbleWindow.close();  // 如果没有消息，关闭气泡窗口
+          if (!msg) await chatBubbleWindow.close();  // 如果没有消息，关闭气泡窗口
           else if (!await chatBubbleWindow.isVisible()) await chatBubbleWindow.show();  // 如果有消息且窗口不可见，显示气泡窗口
-        } else if (currentMessage) openChatBubble();  // 如果没有窗口但有消息，创建新的气泡窗口
+        } else if (msg) openChatBubble();  // 如果没有窗口但有消息，创建新的气泡窗口
       });
     }
   }

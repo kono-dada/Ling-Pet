@@ -1,4 +1,5 @@
 import type { PetResponseItem } from "../../types/ai";
+import { parsePetResponseItemString } from "../../utils/aiResponse";
 
 // 每个处理器接收并返回 buffer，实现管道式处理
 export type ChunkHandler = (buffer: string) => Promise<string>;
@@ -17,17 +18,6 @@ export function createMultiChunkHandler(handlers: ChunkHandler[]): ChunkHandler 
     }
     return current;
   };
-}
-
-// Pet 响应项解析
-function parsePetResponseItemString(response: string): PetResponseItem | null {
-  const parts = response.split('|');
-  if (parts.length !== 3) return null;
-  const [message, japanese, emotionPart] = parts.map(part => part.trim());
-  if (!message || !japanese) return null;
-  const code = Number(emotionPart);
-  if (!Number.isInteger(code)) return null;
-  return { message, japanese, emotion: code };
 }
 
 // 专门处理 Pet 响应格式的 chunk 处理器

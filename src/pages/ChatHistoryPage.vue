@@ -192,49 +192,20 @@ import { codeToEmotion } from '../constants/emotions';
 import { getEmotionImageSrcByName } from '../services/emotionPack';
 import { ref } from 'vue';
 import { voiceVits } from '../services/chatAndVoice/vitsService';
+import { extractItemsFromContent } from '../utils/aiResponse'
 
 const chs = useChatHistoryStore();
 const vcs = useVitsConfigStore();
 
-interface ParsedAIMessage {
-  chinese: string;
-  japanese: string;
-  emotion: number; // 保存编号
-}
+type ParsedAIMessage = { chinese: string; japanese: string; emotion: number }
 
-// 解析AI消息
 function parseAIMessage(content: string): ParsedAIMessage[] {
   try {
-    // 提取 <item>...</item> 内容
-    const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-    const result: ParsedAIMessage[] = [];
-    let match: RegExpExecArray | null;
-
-    while ((match = itemRegex.exec(content)) !== null) {
-      const item = match[1];
-      const parts = item.split('|');
-      if (parts.length === 3) {
-        const raw = parts[2].trim();
-        const num = Number(raw);
-        if (Number.isInteger(num)) {
-          result.push({
-            chinese: parts[0].trim(),
-            japanese: parts[1].trim(),
-            emotion: num
-          });
-        }
-      } else {
-        result.push({
-          chinese: item,
-          japanese: '',
-          emotion: 0
-        });
-      }
-    }
-    return result;
-  } catch (error) {
-    console.error('解析AI消息失败:', error);
-    return [];
+    const items = extractItemsFromContent(content)
+    return items.map(it => ({ chinese: it.message, japanese: it.japanese, emotion: it.emotion }))
+  } catch (e) {
+    console.error('解析AI消息失败:', e)
+    return []
   }
 }
 
