@@ -51,10 +51,38 @@ function onImgError() {
   isReady.value = false;
 }
 
-function onDragStart() {
-  setTimeout(() => {
-    appWindow.startDragging();
-  }, 300); // 防止拖拽阻挡点击事件的形成
+function onDragStart(e: MouseEvent) {
+  // 仅在按下主键时启用拖拽判定
+  if ((e.buttons & 1) === 0) return;
+
+  const startX = e.clientX;
+  const startY = e.clientY;
+  let started = false;
+
+  const DRAG_THRESHOLD = 5; // 像素，避免点击触发拖拽
+
+  const onMove = (ev: MouseEvent) => {
+    if (started) return;
+    const dx = ev.clientX - startX;
+    const dy = ev.clientY - startY;
+    if (Math.hypot(dx, dy) >= DRAG_THRESHOLD) {
+      started = true;
+      // 必须在鼠标事件回调同步调用，macOS 上否则会因为没有当前事件而崩溃
+      // 不要使用 setTimeout，否则会触发 tao objc2 "message to nil" 崩溃
+      void appWindow.startDragging();
+      cleanup();
+    }
+  };
+
+  const onUp = () => cleanup();
+
+  function cleanup() {
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+  }
+
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp, { once: true });
 }
 
   function onClick() {
