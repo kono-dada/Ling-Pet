@@ -15,6 +15,7 @@ import { useVitsConfigStore } from '../stores/vitsConfig';
 import { startSbv2 } from '../services/chatAndVoice/sbv2Process';
 import { initEmotionPack, ensureDefaultEmotionPack } from '../services/emotionPack.ts';
 import { registerDefaultTools } from '../services/tools/index.ts';
+import { startNoInteractionWatcher, stopNoInteractionWatcher } from '../services/interactions/noInteractionWatcher';
 
 const avatarRef = ref();
 const ac = useAppearanceConfigStore();
@@ -33,6 +34,8 @@ onMounted(async () => {
   if (vitsConfig.autoStartSbv2) {
     await startSbv2(vitsConfig.installPath);
   }
+  // 启动“长时间无交互”监视器（默认 1 分钟触发一次）
+  startNoInteractionWatcher();
   try {
     await ensureDefaultEmotionPack()
     await initEmotionPack()
@@ -44,6 +47,7 @@ onUnmounted(() => {
   stopChatBubbleWatching();
   globalHandlersManager.stop();
   stopWindowListMaintaining();
+  stopNoInteractionWatcher();
 });
 
 let stopPetSizeWatcher: (() => void) | null = null;

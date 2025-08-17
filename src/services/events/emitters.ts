@@ -11,3 +11,6 @@ export function emitAvatarMultiClick(payload: EventPayloadMap['AVATAR_MULTI_CLIC
   return emitEvent('AVATAR_MULTI_CLICK', payload);
 }
 
+export function emitNoInteractionTimeout(payload: EventPayloadMap['NO_INTERACTION_TIMEOUT']) {
+  return emitEvent('NO_INTERACTION_TIMEOUT', payload);
+}

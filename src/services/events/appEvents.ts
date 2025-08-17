@@ -6,12 +6,14 @@ export const AppEvents = {
   WINDOWS_UPDATED: 'WINDOWS_UPDATED',
   NEW_WINDOWS: 'NEW_WINDOWS',
   AVATAR_MULTI_CLICK: 'AVATAR_MULTI_CLICK',
+  NO_INTERACTION_TIMEOUT: 'NO_INTERACTION_TIMEOUT',
 } as const;
 
 export interface EventPayloadMap {
   WINDOWS_UPDATED: ScreenshotableWindow[];
   NEW_WINDOWS: ScreenshotableWindow[];
   AVATAR_MULTI_CLICK: { ts: number; threshold: number; windowMs: number };
+  NO_INTERACTION_TIMEOUT: { ts: number; sinceMs: number; thresholdMs: number };
 }
 
 export type AppEventName = keyof EventPayloadMap;
