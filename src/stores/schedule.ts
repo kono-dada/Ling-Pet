@@ -98,7 +98,7 @@ export const useScheduleStore = defineStore('schedule', {
 
     _heartbeatSafe(): void {
       try {
-        console.log('[schedule] heartbeat tick', { now: Date.now() })
+        // console.log('[schedule] heartbeat tick', { now: Date.now() })
         this._heartbeat()
       } catch (e) {
         // 避免异常中断心跳循环
@@ -129,8 +129,8 @@ export const useScheduleStore = defineStore('schedule', {
       // 2) 选择一个任务执行
       const candidate = this._pickOne(now)
       if (!candidate) {
-        const stats = this._stats()
-        console.log('[schedule] no candidate to run', stats)
+        // const stats = this._stats()
+        // console.log('[schedule] no candidate to run', stats)
         return
       }
 
@@ -174,7 +174,7 @@ export const useScheduleStore = defineStore('schedule', {
       })()
     },
 
-    _pickOne(now: number): ScheduleTask | undefined {
+    _pickOne(_now: number): ScheduleTask | undefined {
       // 优先 outdated，按 outdatedAt 升序
       const outdated = this.tasks
         .filter(t => t.status === 'outdated')
