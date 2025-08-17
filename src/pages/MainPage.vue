@@ -14,6 +14,7 @@ import { createGlobalHandlersManager } from '../services/events/globalHandlers';
 import { useVitsConfigStore } from '../stores/vitsConfig';
 import { startSbv2 } from '../services/chatAndVoice/sbv2Process';
 import { initEmotionPack, ensureDefaultEmotionPack } from '../services/emotionPack.ts';
+import { registerDefaultTools } from '../services/tools/index.ts';
 
 const avatarRef = ref();
 const ac = useAppearanceConfigStore();
@@ -24,6 +25,7 @@ const globalHandlersManager = createGlobalHandlersManager();
 const vitsConfig = useVitsConfigStore();
 
 onMounted(async () => {
+  registerDefaultTools()
   startPetSizeWatching();  // 监听设置中的宠物大小以实时调整窗口
   startChatBubbleWatching();  // 监听聊天气泡状态以打开或关闭
   await globalHandlersManager.start(); // 根据设置注册/管理全局事件处理

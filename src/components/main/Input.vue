@@ -1,7 +1,6 @@
 <template>
   <input type="text" v-model="inputMessage" @keyup.enter="sendMessage" @keydown.enter="preventSendWhenThinking"
-    :readonly="currentConfig.readonly" :placeholder="placeholder" class="chat-input"
-    :class="currentConfig.cssClass" />
+    :readonly="currentConfig.readonly" :placeholder="placeholder" class="chat-input" :class="currentConfig.cssClass" />
 </template>
 
 <script lang="ts" setup>
@@ -10,6 +9,7 @@ import { useChatBubbleStateStore } from '../../stores/chatBubbleState';
 import { describeScreens } from '../../services/screenAnalysis/screenDescription';
 import { useStreamConversation } from '../../composables/useStreamConversation';
 import { chatWithPetStream } from '../../services/chatAndVoice/chatWithPet';
+import { callToolByName } from '../../services/tools';
 
 const cbs = useChatBubbleStateStore();
 const { startStreaming, finishStreaming, addStreamItem, isStreaming } = useStreamConversation();
@@ -73,8 +73,8 @@ const currentConfig = computed(() => stateConfig[currentState.value]);
 // 动态 placeholder
 const placeholder = computed(() => {
   const config = currentConfig.value;
-  return typeof config.placeholder === 'function' 
-    ? config.placeholder() 
+  return typeof config.placeholder === 'function'
+    ? config.placeholder()
     : config.placeholder;
 });
 
@@ -96,6 +96,14 @@ watch(currentState, (newState: InputState, oldState: InputState) => {
 async function sendMessage() {
   const userMessage = inputMessage.value.trim();
   if (userMessage && currentState.value === InputState.IDLE) {
+    if (userMessage.startsWith('/')) {
+      // 调用工具
+      const toolResponse = await callToolByName('addNotification', ['2', userMessage.replace('/', '')]);
+      console.log('工具调用结果:', toolResponse);
+    inputMessage.value = '';
+      return;
+    }
+
     // 设置发送状态
     startStreaming();
     // 立即清空输入框，这样 placeholder 就能显示
@@ -105,9 +113,13 @@ async function sendMessage() {
       thinkingIndex.value = (thinkingIndex.value + 1) % thinkingMessages.length;
     }, 500);
 
-    const screenAnalysisResponse = userMessage.startsWith('.') ? await describeScreens() : '';
-    const screenAnalysisBlock = `<screen-analysis>${screenAnalysisResponse}</screen-analysis>`;
-
+    let screenAnalysisBlock = '';
+    try {
+      const screenAnalysisResponse = userMessage.startsWith('.') ? await describeScreens() : '';
+      screenAnalysisBlock = `<screen-analysis>${screenAnalysisResponse}</screen-analysis>`;
+    } catch (error) {
+      console.error('Error occurred while processing message:', error);
+    }
     const petResponse = await chatWithPetStream(
       userMessage + (userMessage.startsWith('.') ? screenAnalysisBlock : ''),
       addStreamItem
@@ -240,6 +252,7 @@ function preventSendWhenThinking(event: KeyboardEvent) {
 
 /* 统一的呼吸动画效果 */
 @keyframes state-breathing {
+
   0%,
   100% {
     opacity: 0.85;
@@ -258,6 +271,7 @@ function preventSendWhenThinking(event: KeyboardEvent) {
 
 /* 统一的文本呼吸动画 */
 @keyframes text-breathing {
+
   0%,
   100% {
     opacity: 0.8;

@@ -5,8 +5,9 @@ import { USER_PROMPT_WRAPPER } from "../../constants/ai";
 import { useAIConfigStore } from "../../stores/aiConfig";
 import { useChatHistoryStore } from "../../stores/chatHistory";
 import { callAIStream } from "./aiService";
-import { createPetResponseChunkHandler } from "./chunkHandlers";
+import { createPetResponseChunkHandler, createToolCallChunkHandler } from "./chunkHandlers";
 import { computed } from "vue";
+import { callToolByName } from "../tools";
 
 
 const ac = useAIConfigStore();
@@ -53,7 +54,10 @@ export async function chatWithPetStream(
     content: userMessage
   });
 
-  const result = await callAIStream(messages, [createPetResponseChunkHandler(onItemComplete)]);
+  const result = await callAIStream(messages, [
+    createPetResponseChunkHandler(onItemComplete),
+    createToolCallChunkHandler(callToolByName)
+  ]);
 
   chs.addMessage({
     role: 'assistant',
