@@ -1,5 +1,5 @@
-use std::sync::Mutex;
 use std::process::Child;
+use std::sync::Mutex;
 
 /// Global, app-managed process manager for sbv2_api to keep it unique across all webviews/windows
 pub struct Sbv2Manager {

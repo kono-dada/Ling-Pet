@@ -8,6 +8,27 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import '@mdi/font/css/materialdesignicons.css' // Material Design Icons 样式
+import {
+  isPermissionGranted,
+  requestPermission,
+} from '@tauri-apps/plugin-notification';
+// when using `"withGlobalTauri": true`, you may use
+// const { isPermissionGranted, requestPermission, sendNotification, } = window.__TAURI__.notification;
+
+// Do you have permission to send a notification?
+async function checkNotificationPermission() {
+  let permissionGranted = await isPermissionGranted();
+
+  // If not we need to request it
+  if (!permissionGranted) {
+    const permission = await requestPermission();
+    permissionGranted = permission === 'granted';
+  }
+  console.log('Notification permission status:', permissionGranted);
+}
+
+checkNotificationPermission();
+
 
 const vuetify = createVuetify({
   components,

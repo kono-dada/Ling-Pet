@@ -10,7 +10,8 @@ use sbv2_manager::Sbv2Manager;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-    .manage(Sbv2Manager::new())
+        .plugin(tauri_plugin_notification::init())
+        .manage(Sbv2Manager::new())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
