@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { onTask } from '../services/schedule/onTask'
 import { onOutdated } from '../services/schedule/onOutdated'
+import { useConversationStore } from './conversation'
 
 type TaskStatus = 'scheduled' | 'pending' | 'running' | 'outdated' | 'accomplished' | 'canceled'
 
@@ -25,7 +26,7 @@ function genId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
 }
 
-const DEFAULT_HEARTBEAT_MS = 5000
+const DEFAULT_HEARTBEAT_MS = 15000
 
 export const useScheduleStore = defineStore('schedule', {
   state: () => ({
@@ -124,6 +125,22 @@ export const useScheduleStore = defineStore('schedule', {
       if (this.isBusy) {
         console.log('[schedule] busy, skip this tick')
         return
+      }
+
+      // 当会话仍有未消费消息（或处于流式中）时，视为外部占用，跳过本次调度
+      try {
+        const conv = useConversationStore()
+        const chatBusy = Boolean(
+          conv.isStreaming ||
+          (conv.currentMessage && conv.currentMessage.length > 0) ||
+          (Array.isArray(conv.responseItems) && conv.responseItems.length > 0)
+        )
+        if (chatBusy) {
+          console.log('[schedule] chat busy, skip this tick')
+          return
+        }
+      } catch (_) {
+        // Pinia 可能尚未就绪（极早期），不强制阻塞
       }
 
       // 2) 选择一个任务执行
