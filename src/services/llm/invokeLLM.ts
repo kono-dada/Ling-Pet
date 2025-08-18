@@ -40,16 +40,10 @@ export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
 
     // 解析 <tool>：立即启动工具执行，剔除已处理的 <tool> 块
     const toolHandler = createToolCallChunkHandler(async (name, args) => {
-      try {
-        const p = callToolByName(name, args)
-        pending.push({ name, args, startedAt: Date.now(), promise: p })
-      } catch (e) {
-        // 若发生同步异常，压入一个失败的占位 Promise，确保后续流程一致
-        const failed: ExecToolResult = { ok: false, error: String(e), continue: false }
-        pending.push({ name, args, startedAt: Date.now(), promise: Promise.resolve(failed) })
-      }
-      // 不阻塞流：立即返回成功占位
-      return { success: true, result: '' }
+      // 不中断流；callToolByName 已内部兜底错误并返回 ExecToolResult
+      const p = callToolByName(name, args)
+      pending.push({ name, args, startedAt: Date.now(), promise: p })
+      return
     })
 
     const r = await callAIStream(messagesForLLM, [petHandler, toolHandler])

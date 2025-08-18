@@ -48,7 +48,7 @@ export function createPetResponseChunkHandler(
 
 // 工具调用解析器：解析 <tool><name>..</name><arguments>..</arguments></tool>
 export function createToolCallChunkHandler(
-  onItemComplete: (name: string, args: string[]) => Promise<{ success: boolean; result?: string; error?: string }>
+  onItemComplete: (name: string, args: string[]) => Promise<unknown>
 ): ChunkHandler {
   return async (buffer: string): Promise<string> => {
     const toolRegex = /<tool>([\s\S]*?)<\/tool>/g;
