@@ -19,6 +19,15 @@ type PendingTool = {
   promise: Promise<ExecToolResult>
 }
 
+type ToolCall = {
+  id: string
+  type: 'function'
+  function: {
+    name: string
+    arguments: string
+  }
+}
+
 export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
   const maxIterations = params.maxIterations ?? 2
   const messagesForLLM: AIMessage[] = params.messages.slice() // copy to mutate for iterations
@@ -34,12 +43,27 @@ export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
     iterations++
 
     const pending: PendingTool[] = []
+    const toolCalls: ToolCall[] = []
 
     // 解析 <item>：推送到 onItem
     const petHandler = createPetResponseChunkHandler(conversation.addItem)
 
     // 解析 <tool>：立即启动工具执行，剔除已处理的 <tool> 块
     const toolHandler = createToolCallChunkHandler(async (name, args) => {
+      // 为本次工具调用生成一个与 assistant.tool_calls 对应的 id
+      const id = `tool_${Date.now()}_${toolCalls.length}`
+      // 规范化 arguments：若已为字符串则直接使用，否则序列化
+      const argStr = typeof args === 'string'
+        ? args
+        : Array.isArray(args)
+          ? JSON.stringify(args.length === 1 ? args[0] : args)
+          : JSON.stringify(args ?? {})
+      // 记录本轮将要注入到 assistant 消息里的 tool_calls
+      toolCalls.push({
+        id,
+        type: 'function',
+        function: { name, arguments: argStr }
+      })
       // 不中断流；callToolByName 已内部兜底错误并返回 ExecToolResult
       const p = callToolByName(name, args)
       pending.push({ name, args, startedAt: Date.now(), promise: p })
@@ -52,8 +76,10 @@ export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
       return transcript
     }
     responsePieces.push(r.response)
-    // 本轮 assistant 文本消息
-    const assistantMsg: AIMessage = { role: 'assistant', content: r.response }
+    // 若模型在本轮触发了工具调用，则把 tool_calls 一并注入到 assistant 消息
+    const assistantMsg: AIMessage = toolCalls.length > 0
+      ? { role: 'assistant', content: r.response, tool_calls: toolCalls }
+      : { role: 'assistant', content: r.response }
     transcript.push(assistantMsg)
     messagesForLLM.push(assistantMsg)
 
@@ -64,6 +90,7 @@ export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
 
     // 等待所有工具结束
     const results = await Promise.allSettled(pending.map(p => p.promise))
+    console.log('工具调用结果:', results)
 
     // 汇总工具调用记录并判断是否需要继续
     let needContinue = false
@@ -81,9 +108,9 @@ export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
     })
 
     // 以 tool 消息的形式注入所有工具结果，并纳入 transcript
-    const toolMessages: AIMessage[] = resultItems.map(it => ({
+    const toolMessages: AIMessage[] = resultItems.map((it, idx) => ({
       role: 'tool',
-      tool_call_id: '',
+      tool_call_id: toolCalls[idx]?.id || '',
       content: JSON.stringify({ name: it.name, ok: it.ok, result: it.data, error: it.error })
     }))
     transcript.push(...toolMessages)
@@ -98,4 +125,5 @@ export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
   return transcript
 }
 
-// 不再构造 <tools_results>，改为使用 role='tool' 的消息注入工具结果
+// 重要：为每个工具调用生成并回传 tool_call_id
+// 先在本轮 assistant 消息中注入 tool_calls，然后用 role='tool' 的消息按顺序回填同 id 的结果

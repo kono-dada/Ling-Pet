@@ -1,5 +1,6 @@
 import { useMemoryStore } from "../../../stores/memory";
 import { useHypothesesStore } from "../../../stores/hypotheses";
+import { getScreenshotableWindows } from "../../screenAnalysis/screenDescription";
 
 export function getMemoryPrompt(): string {
   return `
@@ -17,6 +18,17 @@ export function getHypothesesPrompt(): string {
 
 以下是你之前对用户特点的推测：
 ${useHypothesesStore().getAllAsJSON()}
+
+`
+}
+
+export async function getScreenshotsPrompt(): Promise<string> {
+  return `
+#### 截图
+
+以下是当前可截图窗口的列表：
+${(await getScreenshotableWindows()).map(win => `- ${win.title} (ID: ${win.id})`).join('\n')}
+当你想查看窗口时，记得在对应的工具中填写id。
 
 `
 }

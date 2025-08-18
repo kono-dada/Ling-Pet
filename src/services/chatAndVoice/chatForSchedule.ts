@@ -20,7 +20,7 @@ export async function chatForSchedule(
     return { success: false, error: 'AI服务未配置' };
   }
 
-  const messages: AIMessage[] = constructMessageForSchedule(taskPrompt)
+  const messages: AIMessage[] = await constructMessageForSchedule(taskPrompt)
   const resMsgs = await invokeLLM({ messages })
   console.log('[schedule] AI 返回消息条数:', resMsgs.length)
   return { success: true }

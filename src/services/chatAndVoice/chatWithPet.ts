@@ -21,7 +21,7 @@ export async function chatWithPetStream(
     };
   }
 
-  const messages: AIMessage[] = constructMessageForChat(userMessage);
+  const messages: AIMessage[] = await constructMessageForChat(userMessage);
 
   // 添加 user 消息到聊天历史（默认开启）
   chs.addMessage({

@@ -2,17 +2,17 @@ import { AIMessage } from "../../types/ai"
 import { CHAT_SCENARIO_PROMPT, getResponseFormatPromptForChat } from "./prompts/promptsForChat";
 import { getResponseFormatPromptForSchedule } from "./prompts/promptsForSchedule";
 import { useAIConfigStore } from "../../stores/aiConfig";
-import { getHypothesesPrompt, getMemoryPrompt } from "./prompts/general";
+import { getHypothesesPrompt, getMemoryPrompt, getScreenshotsPrompt } from "./prompts/general";
 import { useChatHistoryStore } from "../../stores/chatHistory";
 import { SCHEDULE_SCENARIO_PROMPT } from "./prompts/promptsForSchedule";
 import { SCHEDULE_USER_MESSAGE_WRAPPER } from "./prompts/promptsForSchedule";
 
-export function constructMessageForChat(userMessage: string): AIMessage[] {
+export async function constructMessageForChat(userMessage: string): Promise<AIMessage[]> {
   const acs = useAIConfigStore()
   const chs = useChatHistoryStore()
   const messages: AIMessage[] = [];
 
-  const systemPrompt = CHAT_SCENARIO_PROMPT + getResponseFormatPromptForChat() + acs.systemPrompt + getMemoryPrompt() + getHypothesesPrompt()
+  const systemPrompt = CHAT_SCENARIO_PROMPT + getResponseFormatPromptForChat() + acs.systemPrompt + getMemoryPrompt() + getHypothesesPrompt() + await getScreenshotsPrompt();
 
   messages.push({role: 'system', content: systemPrompt})
 
@@ -32,11 +32,12 @@ export function constructMessageForChat(userMessage: string): AIMessage[] {
   return messages
 }
 
-export function constructMessageForSchedule(scheduleMessage: string): AIMessage[] {
+export async function constructMessageForSchedule(scheduleMessage: string): Promise<AIMessage[]> {
   const acs = useAIConfigStore()
   const messages: AIMessage[] = [];
 
-  const systemPrompt = SCHEDULE_SCENARIO_PROMPT + getResponseFormatPromptForSchedule() + acs.systemPrompt + getMemoryPrompt() + getHypothesesPrompt()
+  const systemPrompt = SCHEDULE_SCENARIO_PROMPT + getResponseFormatPromptForSchedule() + acs.systemPrompt + getMemoryPrompt() + getHypothesesPrompt() + await getScreenshotsPrompt();
+
 
   messages.push({role: 'system', content: systemPrompt})
 

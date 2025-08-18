@@ -73,6 +73,7 @@ export async function callAIStream(
 
     return { response: total, success: true };
   } catch (error: any) {
+    console.error('流式处理错误:', error);
     return { response: total, error: error instanceof Error ? error.message : '未知错误', success: false };
   }
 }

@@ -9,6 +9,7 @@ import { memoryAddTool } from './tools/memoryAdd';
 import { memoryUpdateTool } from './tools/memoryUpdate';
 import { hypothesisAddTool } from './tools/hypothesisAdd';
 import { hypothesisUpdateTool } from './tools/hypothesisUpdate';
+import { screenDescribeTool } from './tools/screenDescribe';
 
 export function registerDefaultTools() {
   // registerTool(addNotificationTool);
@@ -17,4 +18,5 @@ export function registerDefaultTools() {
   registerTool(memoryUpdateTool);
   registerTool(hypothesisAddTool);
   registerTool(hypothesisUpdateTool);
+  registerTool(screenDescribeTool);
 }

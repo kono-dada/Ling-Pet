@@ -2,9 +2,8 @@ import { getScreenshotableWindows } from "./screenDescription";
 import { useCurrentWindowListStore } from "../../stores/currentWindowList";
 import { emitNewWindows } from "../events/emitters";
 
-const currentWindowList = useCurrentWindowListStore();
-
 async function updateWindowState() {
+  const currentWindowList = useCurrentWindowListStore();
   const windows = await getScreenshotableWindows();
   const newWindows = currentWindowList.update(windows);
   if (newWindows.length > 0) {

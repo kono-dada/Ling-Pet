@@ -27,9 +27,6 @@ async function checkNotificationPermission() {
   console.log('Notification permission status:', permissionGranted);
 }
 
-checkNotificationPermission();
-
-
 const vuetify = createVuetify({
   components,
   directives,
@@ -44,7 +41,9 @@ const vuetify = createVuetify({
 const app = createApp(App);
 app.use(router);
 const pinia = createPinia();
-pinia.use(createPlugin());
 app.use(pinia);
+pinia.use(createPlugin());
 app.use(vuetify);
 app.mount("#app");
+
+checkNotificationPermission();

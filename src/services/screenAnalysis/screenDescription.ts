@@ -13,7 +13,6 @@ import { debug } from '@tauri-apps/plugin-log';
 import { OpenAI } from 'openai';
 import { ScreenshotableWindow } from 'tauri-plugin-screenshots-api';
 
-const sgc = useScreenAnalysisConfigStore();
 
 const ignoreList = ['控制中心', '通知中心', 'Window Server', '搜狗输入法', 'lingpet', '程序坞'];
 
@@ -57,6 +56,7 @@ async function resizeImage(base64: string, targetHeight: number): Promise<string
 
 
 async function callAI(messages: AIMessage[]): Promise<ChatCompletion> {
+  const sgc = useScreenAnalysisConfigStore();
   const client = new OpenAI({
     apiKey: sgc.apiKey,
     baseURL: sgc.baseURL,
@@ -93,6 +93,7 @@ function toBase64(array: Uint8Array): Promise<string> {
 
 // 使用视觉语言模型，获取多个窗口的描述
 export async function describeScreens(windowIds: number[] | null = null): Promise<string> {
+  const sgc = useScreenAnalysisConfigStore();
   try {
     if (!windowIds) {
       windowIds = (await getScreenshotableWindows()).map(win => win.id);
@@ -149,6 +150,7 @@ export async function describeScreens(windowIds: number[] | null = null): Promis
 }
 
 export async function testScreenAnalysis(ids: number[] | null = null): Promise<{ success: boolean; message: string }> {
+  const sgc = useScreenAnalysisConfigStore();
   if (!sgc.apiKey || !sgc.baseURL || !sgc.model) {
     return { success: false, message: '请正确配置屏幕分析AI服务' };
   }
