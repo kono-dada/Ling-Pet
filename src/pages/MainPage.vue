@@ -16,6 +16,8 @@ import { startSbv2 } from '../services/chatAndVoice/sbv2Process';
 import { initEmotionPack, ensureDefaultEmotionPack } from '../services/emotionPack.ts';
 import { registerDefaultTools } from '../services/tools/index.ts';
 import { startNoInteractionWatcher, stopNoInteractionWatcher } from '../services/interactions/noInteractionWatcher';
+import { useMemoryStore } from '../stores/memory.ts';
+import { useHypothesesStore } from '../stores/hypotheses.ts';
 
 const avatarRef = ref();
 const ac = useAppearanceConfigStore();
@@ -26,6 +28,9 @@ const globalHandlersManager = createGlobalHandlersManager();
 const vitsConfig = useVitsConfigStore();
 
 onMounted(async () => {
+  useMemoryStore().$tauri.start();
+  useHypothesesStore().$tauri.start();
+  
   registerDefaultTools()
   startPetSizeWatching();  // 监听设置中的宠物大小以实时调整窗口
   startChatBubbleWatching();  // 监听聊天气泡状态以打开或关闭

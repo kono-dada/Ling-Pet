@@ -56,7 +56,7 @@
 
             <!-- AI消息 -->
             <div v-if="message.role === 'assistant'" class="message-row ai-message mb-4">
-              <template v-for="aiMsg in parseAIMessage(message.content)" :key="aiMsg.chinese + aiMsg.emotion">
+              <template v-for="aiMsg in parseAIMessage(String(message.content))" :key="aiMsg.chinese + aiMsg.emotion">
                 <div class="d-flex justify-start mb-3 ai-message-item">
                   <v-avatar class="mr-3 ai-avatar" size="40">
                     <v-img :src="getEmotionImage(aiMsg.emotion)" :alt="codeToEmotion(aiMsg.emotion)" cover />
@@ -228,7 +228,7 @@ const totalCharacters = computed(() => {
     if (msg.role === 'user') {
       return total + msg.content.length;
     } else {
-      const parsed = parseAIMessage(msg.content);
+      const parsed = parseAIMessage(String(msg.content));
       return total + parsed.reduce((sum, item) => sum + item.chinese.length, 0);
     }
   }, 0);
@@ -244,7 +244,7 @@ const emotionCounts = computed(() => {
 
   chs.chatHistory.forEach(msg => {
     if (msg.role === 'assistant') {
-      const parsed = parseAIMessage(msg.content);
+      const parsed = parseAIMessage(String(msg.content));
       parsed.forEach(item => {
         const name = codeToEmotion(item.emotion) as string;
         counts[name] = (counts[name] || 0) + 1;

@@ -1,4 +1,5 @@
 import type { Tool } from './types';
+import type { ExecToolResult } from './types'
 
 const registry = new Map<string, Tool>();
 
@@ -13,19 +14,19 @@ export function getTool(name: string): Tool | undefined {
 export async function callToolByName(
   name: string,
   args: string[],
-): Promise<{ success: boolean; result?: unknown; error?: string }> {
+): Promise<ExecToolResult> {
   console.log(`Calling tool ${name} with args:`, args);
   const tool = registry.get(name);
   if (!tool) {
-    return { success: false, error: `Unknown tool: ${name}` };
+    return { ok: false, error: `Unknown tool: ${name}`, continue: false };
   }
   try {
     const result = await tool.call(...args);
-    return { success: true, result };
+    return result;
   } catch (e: any) {
     const msg = e instanceof Error ? e.message : String(e);
     console.log(`Tool ${name} failed`, e);
-    return { success: false, error: msg };
+    return { ok: false, error: msg, continue: false };
   }
 }
 

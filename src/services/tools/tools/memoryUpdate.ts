@@ -1,5 +1,6 @@
 import type { Tool } from '../types'
 import { useMemoryStore } from '../../../stores/memory'
+import type { ExecToolResult } from '../types'
 
 export const memoryUpdateTool: Tool = {
   name: 'memoryUpdate',
@@ -8,9 +9,9 @@ export const memoryUpdateTool: Tool = {
     '  功能：使用 id 更新一条记忆；当 content 为 "" 时删除该记忆。\n' +
     '  例子（更新）：memoryUpdate("lxt8l3bq-2k9p1u5q", "用户常在晚上学习")\n' +
     '  例子（删除）：memoryUpdate("lxt8l3bq-2k9p1u5q", "")',
-  async call(id?: string, content?: string) {
+  async call(id?: string, content?: string): Promise<ExecToolResult> {
     const store = useMemoryStore()
     store.updateMemory(id ?? '', content ?? '')
-    return { id, deleted: (content ?? '') === '' }
+    return { ok: true, continue: false, result: { id, deleted: (content ?? '') === '' } }
   },
 }
