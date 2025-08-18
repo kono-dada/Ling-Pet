@@ -1,14 +1,13 @@
-import type { AIMessage, PetResponseItem } from '../../types/ai'
+import type { AIMessage } from '../../types/ai'
 import { callAIStream } from '../chatAndVoice/aiService'
 import { createPetResponseChunkHandler, createToolCallChunkHandler } from '../chatAndVoice/chunkHandlers'
 import type { ExecToolResult } from '../tools/types'
 import { callToolByName } from '../tools'
+import { useConversationStore } from '../../stores/conversation'
 
 export interface InvokeLLMParams {
   // 由调用方构造：system + 历史 + 包裹后的 user
   messages: AIMessage[]
-  // 解析到 <item> 的回调（通常为 conversation.addItem）
-  onItem: (item: PetResponseItem) => Promise<void>
   // 最大迭代次数（默认 2）
   maxIterations?: number
 }
@@ -21,11 +20,11 @@ type PendingTool = {
 }
 
 export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
-  const { onItem } = params
   const maxIterations = params.maxIterations ?? 2
   const messagesForLLM: AIMessage[] = params.messages.slice() // copy to mutate for iterations
   const transcript: AIMessage[] = [] // 返回给调用方的对话片段（assistant/tool 序列）
   // 工具执行统一走 callToolByName（工具层已统一返回 ExecToolResult）
+  const conversation = useConversationStore()
 
   const responsePieces: string[] = []
 
@@ -37,7 +36,7 @@ export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
     const pending: PendingTool[] = []
 
     // 解析 <item>：推送到 onItem
-    const petHandler = createPetResponseChunkHandler(onItem)
+    const petHandler = createPetResponseChunkHandler(conversation.addItem)
 
     // 解析 <tool>：立即启动工具执行，剔除已处理的 <tool> 块
     const toolHandler = createToolCallChunkHandler(async (name, args) => {
@@ -50,7 +49,7 @@ export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
         pending.push({ name, args, startedAt: Date.now(), promise: Promise.resolve(failed) })
       }
       // 不阻塞流：立即返回成功占位
-      return { ok: true }
+      return { success: true, result: '' }
     })
 
     const r = await callAIStream(messagesForLLM, [petHandler, toolHandler])
@@ -74,7 +73,7 @@ export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
 
     // 汇总工具调用记录并判断是否需要继续
     let needContinue = false
-    const resultItems: Array<{ name: string; ok: boolean; data?: unknown; error?: string }> = []
+    const resultItems: Array<{ name: string; ok: boolean; data?: string; error?: string }> = []
 
     results.forEach((res, idx) => {
       const { name } = pending[idx]

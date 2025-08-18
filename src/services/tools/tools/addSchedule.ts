@@ -47,12 +47,7 @@ export const addScheduleTool: Tool = {
     return {
       ok: true,
       continue: false,
-      result: {
-        id,
-        scheduledAt: task?.scheduledAt,
-        outdatedAt: task?.outdatedAt,
-        prompt,
-      },
+      result: JSON.stringify({ id, scheduledAt: task?.scheduledAt, outdatedAt: task?.outdatedAt, prompt })
     };
   },
 };

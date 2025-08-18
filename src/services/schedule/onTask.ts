@@ -17,7 +17,7 @@ export async function onTask(prompt: string): Promise<void> {
     }
 
     conversation.start()
-    const res = await chatForSchedule(prompt, conversation.addItem)
+    const res = await chatForSchedule(prompt)
     if (!res.success) {
       // Schedule 场景：失败时静默，只记录日志，不主动显示错误气泡
       console.warn('[onTask] schedule chat failed:', res.error)

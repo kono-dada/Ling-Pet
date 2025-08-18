@@ -12,6 +12,6 @@ export const memoryUpdateTool: Tool = {
   async call(id?: string, content?: string): Promise<ExecToolResult> {
     const store = useMemoryStore()
     store.updateMemory(id ?? '', content ?? '')
-    return { ok: true, continue: false, result: { id, deleted: (content ?? '') === '' } }
+    return { ok: true, continue: false, result: JSON.stringify({ id, deleted: (content ?? '') === '' }) }
   },
 }

@@ -1,8 +1,7 @@
-import { PetResponseItem } from "../../types/ai";
-import { getResponseFormatPrompt, SCHEDULE_PROMPT_WRAPPER } from "../../constants/ai";
+import { type AIMessage } from "../../types/ai";
 import { useAIConfigStore } from "../../stores/aiConfig";
-import { callAIStream } from "./aiService";
-import { createPetResponseChunkHandler } from "./chunkHandlers";
+import { constructMessageForSchedule } from "../llm/messageConstructor";
+import { invokeLLM } from "../llm/invokeLLM";
 
 /**
  * 专用于 Schedule 的对话调用：
@@ -13,7 +12,6 @@ import { createPetResponseChunkHandler } from "./chunkHandlers";
  */
 export async function chatForSchedule(
   taskPrompt: string,
-  onItemComplete: (item: PetResponseItem) => Promise<void>,
 ): Promise<{ success: boolean; error?: string }> {
   const ac = useAIConfigStore();
 
@@ -22,20 +20,8 @@ export async function chatForSchedule(
     return { success: false, error: 'AI服务未配置' };
   }
 
-  const messages = [] as { role: 'system' | 'user'; content: string }[];
-
-  if (ac.systemPrompt) {
-    messages.push({ role: 'system', content: getResponseFormatPrompt() + '\n\n' + ac.systemPrompt });
-  }
-
-  const wrapped = SCHEDULE_PROMPT_WRAPPER.replace('{}', taskPrompt)
-  messages.push({ role: 'user', content: wrapped });
-
-  const result = await callAIStream(messages, [
-    createPetResponseChunkHandler(onItemComplete),
-    // 忽略所有 <tool> 调用，直接剔除
-    async (buffer: string) => buffer.replace(/<tool>[\s\S]*?<\/tool>/g, ''),
-  ]);
-
-  return { success: result.success, error: result.error };
+  const messages: AIMessage[] = constructMessageForSchedule(taskPrompt)
+  const resMsgs = await invokeLLM({ messages })
+  console.log('[schedule] AI 返回消息条数:', resMsgs.length)
+  return { success: true }
 }

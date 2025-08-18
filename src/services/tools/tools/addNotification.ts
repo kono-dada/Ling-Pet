@@ -17,6 +17,6 @@ export const addNotificationTool: Tool = {
       console.log(`Notification sent after ${safeDelay} seconds: ${content}`);
     }, safeDelay * 1000);
 
-    return { ok: true, continue: false, result: { scheduledInSeconds: safeDelay, content } };
+    return { ok: true, continue: false, result: JSON.stringify({ scheduledInSeconds: safeDelay, content }) };
   },
 };

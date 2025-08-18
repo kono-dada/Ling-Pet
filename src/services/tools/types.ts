@@ -1,6 +1,6 @@
 export interface ExecToolResult {
   ok: boolean
-  result?: unknown
+  result?: string
   error?: string
   continue?: boolean
 }

@@ -11,6 +11,6 @@ export const memoryAddTool: Tool = {
   async call(content?: string): Promise<ExecToolResult> {
     const store = useMemoryStore()
     const id = store.addMemory(content ?? '')
-    return { ok: true, continue: false, result: { id } }
+    return { ok: true, continue: false, result: JSON.stringify({ id }) }
   },
 }

@@ -1,5 +1,4 @@
-import type { Tool } from './types';
-import type { ExecToolResult } from './types'
+import type { Tool, ExecToolResult } from './types';
 
 const registry = new Map<string, Tool>();
 
@@ -22,6 +21,10 @@ export async function callToolByName(
   }
   try {
     const result = await tool.call(...args);
+    // 统一约定：若工具未提供 result 字符串，则默认返回 'ok'
+    if (result && result.ok && (result.result == null || result.result === '')) {
+      return { ...result, result: 'ok' };
+    }
     return result;
   } catch (e: any) {
     const msg = e instanceof Error ? e.message : String(e);

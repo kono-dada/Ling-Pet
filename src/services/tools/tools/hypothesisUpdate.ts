@@ -12,6 +12,6 @@ export const hypothesisUpdateTool: Tool = {
   async call(id?: string, content?: string): Promise<ExecToolResult> {
     const store = useHypothesesStore()
     store.updateHypothesis(id ?? '', content ?? '')
-    return { ok: true, continue: false, result: { id, deleted: (content ?? '') === '' } }
+    return { ok: true, continue: false, result: JSON.stringify({ id, deleted: (content ?? '') === '' }) }
   },
 }

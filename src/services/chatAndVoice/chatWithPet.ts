@@ -1,7 +1,6 @@
 import { AIMessage } from "../../types/ai";
 import { useAIConfigStore } from "../../stores/aiConfig";
 import { useChatHistoryStore } from "../../stores/chatHistory";
-import { useConversationStore } from "../../stores/conversation";
 import { constructMessageForChat } from "../llm/messageConstructor";
 import { invokeLLM } from "../llm/invokeLLM";
 
@@ -11,7 +10,7 @@ export async function chatWithPetStream(
   // Lazily access stores here to ensure Pinia is active
   const ac = useAIConfigStore();
   const chs = useChatHistoryStore();
-  const conversation = useConversationStore();
+  // conversation store is used internally by invokeLLM
 
   // 检查配置是否完整
   const hasConfig = Boolean(ac.apiKey && ac.baseURL && ac.model)
@@ -30,10 +29,7 @@ export async function chatWithPetStream(
     content: userMessage
   });
 
-  const resultMessages = await invokeLLM({ 
-    messages, 
-    onItem: conversation.addItem 
-  });
+  const resultMessages = await invokeLLM({ messages });
 
   console.log('AI回复：', resultMessages);
 

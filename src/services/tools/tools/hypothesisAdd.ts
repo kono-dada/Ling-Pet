@@ -11,6 +11,6 @@ export const hypothesisAddTool: Tool = {
   async call(content?: string): Promise<ExecToolResult> {
     const store = useHypothesesStore()
     const id = store.addHypothesis(content ?? '')
-    return { ok: true, continue: false, result: { id } }
+    return { ok: true, continue: false, result: JSON.stringify({ id }) }
   },
 }
