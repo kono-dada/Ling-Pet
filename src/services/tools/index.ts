@@ -5,8 +5,16 @@ export * from './registry';
 import { registerTool } from './registry';
 // import { addNotificationTool } from './tools/addNotification';
 import { addScheduleTool } from './tools/addSchedule';
+import { memoryAddTool } from './tools/memoryAdd';
+import { memoryUpdateTool } from './tools/memoryUpdate';
+import { hypothesisAddTool } from './tools/hypothesisAdd';
+import { hypothesisUpdateTool } from './tools/hypothesisUpdate';
 
 export function registerDefaultTools() {
   // registerTool(addNotificationTool);
   registerTool(addScheduleTool);
+  registerTool(memoryAddTool);
+  registerTool(memoryUpdateTool);
+  registerTool(hypothesisAddTool);
+  registerTool(hypothesisUpdateTool);
 }
