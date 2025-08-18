@@ -27,7 +27,7 @@ export async function getScreenshotsPrompt(): Promise<string> {
 #### 截图
 
 以下是当前可截图窗口的列表：
-${(await getScreenshotableWindows()).map(win => `- ${win.title} (ID: ${win.id})`).join('\n')}
+${JSON.stringify(await getScreenshotableWindows())}
 当你想查看窗口时，记得在对应的工具中填写id。
 
 `

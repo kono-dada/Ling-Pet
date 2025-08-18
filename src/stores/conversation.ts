@@ -21,6 +21,7 @@ export const useConversationStore = defineStore('conversation', () => {
   const aiConfig = useAIConfigStore()
 
   const isStreaming = ref(false)
+  const isTooling = ref(false)
   const currentAudio = ref<HTMLAudioElement | null>(null)
   const autoPlayTimerId = ref<number | null>(null)
   const inactivityTimerId = ref<number | null>(null)
@@ -71,6 +72,12 @@ export const useConversationStore = defineStore('conversation', () => {
   function start() {
     isStreaming.value = true
     abortAfterStream.value = false
+    touchActivity()
+  }
+
+  function setTooling(flag: boolean) {
+    isTooling.value = !!flag
+    // 工具调用期不计入空闲超时，因此切换时重置活跃时间
     touchActivity()
   }
 
@@ -155,6 +162,7 @@ export const useConversationStore = defineStore('conversation', () => {
 
   function finish() {
     isStreaming.value = false
+    isTooling.value = false
     currentAudio.value = null
     debug('stream结束')
     // 若已触发空闲策略且要求在流式结束后清空，则执行停止到空闲
@@ -182,6 +190,7 @@ export const useConversationStore = defineStore('conversation', () => {
     currentMessage.value = ''
     petState.setPetEmotion(EMOTION_CODE_MAP[getDefaultEmotion()])
     isStreaming.value = false
+    isTooling.value = false
     abortAfterStream.value = false
     touchActivity() // 重置活跃计时
   }
@@ -199,6 +208,11 @@ export const useConversationStore = defineStore('conversation', () => {
       inactivityTimerId.value = null
       const now = Date.now()
       const elapsed = now - lastActivityAt.value
+      // 工具调用过程中不计入空闲超时
+      if (isTooling.value) {
+        scheduleInactivityWatch()
+        return
+      }
       if (elapsed < INACTIVITY_TIMEOUT_MS) {
         // 有新活动，重新监听
         scheduleInactivityWatch()
@@ -227,10 +241,12 @@ export const useConversationStore = defineStore('conversation', () => {
   return {
     // state
     isStreaming,
+    isTooling,
     currentMessage,
     responseItems,
     // actions
     start,
+    setTooling,
     addItem,
     finish,
     playNext,

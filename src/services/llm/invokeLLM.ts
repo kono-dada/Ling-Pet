@@ -88,8 +88,20 @@ export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
       break
     }
 
+    // 标记：使用工具中
+    try {
+      const conversation = useConversationStore()
+      conversation.setTooling(true)
+    } catch {}
+
     // 等待所有工具结束
     const results = await Promise.allSettled(pending.map(p => p.promise))
+
+    // 清除标记
+    try {
+      const conversation = useConversationStore()
+      conversation.setTooling(false)
+    } catch {}
     console.log('工具调用结果:', results)
 
     // 汇总工具调用记录并判断是否需要继续

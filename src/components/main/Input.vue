@@ -12,17 +12,19 @@ import { chatWithPetStream } from '../../services/chatAndVoice/chatWithPet';
 import { callToolByName } from '../../services/tools';
 
 const conversation = useConversationStore();
-const { isStreaming } = storeToRefs(conversation);
+const { isStreaming, isTooling } = storeToRefs(conversation);
 
 
 const inputMessage = ref('');
 const thinkingMessages = ['正在思考中', '正在思考中.', '正在思考中..', '正在思考中...'];
 const thinkingIndex = ref(0);
+const toolingMessages = ['使用工具中', '使用工具中.', '使用工具中..', '使用工具中...'];
 
 // 输入框状态枚举
 enum InputState {
   IDLE = 'idle',
   THINKING = 'thinking',
+  TOOLING = 'tooling',
   CONTINUE = 'continue',
   // 预留未来状态示例：
   // WAITING = 'waiting',      // 等待外部条件
@@ -45,6 +47,12 @@ const stateConfig = {
     cssClass: 'thinking',
     cursor: 'not-allowed'
   },
+  [InputState.TOOLING]: {
+    placeholder: () => toolingMessages[thinkingIndex.value],
+    readonly: true,
+    cssClass: 'tooling',
+    cursor: 'not-allowed'
+  },
   [InputState.CONTINUE]: {
     placeholder: '点击以继续...',
     readonly: true,
@@ -62,7 +70,7 @@ const stateConfig = {
 
 // 状态计算逻辑
 const currentState = computed(() => {
-  if (isStreaming.value) return InputState.THINKING;
+  if (isStreaming.value) return isTooling.value ? InputState.TOOLING : InputState.THINKING;
   if (conversation.responseItems.length > 0) return InputState.CONTINUE;
   return InputState.IDLE;
 });
@@ -190,6 +198,7 @@ function preventSendWhenThinking(event: KeyboardEvent) {
 
 /* 思考和继续状态的公共样式 */
 .chat-input.thinking,
+.chat-input.tooling,
 .chat-input.continue,
 .chat-input[readonly] {
   cursor: not-allowed;
@@ -197,6 +206,7 @@ function preventSendWhenThinking(event: KeyboardEvent) {
 }
 
 .chat-input.thinking::placeholder,
+.chat-input.tooling::placeholder,
 .chat-input.continue::placeholder,
 .chat-input[readonly]::placeholder {
   font-style: italic;
@@ -219,6 +229,22 @@ function preventSendWhenThinking(event: KeyboardEvent) {
   --text-shadow: rgba(255, 165, 0, 0.5);
   --text-shadow-light: rgba(255, 165, 0, 0.3);
   --text-shadow-heavy: rgba(255, 165, 0, 0.7);
+}
+
+/* 工具使用状态特定样式（浅绿色） */
+.chat-input.tooling {
+  background: rgba(235, 249, 238, 0.95);
+  border-color: rgba(120, 200, 160, 0.9);
+  color: rgba(80, 120, 90, 0.9);
+  box-shadow: 0 0 10px rgba(120, 200, 160, 0.3);
+  --breathing-color: rgba(120, 200, 160, 0.6);
+  --breathing-color-active: rgba(120, 200, 160, 1);
+  --breathing-shadow: rgba(120, 200, 160, 0.2);
+  --breathing-shadow-active: rgba(120, 200, 160, 0.5);
+  --text-color: rgba(60, 160, 110, 0.95);
+  --text-shadow: rgba(120, 200, 160, 0.5);
+  --text-shadow-light: rgba(120, 200, 160, 0.3);
+  --text-shadow-heavy: rgba(120, 200, 160, 0.7);
 }
 
 /* 继续播放状态特定样式 */
