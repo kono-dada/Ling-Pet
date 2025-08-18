@@ -36,7 +36,6 @@ export async function handleNewWindows(newWindows: ScreenshotableWindow[]) {
 
   const analysisResult = await describeScreens(newWindows.map((w) => w.id));
   await chatWithPetStream(
-    USERPROMPT.replace('{screenContent}', analysisResult),
-    conversation.addItem
+    USERPROMPT.replace('{screenContent}', analysisResult)
   );
 }

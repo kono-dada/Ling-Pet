@@ -1,6 +1,6 @@
 // Stub onTask implementation. You can implement your own logic here.
 // It will be called automatically when a scheduled item is due.
-import { chatWithPetStream } from '../chatAndVoice/chatWithPet'
+import { chatForSchedule } from '../chatAndVoice/chatForSchedule'
 import { useConversationStore } from '../../stores/conversation'
 
 export async function onTask(prompt: string): Promise<void> {
@@ -17,14 +17,10 @@ export async function onTask(prompt: string): Promise<void> {
     }
 
     conversation.start()
-    const res = await chatWithPetStream(prompt, conversation.addItem, {
-      origin: 'schedule',
-      wrap: 'schedule',
-      historyScope: 'none', 
-      saveHistory: false
-    })
+    const res = await chatForSchedule(prompt, conversation.addItem)
     if (!res.success) {
-      conversation.currentMessage = res.error || '任务执行失败'
+      // Schedule 场景：失败时静默，只记录日志，不主动显示错误气泡
+      console.warn('[onTask] schedule chat failed:', res.error)
     }
   } catch (e) {
     console.error('[onTask] failed', e)

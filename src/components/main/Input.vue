@@ -121,8 +121,7 @@ async function sendMessage() {
       console.error('Error occurred while processing message:', error);
     }
     const petResponse = await chatWithPetStream(
-      userMessage + (userMessage.startsWith('.') ? screenAnalysisBlock : ''),
-      conversation.addItem
+      userMessage + (userMessage.startsWith('.') ? screenAnalysisBlock : '')
     );
 
     if (!petResponse.success) {
