@@ -2,6 +2,7 @@ import { type AIMessage } from "../../types/ai";
 import { useAIConfigStore } from "../../stores/aiConfig";
 import { constructMessageForSchedule } from "../llm/messageConstructor";
 import { invokeLLM } from "../llm/invokeLLM";
+import { useChatHistoryStore } from "../../stores/chatHistory";
 
 /**
  * 专用于 Schedule 的对话调用：
@@ -13,6 +14,7 @@ import { invokeLLM } from "../llm/invokeLLM";
 export async function chatForSchedule(
   taskPrompt: string,
 ): Promise<{ success: boolean; error?: string }> {
+  const chs = useChatHistoryStore()
   const ac = useAIConfigStore();
 
   const hasConfig = Boolean(ac.apiKey && ac.baseURL && ac.model)
@@ -22,6 +24,9 @@ export async function chatForSchedule(
 
   const messages: AIMessage[] = await constructMessageForSchedule(taskPrompt)
   const resMsgs = await invokeLLM({ messages })
-  console.log('[schedule] AI 返回消息条数:', resMsgs.length)
+    resMsgs.map(msg => {
+    chs.addMessage(msg);
+  });
+  console.log('[schedule] AI 返回消息:', resMsgs)
   return { success: true }
 }

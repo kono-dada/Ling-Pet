@@ -19,7 +19,7 @@ export async function constructMessageForChat(userMessage: string): Promise<AIMe
   const historyLength = Math.min(chs.chatHistory.length, acs.historyMaxLength);
   for (let i = chs.chatHistory.length - historyLength; i < chs.chatHistory.length; i++) {
     const message = chs.chatHistory[i];
-    if (message.role === 'user' || message.role === 'assistant') {
+    if (message.role === 'user' || message.role === 'assistant' || message.role === 'tool') {
       messages.push(message);
     }
   }
