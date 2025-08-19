@@ -7,7 +7,7 @@ import type { ExecToolResult } from '../types';
 export const addScheduleTool: Tool = {
   name: 'addSchedule',
   description:
-    '参数：延迟时间（秒）, 过期时间（秒，-1表示不过期）, 任务内容（字符串，这是你要提醒你自己在未来要做的事情，比如“我需要做xxx”。这个任务内容可以写的很详细）\n' + 
+    '参数：延迟时间（秒）, 过期时间（秒，-1表示不过期）, 任务内容（字符串，这是你要提醒你自己在未来要做的事情，比如“我需要做xxx”。这个任务内容可以写的很详细。请注意，这个字段不要填写“xx后我要做什么”，因为你是在提醒未来的自己做事情，应该用现在进行时）\n' + 
     '  功能：添加一个定时器，到时间会提醒你执行你自己定下的任务。如果这个任务具有时效性，你可以添加过期时间。',
   async call(delaySecRaw, outdatedSecRaw, promptRaw): Promise<ExecToolResult> {
     console.log('[tool:addSchedule] start', { delaySecRaw, outdatedSecRaw, promptRaw });

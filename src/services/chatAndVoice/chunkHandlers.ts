@@ -74,10 +74,12 @@ export function createToolCallChunkHandler(
           console.log('解析到工具调用:', { name: rawName, args });
           await onItemComplete(rawName, args);
         } catch (e) {
+          onItemComplete('fallback', ['处理工具调用回调时出错: ' + String(e)]);
           console.warn('处理工具调用回调时出错:', e);
         }
       } else {
         console.warn('解析工具调用失败，缺少 <name> 或 <arguments>');
+        onItemComplete('fallback', ['解析工具调用失败，缺少 <name> 或 <arguments>']);
       }
     }
 

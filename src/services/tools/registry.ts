@@ -14,6 +14,9 @@ export async function callToolByName(
   name: string,
   args: string[],
 ): Promise<ExecToolResult> {
+  if (name === 'fallback') {
+    return { ok: false, error: String(args), continue: true };
+  }
   console.log(`Calling tool ${name} with args:`, args);
   const tool = registry.get(name);
   if (!tool) {

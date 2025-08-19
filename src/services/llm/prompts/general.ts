@@ -18,6 +18,7 @@ export function getHypothesesPrompt(): string {
 
 以下是你之前对用户特点的推测：
 ${useHypothesesStore().getAllAsJSON()}
+十分推荐频繁地添加或修改这些推测，以便更好地理解用户。
 
 `
 }

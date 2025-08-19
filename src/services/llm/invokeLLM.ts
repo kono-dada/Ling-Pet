@@ -65,6 +65,7 @@ export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
         function: { name, arguments: argStr }
       })
       // 不中断流；callToolByName 已内部兜底错误并返回 ExecToolResult
+      console.log('调用工具:', name)
       const p = callToolByName(name, args)
       pending.push({ name, args, startedAt: Date.now(), promise: p })
       return
