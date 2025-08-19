@@ -6,31 +6,20 @@ import { useChatHistoryStore } from './stores/chatHistory';
 import { useScreenAnalysisConfigStore } from './stores/screenAnalysisConfig';
 import { useVitsConfigStore } from './stores/vitsConfig';
 import { useConversationStore } from './stores/conversation';
-import { useScheduleStore } from './stores/schedule';
 import { onMounted } from 'vue';
 import { denySave } from '@tauri-store/pinia';
 
 onMounted(async () => {
-  await useAppearanceConfigStore().$tauri.start();
-  await usePetStateStore().$tauri.start();
-  await useAIConfigStore().$tauri.start();
-  await useChatHistoryStore().$tauri.start();
-  await useScreenAnalysisConfigStore().$tauri.start();
-  await useConversationStore().$tauri.start();
+  useAppearanceConfigStore().$tauri.start();
+  usePetStateStore().$tauri.start();
+  useAIConfigStore().$tauri.start();
+  useChatHistoryStore().$tauri.start();
+  useScreenAnalysisConfigStore().$tauri.start();
+  useConversationStore().$tauri.start();
   const vitsConfig = useVitsConfigStore();
-  await vitsConfig.$tauri.start();
+  vitsConfig.$tauri.start();
   // 会话编排使用非持久化的会话 store（conversation），无需 denySave
   denySave('conversation');
-  // Initialize schedule manager: restore state and start heartbeat
-  try {
-    const schedule = useScheduleStore()
-    console.log('[schedule] init: start storage + rehydrate + startHeartbeat')
-    schedule.$tauri.start()
-    schedule.rehydrate()
-    schedule.startHeartbeat()
-  } catch (e) {
-    console.error('Failed to initialize schedule manager:', e)
-  }
 });
 </script>
 

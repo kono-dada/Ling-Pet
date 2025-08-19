@@ -18,6 +18,7 @@ import { registerDefaultTools } from '../services/tools/index.ts';
 import { startNoInteractionWatcher, stopNoInteractionWatcher } from '../services/interactions/noInteractionWatcher';
 import { useMemoryStore } from '../stores/memory.ts';
 import { useHypothesesStore } from '../stores/hypotheses.ts';
+import { useScheduleStore } from '../stores/schedule.ts';
 
 const avatarRef = ref();
 const ac = useAppearanceConfigStore();
@@ -34,10 +35,10 @@ onMounted(async () => {
   registerDefaultTools()
   startPetSizeWatching();  // 监听设置中的宠物大小以实时调整窗口
   startChatBubbleWatching();  // 监听聊天气泡状态以打开或关闭
-  await globalHandlersManager.start(); // 根据设置注册/管理全局事件处理
+  globalHandlersManager.start(); // 根据设置注册/管理全局事件处理
   startWindowListMaintaining();  // 实时更新当前窗口状态
   if (vitsConfig.autoStartSbv2) {
-    await startSbv2(vitsConfig.installPath);
+    startSbv2(vitsConfig.installPath);
   }
   // 启动“长时间无交互”监视器（默认 1 分钟触发一次）
   startNoInteractionWatcher();
@@ -45,6 +46,18 @@ onMounted(async () => {
     await ensureDefaultEmotionPack()
     await initEmotionPack()
   } catch (err) { console.error('初始化情绪包失败：', err) }
+
+
+  // Initialize schedule manager: restore state and start heartbeat
+  try {
+    const schedule = useScheduleStore()
+    console.log('[schedule] init: start storage + rehydrate + startHeartbeat')
+    schedule.$tauri.start()
+    schedule.rehydrate()
+    schedule.startHeartbeat()
+  } catch (e) {
+    console.error('Failed to initialize schedule manager:', e)
+  }
 });
 
 onUnmounted(() => {
