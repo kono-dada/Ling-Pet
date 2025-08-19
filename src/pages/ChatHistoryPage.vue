@@ -83,6 +83,20 @@
                 </div>
               </template>
             </div>
+            <div v-if="message.role === 'tool'" class="message-row tool-message mb-4">
+              <div class="d-flex justify-start mb-3 tool-message-item">
+              <v-avatar class="mr-3 tool-avatar" size="40">
+                <v-icon color="white">mdi-tools</v-icon>
+              </v-avatar>
+              <v-card class="message-bubble tool-bubble" rounded="xl">
+                <v-card-text class="pa-3">
+                <span class="tool-name">
+                  {{ (JSON.parse(String(message.content)) as ToolResultMessageContent).name }}
+                </span>
+                </v-card-text>
+              </v-card>
+              </div>
+            </div>
           </template>
 
           <!-- 空状态 -->
@@ -193,6 +207,7 @@ import { getEmotionImageSrcByName } from '../services/emotionPack';
 import { ref } from 'vue';
 import { voiceVits } from '../services/chatAndVoice/vitsService';
 import { extractItemsFromContent } from '../utils/aiResponse'
+import { ToolResultMessageContent } from '../services/tools';
 
 const chs = useChatHistoryStore();
 const vcs = useVitsConfigStore();
@@ -408,6 +423,17 @@ function getEmotionImage(code: number) {
 .ai-avatar {
   border: 2px solid rgba(0, 0, 0, 0.05);
   /* 边框颜色变浅 */
+}
+
+.tool-avatar {
+  background-color: #707070; /* 黑色背景 */
+  border: 2px solid #000000; /* 黑色边框 */
+}
+
+.tool-bubble {
+  background-color: #404040; /* 黑底 */
+  border: 1px solid #333333; /* 深灰边框，弱化存在感 */
+  color: #ffffff; /* 白字 */
 }
 
 .stats-card {

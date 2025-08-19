@@ -1,7 +1,7 @@
 import type { AIMessage } from '../../types/ai'
 import { callAIStream } from '../chatAndVoice/aiService'
 import { createPetResponseChunkHandler, createToolCallChunkHandler } from '../chatAndVoice/chunkHandlers'
-import type { ExecToolResult } from '../tools/types'
+import type { ExecToolResult, ToolResultMessageContent } from '../tools/types'
 import { callToolByName } from '../tools'
 import { useConversationStore } from '../../stores/conversation'
 
@@ -106,7 +106,7 @@ export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
 
     // 汇总工具调用记录并判断是否需要继续
     let needContinue = false
-    const resultItems: Array<{ name: string; ok: boolean; data?: string; error?: string }> = []
+    const resultItems: Array<ToolResultMessageContent> = []
 
     results.forEach((res, idx) => {
       const { name } = pending[idx]
@@ -123,7 +123,7 @@ export async function invokeLLM(params: InvokeLLMParams): Promise<AIMessage[]> {
     const toolMessages: AIMessage[] = resultItems.map((it, idx) => ({
       role: 'tool',
       tool_call_id: toolCalls[idx]?.id || '',
-      content: JSON.stringify({ name: it.name, ok: it.ok, result: it.data, error: it.error })
+      content: JSON.stringify(it)
     }))
     transcript.push(...toolMessages)
     messagesForLLM.push(...toolMessages)
