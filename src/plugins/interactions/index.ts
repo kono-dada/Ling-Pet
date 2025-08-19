@@ -12,3 +12,8 @@ export function interactionPluginHandlers(): HandlerDescriptor[] {
 
   return [d1 as HandlerDescriptor];
 }
+
+// 默认导出，便于通过 import.meta.glob 自动注册
+export default function pluginHandlers(): HandlerDescriptor[] {
+  return interactionPluginHandlers();
+}
