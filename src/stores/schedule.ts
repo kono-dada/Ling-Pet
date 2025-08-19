@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { onTask } from '../services/schedule/onTask'
 import { onOutdated } from '../services/schedule/onOutdated'
 import { useConversationStore } from './conversation'
+import { emitScheduleIdle } from '../services/events/emitters'
 
 type TaskStatus = 'scheduled' | 'pending' | 'running' | 'outdated' | 'accomplished' | 'canceled'
 
@@ -120,6 +121,12 @@ export const useScheduleStore = defineStore('schedule', {
           t.status = 'outdated'
           console.log('[schedule] task -> outdated', { id: t.id, outdatedAt: t.outdatedAt, now })
         }
+      }
+
+      // 若没有未来需要执行的任务（无 scheduled/pending/outdated），发射空闲事件
+      const hasFutureTasks = this.tasks.some(t => t.status === 'scheduled' || t.status === 'pending' || t.status === 'outdated')
+      if (!hasFutureTasks) {
+        emitScheduleIdle({ ts: now }).catch(err => console.warn('[schedule] emit SCHEDULE_IDLE failed', err))
       }
 
       if (this.isBusy) {

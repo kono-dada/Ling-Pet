@@ -7,6 +7,7 @@ export const AppEvents = {
   NEW_WINDOWS: 'NEW_WINDOWS',
   AVATAR_MULTI_CLICK: 'AVATAR_MULTI_CLICK',
   NO_INTERACTION_TIMEOUT: 'NO_INTERACTION_TIMEOUT',
+  SCHEDULE_IDLE: 'SCHEDULE_IDLE',
 } as const;
 
 export interface EventPayloadMap {
@@ -14,6 +15,7 @@ export interface EventPayloadMap {
   NEW_WINDOWS: ScreenshotableWindow[];
   AVATAR_MULTI_CLICK: { ts: number; threshold: number; windowMs: number };
   NO_INTERACTION_TIMEOUT: { ts: number; sinceMs: number; thresholdMs: number };
+  SCHEDULE_IDLE: { ts: number };
 }
 
 export type AppEventName = keyof EventPayloadMap;
