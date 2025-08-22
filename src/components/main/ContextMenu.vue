@@ -17,6 +17,11 @@
         <v-icon :size="iconSize" class="menu-icon">mdi-message-text-outline</v-icon>
         <span class="menu-text">查看聊天记录</span>
       </div>
+      <div v-if="(ac as any).showDevTools" class="menu-divider"></div>
+      <div v-if="(ac as any).showDevTools" class="menu-item" @click="toggleDevTools">
+        <v-icon :size="iconSize" class="menu-icon">mdi-bug-outline</v-icon>
+        <span class="menu-text">关闭开发者工具</span>
+      </div>
     </div>
     
     <!-- 遮罩层，点击时关闭菜单 -->
@@ -46,7 +51,23 @@ const menuRef = ref<HTMLElement>()
 const menuDimensions = computed(() => {
   // 基础尺寸：桌宠大小的 80%，但至少 120px，最多 200px
   const baseWidth = Math.max(120, Math.min(200, ac.petSize * 0.8))
-  const baseHeight = Math.max(80, Math.min(120, ac.petSize * 0.4))
+  
+  // 动态计算高度：根据菜单项数量调整
+  const baseItemCount = 2 // 基础项目：设置、聊天记录
+  const devToolsItems = (ac as any).showDevTools ? 1 : 0 // 开发者工具项
+  const totalItems = baseItemCount + devToolsItems
+  const dividerCount = (ac as any).showDevTools ? 2 : 1 // 分割线数量
+  
+  // 每个菜单项约 32px，分割线约 9px，padding 8px
+  const itemHeight = 32 * (ac.petSize / 200) // 根据桌宠大小缩放
+  const dividerHeight = 9
+  const padding = 8
+  const calculatedHeight = (totalItems * itemHeight) + (dividerCount * dividerHeight) + (padding * 2)
+  
+  // 设置最小和最大高度
+  const minHeight = 80
+  const maxHeight = 200
+  const baseHeight = Math.max(minHeight, Math.min(maxHeight, calculatedHeight))
   
   return {
     width: baseWidth,
@@ -82,22 +103,35 @@ const menuStyle = computed(() => ({
 
 // 显示菜单
 const showMenu = async (event: MouseEvent) => {
-  // 使用响应式的菜单尺寸
-  const menuWidth = menuDimensions.value.width
-  const menuHeight = menuDimensions.value.height
-  const maxX = window.innerWidth - menuWidth
-  const maxY = window.innerHeight - menuHeight
-  
+  // 初始位置设置
   menuPosition.value = {
-    x: Math.min(event.clientX, maxX),
-    y: Math.min(event.clientY, maxY)
+    x: event.clientX,
+    y: event.clientY
   }
   
   isVisible.value = true
   
-  // 等待下一帧，确保菜单已渲染，然后聚焦
+  // 等待下一帧，确保菜单已渲染
   await nextTick()
-  menuRef.value?.focus()
+  
+  // 获取菜单的实际尺寸
+  if (menuRef.value) {
+    const rect = menuRef.value.getBoundingClientRect()
+    const menuWidth = rect.width
+    const menuHeight = rect.height
+    
+    // 重新计算位置，确保不超出屏幕边界
+    const maxX = window.innerWidth - menuWidth
+    const maxY = window.innerHeight - menuHeight
+    
+    menuPosition.value = {
+      x: Math.min(event.clientX, maxX),
+      y: Math.min(event.clientY, maxY)
+    }
+    
+    // 聚焦菜单
+    menuRef.value.focus()
+  }
 }
 
 // 隐藏菜单
@@ -163,6 +197,12 @@ const openChatHistory = async () => {
   }
   
   new WebviewWindow('chat-history', chatHistoryWindowConfig)
+}
+
+// 切换开发者工具
+const toggleDevTools = () => {
+  hideMenu()
+  ;(ac as any).showDevTools = !(ac as any).showDevTools
 }
 
 // 导出方法供父组件使用
