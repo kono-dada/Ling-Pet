@@ -7,8 +7,54 @@
       </div>
       <v-divider class="mb-4"></v-divider>
 
+      <!-- 安装类型选择 -->
+      <div class="mb-4">
+        <h3 class="text-subtitle-1 font-weight-medium mb-3">安装类型</h3>
+        <v-btn-toggle
+          v-model="installType"
+          color="primary"
+          mandatory
+          variant="outlined"
+          divided
+          class="mb-3"
+        >
+          <v-btn value="style-bert-vits2">
+            <v-icon start>mdi-microphone</v-icon>
+            Style-Bert-VITS2
+          </v-btn>
+          <v-btn value="vits-simple-api">
+            <v-icon start>mdi-microphone-variant</v-icon>
+            VITS-Simple-API
+          </v-btn>
+        </v-btn-toggle>
+        <v-alert type="info" variant="tonal" density="compact" class="mb-4">
+          <div v-if="installType === 'style-bert-vits2'">
+            <strong>Style-Bert-VITS2:</strong> 适用于本地部署，支持情感控制。需要下载模型文件和可执行文件。
+          </div>
+          <div v-else>
+            <strong>VITS-Simple-API:</strong> 适用于Bert-VITS2远程API调用。支持多种模型，可部署在本地或远程服务器。
+          </div>
+        </v-alert>
+      </div>
+
       <v-alert v-if="!osSupported" type="warning" variant="tonal" class="mb-4">
         当前系统不支持安装。当前仅支持：macOS 与 Windows。
+      </v-alert>
+
+      <!-- VITS-Simple-API 远程配置信息 -->
+      <v-alert v-if="installType === 'vits-simple-api'" type="info" variant="tonal" class="mb-4">
+        <div class="text-subtitle-2 mb-2">🔗 远程部署指南</div>
+        <div class="text-body-2 mb-2">
+          如果您已有远程服务器，可以直接在服务器上安装 VITS-Simple-API：
+        </div>
+        <div class="text-caption mb-2">
+          <code>git clone https://github.com/Artrajz/vits-simple-api.git</code><br>
+          <code>cd vits-simple-api && pip install -r requirements.txt</code><br>
+          <code>python app.py</code>
+        </div>
+        <div class="text-body-2">
+          然后在上方的 API 地址中配置您的远程服务器地址。
+        </div>
       </v-alert>
 
       <div class="d-flex align-center gap-2 mb-2" style="gap: 8px" :class="{ 'text-disabled': !osSupported }">
@@ -101,24 +147,38 @@ const overwrite = ref(false)
 const isBatchDownloading = ref(false)
 const items = ref<DownloadItem[]>([])
 const pathExists = ref<boolean | null>(null)
+const installType = ref<'style-bert-vits2' | 'vits-simple-api'>('style-bert-vits2')
 
 const vc = useVitsConfigStore();
 
 // 安装清单
 const INSTALL_MANIFEST = {
-  files: {
-    'configuration.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/configuration.json',
-    'deberta.onnx': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/deberta.onnx',
-    'model_Murasame.onnx': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/model_Murasame.onnx',
-    'style_vectors_Murasame.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/style_vectors_Murasame.json',
-    'tokenizer.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/tokenizer.json',
-  },
-  binary: {
-    macos: {
-      'sbv2_api_mac_arm64.zip': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/sbv2_api_mac_arm64.zip'
+  'style-bert-vits2': {
+    files: {
+      'configuration.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/configuration.json',
+      'deberta.onnx': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/deberta.onnx',
+      'model_Murasame.onnx': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/model_Murasame.onnx',
+      'style_vectors_Murasame.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/style_vectors_Murasame.json',
+      'tokenizer.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/tokenizer.json',
     },
-    windows: {
-      'sbv2_api_win_x64.zip': 'https://www.modelscope.cn/models/konodada/PET-sbv2/resolve/master/sbv2_api_win_x64.zip'
+    binary: {
+      macos: {
+        'sbv2_api_mac_arm64.zip': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/sbv2_api_mac_arm64.zip'
+      },
+      windows: {
+        'sbv2_api_win_x64.zip': 'https://www.modelscope.cn/models/konodada/PET-sbv2/resolve/master/sbv2_api_win_x64.zip'
+      }
+    }
+  },
+  'vits-simple-api': {
+    files: {},
+    binary: {
+      macos: {
+        'vits-simple-api-macos.zip': 'https://github.com/Artrajz/vits-simple-api/releases/latest/download/vits-simple-api-macos.zip'
+      },
+      windows: {
+        'vits-simple-api-windows.zip': 'https://github.com/Artrajz/vits-simple-api/releases/latest/download/vits-simple-api-windows.zip'
+      }
     }
   }
 } as const
@@ -153,6 +213,11 @@ watch(() => (vc as any).installPath, async (val: string) => {
   }
 }, { immediate: true })
 
+// 监听安装类型变化
+watch(installType, () => {
+  prepareItems()
+}, { immediate: false })
+
 // 工具函数
 function joinPath(dir: string, name: string) {
   return `${dir.replace(/\/+$/, '')}/${name}`
@@ -167,20 +232,24 @@ async function ensureDir(path: string) {
 // 生成安装项目
 function prepareItems() {
   const list: DownloadItem[] = []
+  const manifest = INSTALL_MANIFEST[installType.value]
+  
   // 常规文件
-  Object.entries(INSTALL_MANIFEST.files).forEach(([name, url]) => {
+  Object.entries(manifest.files).forEach(([name, url]) => {
     list.push({ url, name, progress: 0, status: 'pending', kind: (name.endsWith('.zip') ? 'zip' : 'file') })
   })
+  
   // 二进制按平台
   if (currentOs === 'macos') {
-    Object.entries(INSTALL_MANIFEST.binary.macos).forEach(([name, url]) => {
+    Object.entries(manifest.binary.macos || {}).forEach(([name, url]) => {
       list.push({ url, name, progress: 0, status: 'pending', kind: 'zip' })
     })
   } else if (currentOs === 'windows') {
-    Object.entries(INSTALL_MANIFEST.binary.windows).forEach(([name, url]) => {
+    Object.entries(manifest.binary.windows || {}).forEach(([name, url]) => {
       list.push({ url, name, progress: 0, status: 'pending', kind: 'zip' })
     })
   }
+  
   items.value = list
 }
 
@@ -248,7 +317,9 @@ async function downloadOne(item: DownloadItem) {
       await extractZipFile(fullPath, vc.installPath)
       // macOS/Linux: 给予可执行权限
       if (currentOs === 'macos' || currentOs === 'linux') {
-        const exePath = joinPath(vc.installPath, 'sbv2_api')
+        const exePath = installType.value === 'style-bert-vits2' 
+          ? joinPath(vc.installPath, 'sbv2_api')
+          : joinPath(vc.installPath, 'vits-simple-api')
         try { await Command.create('chmod', ['+x', exePath]).spawn() } catch (err) {
           console.warn('设置可执行权限失败，请手动 chmod +x：', exePath, err)
         }
@@ -274,7 +345,7 @@ async function startInstall() {
   try {
     const results = await Promise.allSettled(items.value.map(it => downloadOne(it)))
     const hasError = results.some(r => r.status === 'rejected') || items.value.some(i => i.status === 'error' || i.status === 'canceled')
-    if (!hasError) {
+    if (!hasError && installType.value === 'style-bert-vits2') {
       await writeEnvFile()
     }
   } finally {
