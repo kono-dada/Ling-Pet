@@ -38,24 +38,51 @@
       </div>
 
       <v-alert v-if="!osSupported" type="warning" variant="tonal" class="mb-4">
-        当前系统不支持安装。当前仅支持：macOS 与 Windows。
+        <div v-if="installType === 'style-bert-vits2'">
+          当前系统不支持 Style-Bert-VITS2 安装。当前仅支持：macOS 与 Windows。
+        </div>
+        <div v-else>
+          当前系统不支持 VITS-Simple-API 自动安装。当前仅支持：Linux 与 Windows。
+          <div v-if="currentOs === 'macos'" class="mt-2">
+            <strong>macOS 用户：</strong>可通过源码手动安装，运行以下命令：<br>
+            <code class="text-caption">git clone https://github.com/Artrajz/vits-simple-api.git</code><br>
+            <code class="text-caption">cd vits-simple-api && pip install -r requirements.txt</code><br>
+            <code class="text-caption">python app.py</code>
+          </div>
+        </div>
       </v-alert>
 
-      <!-- VITS-Simple-API 远程配置信息 -->
-      <v-alert v-if="installType === 'vits-simple-api'" type="info" variant="tonal" class="mb-4">
-        <div class="text-subtitle-2 mb-2">🔗 远程部署指南</div>
-        <div class="text-body-2 mb-2">
-          如果您已有远程服务器，可以直接在服务器上安装 VITS-Simple-API：
-        </div>
-        <div class="text-caption mb-2">
-          <code>git clone https://github.com/Artrajz/vits-simple-api.git</code><br>
-          <code>cd vits-simple-api && pip install -r requirements.txt</code><br>
-          <code>python app.py</code>
-        </div>
-        <div class="text-body-2">
-          然后在上方的 API 地址中配置您的远程服务器地址。
-        </div>
-      </v-alert>
+      <!-- VITS-Simple-API 版本选择 -->
+      <div v-if="installType === 'vits-simple-api'" class="mb-4">
+        <h3 class="text-subtitle-1 font-weight-medium mb-3">版本选择</h3>
+        <v-btn-toggle
+          v-model="vitsApiVersion"
+          color="primary"
+          mandatory
+          variant="outlined"
+          divided
+          class="mb-3"
+        >
+          <v-btn value="gpu">
+            <v-icon start>mdi-chip</v-icon>
+            GPU 版本
+          </v-btn>
+          <v-btn value="cpu">
+            <v-icon start>mdi-memory</v-icon>
+            CPU 版本
+          </v-btn>
+        </v-btn-toggle>
+        <v-alert type="info" variant="tonal" density="compact" class="mb-4">
+          <div v-if="vitsApiVersion === 'gpu'">
+            <strong>GPU 版本:</strong> 支持 NVIDIA GPU 加速，生成速度更快，需要 CUDA 环境。
+          </div>
+          <div v-else>
+            <strong>CPU 版本:</strong> 仅使用 CPU 计算，兼容性更好，无需额外环境配置。
+          </div>
+        </v-alert>
+      </div>
+
+
 
       <div class="d-flex align-center gap-2 mb-2" style="gap: 8px" :class="{ 'text-disabled': !osSupported }">
         <v-text-field v-model="vc.installPath" :disabled="!osSupported" label="保存目录" density="compact" variant="outlined" hide-details
@@ -148,6 +175,7 @@ const isBatchDownloading = ref(false)
 const items = ref<DownloadItem[]>([])
 const pathExists = ref<boolean | null>(null)
 const installType = ref<'style-bert-vits2' | 'vits-simple-api'>('style-bert-vits2')
+const vitsApiVersion = ref<'gpu' | 'cpu'>('gpu') // VITS-Simple-API 版本选择
 
 const vc = useVitsConfigStore();
 
@@ -173,11 +201,21 @@ const INSTALL_MANIFEST = {
   'vits-simple-api': {
     files: {},
     binary: {
-      macos: {
-        'vits-simple-api-macos.zip': 'https://github.com/Artrajz/vits-simple-api/releases/latest/download/vits-simple-api-macos.zip'
+      linux: {
+        gpu: {
+          'vits-simple-api-linux-gpu.tar.gz': 'https://github.com/Artrajz/vits-simple-api/releases/download/v0.6.16/vits-simple-api-linux-gpu-v0.6.16.tar.gz'
+        },
+        cpu: {
+          'vits-simple-api-linux-cpu.tar.gz': 'https://github.com/Artrajz/vits-simple-api/releases/download/v0.6.16/vits-simple-api-linux-cpu-v0.6.16.tar.gz'
+        }
       },
       windows: {
-        'vits-simple-api-windows.zip': 'https://github.com/Artrajz/vits-simple-api/releases/latest/download/vits-simple-api-windows.zip'
+        gpu: {
+          'vits-simple-api-windows-gpu.7z': 'https://github.com/Artrajz/vits-simple-api/releases/download/v0.6.16/vits-simple-api-windows-gpu-v0.6.16.7z'
+        },
+        cpu: {
+          'vits-simple-api-windows-cpu.7z': 'https://github.com/Artrajz/vits-simple-api/releases/download/v0.6.16/vits-simple-api-windows-cpu-v0.6.16.7z'
+        }
       }
     }
   }
@@ -185,7 +223,14 @@ const INSTALL_MANIFEST = {
 
 // 计算属性
 const currentOs = osType()
-const osSupported = computed(() => currentOs === 'macos' || currentOs === 'windows')
+const osSupported = computed(() => {
+  if (installType.value === 'style-bert-vits2') {
+    return currentOs === 'macos' || currentOs === 'windows'
+  } else {
+    // vits-simple-api 仅支持 Linux 和 Windows
+    return currentOs === 'linux' || currentOs === 'windows'
+  }
+})
 const pathHint = computed(() => pathExists.value === true ? '目录存在' : pathExists.value === false ? '目录将被创建' : '请输入路径')
 
 const totalProgress = computed(() => {
@@ -213,9 +258,15 @@ watch(() => (vc as any).installPath, async (val: string) => {
   }
 }, { immediate: true })
 
-// 监听安装类型变化
+// 监听安装类型和版本变化
 watch(installType, () => {
   prepareItems()
+}, { immediate: false })
+
+watch(vitsApiVersion, () => {
+  if (installType.value === 'vits-simple-api') {
+    prepareItems()
+  }
 }, { immediate: false })
 
 // 工具函数
@@ -236,18 +287,36 @@ function prepareItems() {
   
   // 常规文件
   Object.entries(manifest.files).forEach(([name, url]) => {
-    list.push({ url, name, progress: 0, status: 'pending', kind: (name.endsWith('.zip') ? 'zip' : 'file') })
+    list.push({ url: url as string, name, progress: 0, status: 'pending', kind: (name.endsWith('.zip') || name.endsWith('.7z') || name.endsWith('.tar.gz') ? 'zip' : 'file') })
   })
   
-  // 二进制按平台
-  if (currentOs === 'macos') {
-    Object.entries(manifest.binary.macos || {}).forEach(([name, url]) => {
-      list.push({ url, name, progress: 0, status: 'pending', kind: 'zip' })
-    })
-  } else if (currentOs === 'windows') {
-    Object.entries(manifest.binary.windows || {}).forEach(([name, url]) => {
-      list.push({ url, name, progress: 0, status: 'pending', kind: 'zip' })
-    })
+  // 二进制按平台和版本
+  if (installType.value === 'style-bert-vits2') {
+    // Style-Bert-VITS2: 原有逻辑
+    if (currentOs === 'macos' && 'macos' in manifest.binary) {
+      Object.entries(manifest.binary.macos).forEach(([name, url]) => {
+        list.push({ url: url as string, name, progress: 0, status: 'pending', kind: 'zip' })
+      })
+    } else if (currentOs === 'windows' && 'windows' in manifest.binary) {
+      Object.entries(manifest.binary.windows).forEach(([name, url]) => {
+        list.push({ url: url as string, name, progress: 0, status: 'pending', kind: 'zip' })
+      })
+    }
+  } else if (installType.value === 'vits-simple-api') {
+    // VITS-Simple-API: 按版本选择
+    if (currentOs === 'linux' && 'linux' in manifest.binary) {
+      const osManifest = manifest.binary.linux as any
+      const versionFiles = osManifest[vitsApiVersion.value] || {}
+      Object.entries(versionFiles).forEach(([name, url]) => {
+        list.push({ url: url as string, name, progress: 0, status: 'pending', kind: 'zip' })
+      })
+    } else if (currentOs === 'windows' && 'windows' in manifest.binary) {
+      const osManifest = manifest.binary.windows as any
+      const versionFiles = osManifest[vitsApiVersion.value] || {}
+      Object.entries(versionFiles).forEach(([name, url]) => {
+        list.push({ url: url as string, name, progress: 0, status: 'pending', kind: 'zip' })
+      })
+    }
   }
   
   items.value = list
@@ -361,23 +430,47 @@ function cancelBatch() {
   for (const it of items.value) it.cancel?.()
 }
 
-// 使用系统原生命令解压磁盘上的 zip 文件，避免将压缩包解到内存
+// 使用系统原生命令解压磁盘上的压缩文件，避免将压缩包解到内存
 async function extractZipFile(zipPath: string, destDir: string): Promise<void> {
   await ensureDir(destDir)
-  if (currentOs === 'windows') {
-    // 使用 PowerShell Expand-Archive -Force
-    await Command.create('powershell', [
-      '-NoProfile',
-      '-NonInteractive',
-      '-Command',
-      `Expand-Archive -LiteralPath \"${zipPath}\" -DestinationPath \"${destDir}\" -Force`
-    ]).execute()
+  
+  if (zipPath.endsWith('.7z')) {
+    // .7z 文件解压
+    if (currentOs === 'windows') {
+      // Windows: 使用 7z 命令（如果存在）或 PowerShell 的 Expand-Archive
+      try {
+        await Command.create('7z', ['x', zipPath, `-o${destDir}`, '-y']).execute()
+      } catch {
+        throw new Error('无法解压 .7z 文件，请手动安装 7-Zip 或使用其他压缩工具')
+      }
+    } else {
+      // Linux: 使用 p7zip
+      try {
+        await Command.create('7z', ['x', zipPath, `-o${destDir}`, '-y']).execute()
+      } catch {
+        throw new Error('无法解压 .7z 文件，请安装 p7zip-full: sudo apt install p7zip-full')
+      }
+    }
+  } else if (zipPath.endsWith('.tar.gz')) {
+    // .tar.gz 文件解压
+    await Command.create('tar', ['-xzf', zipPath, '-C', destDir]).execute()
   } else {
-    // macOS / Linux 常见为 unzip，部分环境也可用 tar -xf
-    try {
-      await Command.create('unzip', ['-o', zipPath, '-d', destDir]).execute()
-    } catch {
-      await Command.create('tar', ['-xf', zipPath, '-C', destDir]).execute()
+    // .zip 文件解压（原有逻辑）
+    if (currentOs === 'windows') {
+      // 使用 PowerShell Expand-Archive -Force
+      await Command.create('powershell', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        `Expand-Archive -LiteralPath \"${zipPath}\" -DestinationPath \"${destDir}\" -Force`
+      ]).execute()
+    } else {
+      // macOS / Linux 常见为 unzip，部分环境也可用 tar -xf
+      try {
+        await Command.create('unzip', ['-o', zipPath, '-d', destDir]).execute()
+      } catch {
+        await Command.create('tar', ['-xf', zipPath, '-C', destDir]).execute()
+      }
     }
   }
 }
