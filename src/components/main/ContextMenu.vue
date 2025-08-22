@@ -9,12 +9,12 @@
       @contextmenu.prevent
     >
       <div class="menu-item" @click="openSettings">
-        <v-icon size="16" class="menu-icon">mdi-cog</v-icon>
+        <v-icon :size="iconSize" class="menu-icon">mdi-cog</v-icon>
         <span class="menu-text">设置</span>
       </div>
       <div class="menu-divider"></div>
       <div class="menu-item" @click="openChatHistory">
-        <v-icon size="16" class="menu-icon">mdi-message-text-outline</v-icon>
+        <v-icon :size="iconSize" class="menu-icon">mdi-message-text-outline</v-icon>
         <span class="menu-text">查看聊天记录</span>
       </div>
     </div>
@@ -32,23 +32,59 @@
 <script lang="ts" setup>
 import { ref, computed, nextTick } from 'vue'
 import { getAllWebviewWindows, WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useAppearanceConfigStore } from '../../stores/configs/appearanceConfig'
+
+// 获取外观配置
+const ac = useAppearanceConfigStore()
 
 // 组件状态
 const isVisible = ref(false)
 const menuPosition = ref({ x: 0, y: 0 })
 const menuRef = ref<HTMLElement>()
 
+// 根据桌宠大小计算菜单尺寸
+const menuDimensions = computed(() => {
+  // 基础尺寸：桌宠大小的 80%，但至少 120px，最多 200px
+  const baseWidth = Math.max(120, Math.min(200, ac.petSize * 0.8))
+  const baseHeight = Math.max(80, Math.min(120, ac.petSize * 0.4))
+  
+  return {
+    width: baseWidth,
+    height: baseHeight
+  }
+})
+
+// 根据桌宠大小计算字体和图标尺寸
+const scaleFactors = computed(() => {
+  // 根据桌宠大小计算缩放因子，范围在 0.7 到 1.2 之间
+  const scale = Math.max(0.7, Math.min(1.2, ac.petSize / 200))
+  
+  return {
+    fontSize: Math.round(13 * scale),
+    iconSize: Math.round(16 * scale),
+    padding: Math.round(8 * scale),
+    borderRadius: Math.round(8 * scale)
+  }
+})
+
+// 计算图标尺寸
+const iconSize = computed(() => scaleFactors.value.iconSize)
+
 // 计算菜单位置样式
 const menuStyle = computed(() => ({
   left: `${menuPosition.value.x}px`,
   top: `${menuPosition.value.y}px`,
+  minWidth: `${menuDimensions.value.width}px`,
+  fontSize: `${scaleFactors.value.fontSize}px`,
+  borderRadius: `${scaleFactors.value.borderRadius}px`,
+  '--menu-padding': `${scaleFactors.value.padding}px`,
 }))
 
 // 显示菜单
 const showMenu = async (event: MouseEvent) => {
-  // 确保菜单在屏幕范围内
-  const menuWidth = 160
-  const menuHeight = 80
+  // 使用响应式的菜单尺寸
+  const menuWidth = menuDimensions.value.width
+  const menuHeight = menuDimensions.value.height
   const maxX = window.innerWidth - menuWidth
   const maxY = window.innerHeight - menuHeight
   
@@ -143,9 +179,7 @@ defineExpose({
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  min-width: 160px;
   padding: 4px;
   outline: none;
   user-select: none;
@@ -154,12 +188,12 @@ defineExpose({
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
+  padding: var(--menu-padding, 8px) calc(var(--menu-padding, 8px) * 1.5);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
   color: #333;
-  font-size: 13px;
+  white-space: nowrap;
 }
 
 .menu-item:hover {
@@ -168,8 +202,9 @@ defineExpose({
 }
 
 .menu-icon {
-  margin-right: 8px;
+  margin-right: calc(var(--menu-padding, 8px));
   opacity: 0.8;
+  flex-shrink: 0;
 }
 
 .menu-text {
@@ -179,7 +214,7 @@ defineExpose({
 .menu-divider {
   height: 1px;
   background: rgba(0, 0, 0, 0.1);
-  margin: 4px 8px;
+  margin: 4px calc(var(--menu-padding, 8px));
 }
 
 .context-menu-overlay {
