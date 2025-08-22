@@ -109,7 +109,7 @@
                 label="应用启动时自动启动本地 sbv2_api"
               />
               <div v-else class="text-caption text-medium-emphasis">
-                Bert-VITS2 通常使用远程API，不需要本地服务
+                Bert-VITS2 通过vits-simple-api同时支持远程部署与本地运行
               </div>
             </v-col>
             <v-col cols="12" md="6">
