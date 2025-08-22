@@ -1,7 +1,12 @@
 <template>
   <div class="chat-bubble-window">
     <div class="bubble-container">
-      <div class="bubble-content" :style="bubbleStyles">
+      <div class="bubble-content" 
+           :class="{ 
+             transparent: ac.bubbleTransparent, 
+             'no-border': ac.bubbleTransparent && !ac.bubbleShowBorder 
+           }" 
+           :style="bubbleStyles">
         <div class="bubble-text" :style="{ textAlign, color: colorTheme.text }">
           {{ displayedMessage }}<span v-if="isTyping" class="typing-cursor" :style="{ color: colorTheme.text }">|</span>
         </div>
@@ -12,7 +17,11 @@
             Q0,10 10,14 
             Q12,15 18,18 
             Q12,10 14,0 
-            Q3,2 0,0 Z" :fill="colorTheme.background" fill-opacity="0.95" stroke="none" />
+            Q3,2 0,0 Z" 
+            :fill="ac.bubbleTransparent ? 'transparent' : colorTheme.background" 
+            :fill-opacity="ac.bubbleTransparent ? '0' : '0.95'" 
+            :stroke="(ac.bubbleTransparent && ac.bubbleShowBorder) ? colorTheme.border : 'none'" 
+            :stroke-width="(ac.bubbleTransparent && ac.bubbleShowBorder) ? '1' : '0'" />
         </svg>
       </div>
     </div>
@@ -93,6 +102,13 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 透明模式下的特殊样式 */
+.bubble-content.transparent {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  animation: none;
+}
+
 .bubble-text {
   /* 文本样式 */
   color: #1a1a1a;
@@ -121,11 +137,50 @@
   text-shadow: 0 0.5px 1px rgba(255, 255, 255, 0.8);
 }
 
+/* 透明模式下的文字样式增强 */
+.bubble-content.transparent .bubble-text {
+  font-weight: 600;
+  /* 使用更温暖、更现代的深色，带有轻微蓝调 */
+  color: rgba(51, 65, 85, 0.92);
+  /* 优化文字阴影，创造更柔和的立体效果 */
+  text-shadow: 
+    0 1px 3px rgba(255, 255, 255, 0.95),
+    0 2px 8px rgba(255, 255, 255, 0.6),
+    1px 1px 2px rgba(100, 116, 139, 0.3),
+    0 0 10px rgba(255, 255, 255, 0.4);
+  /* 增强文本渲染 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 透明模式下无边框时的特殊样式 */
+.bubble-content.transparent.no-border .bubble-text {
+  /* 无边框时使用更深的颜色和更强的对比度 */
+  font-weight: 650;
+  color: rgba(30, 41, 59, 0.94);
+  text-shadow: 
+    0 1px 4px rgba(255, 255, 255, 0.98),
+    0 2px 12px rgba(255, 255, 255, 0.7),
+    1px 1px 3px rgba(71, 85, 105, 0.4),
+    0 0 15px rgba(255, 255, 255, 0.5),
+    0 0 5px rgba(148, 163, 184, 0.3);
+}
+
 /* 打字机光标 */
 .typing-cursor {
   animation: blink 1s infinite;
   color: #1a1a1a;
   font-weight: 400;
+}
+
+/* 透明模式下的光标样式增强 */
+.bubble-content.transparent .typing-cursor {
+  font-weight: 600;
+  color: rgba(51, 65, 85, 0.92);
+  text-shadow: 
+    0 1px 3px rgba(255, 255, 255, 0.95),
+    0 2px 8px rgba(255, 255, 255, 0.6),
+    0 0 10px rgba(255, 255, 255, 0.4);
 }
 
 /* 自定义滚动条样式 */
@@ -267,12 +322,14 @@ import { getEmotionColorTheme } from '../constants/emotionColors';
 import { useConversationStore } from '../stores/conversation';
 import { storeToRefs } from 'pinia';
 import { usePetStateStore } from '../stores/petState';
+import { useAppearanceConfigStore } from '../stores/configs/appearanceConfig';
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi';
 
 const cs = useConversationStore();
 const { currentMessage } = storeToRefs(cs)
 const petState = usePetStateStore();
+const ac = useAppearanceConfigStore();
 
 const displayedMessage = ref('');
 const isTyping = ref(false);
@@ -287,16 +344,36 @@ const colorTheme = computed(() => getEmotionColorTheme(petState.currentEmotion))
 // 计算气泡样式
 const bubbleStyles = computed(() => {
   const theme = colorTheme.value;
-  return {
-    background: theme.background,
-    borderColor: theme.border,
-    boxShadow: `0 8px 32px ${theme.shadow}, 0 0 0 1px ${theme.border}`,
-    color: theme.text,
-    // 设置 CSS 变量用于动画
-    '--dynamic-shadow': `0 8px 32px ${theme.shadow}`,
-    '--glow-color': theme.shadow,
-    '--border-glow': theme.border
-  };
+  const isTransparent = ac.bubbleTransparent;
+  
+  if (isTransparent) {
+    // 透明模式：背景透明，可选择是否显示边框
+    const borderStyle = ac.bubbleShowBorder 
+      ? `1px solid ${theme.border}` 
+      : 'none';
+    
+    return {
+      background: 'transparent',
+      border: borderStyle,
+      boxShadow: 'none',
+      color: theme.text,
+      '--dynamic-shadow': 'none',
+      '--glow-color': 'transparent',
+      '--border-glow': ac.bubbleShowBorder ? theme.border : 'transparent'
+    };
+  } else {
+    // 正常模式：毛玻璃背景效果
+    return {
+      background: theme.background,
+      borderColor: theme.border,
+      boxShadow: `0 8px 32px ${theme.shadow}, 0 0 0 1px ${theme.border}`,
+      color: theme.text,
+      // 设置 CSS 变量用于动画
+      '--dynamic-shadow': `0 8px 32px ${theme.shadow}`,
+      '--glow-color': theme.shadow,
+      '--border-glow': theme.border
+    };
+  }
 });
 
 // 打字机效果

@@ -7,6 +7,8 @@ export const useAppearanceConfigStore = defineStore(
   () => {
     const petSize = ref(200) // Default size in pixels
     const opacity = ref(1) // Default transparency
+    const bubbleTransparent = ref(false) // 聊天气泡透明模式
+    const bubbleShowBorder = ref(true) // 聊天气泡显示边框（透明模式下有效）
     // 当前装饰类型: 'none' | 'circle' | 未来扩展其它名字
     const decorationType = ref<'none' | 'circle' | 'fallingStars'>('circle')
     // 当前选中的表情包名称（跨窗口同步）
@@ -27,6 +29,8 @@ export const useAppearanceConfigStore = defineStore(
     return {
       petSize,
       opacity,
+      bubbleTransparent,
+      bubbleShowBorder,
       decorationType,
       activeEmotionPackName,
       // emotion pack runtime state

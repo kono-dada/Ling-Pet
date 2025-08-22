@@ -41,6 +41,37 @@
             />
           </div>
 
+          <div class="mb-6">
+            <div class="d-flex justify-space-between align-center mb-3">
+              <v-label>聊天气泡透明模式</v-label>
+              <v-switch
+                v-model="ac.bubbleTransparent"
+                color="primary"
+                density="compact"
+                hide-details
+              />
+            </div>
+            <div class="text-caption text-medium-emphasis mb-3">
+              开启后气泡背景将变为透明，仅保留文字和边框
+            </div>
+            
+            <!-- 边框显示选项（仅在透明模式下显示） -->
+            <div v-if="ac.bubbleTransparent" class="ml-4">
+              <div class="d-flex justify-space-between align-center mb-2">
+                <v-label class="text-body-2">显示边框</v-label>
+                <v-switch
+                  v-model="ac.bubbleShowBorder"
+                  color="secondary"
+                  density="compact"
+                  hide-details
+                />
+              </div>
+              <div class="text-caption text-medium-emphasis">
+                关闭后仅显示文字，达到最简洁的效果
+              </div>
+            </div>
+          </div>
+
           <v-divider class="my-6"></v-divider>
 
           <div class="mb-3 d-flex justify-space-between align-center">
