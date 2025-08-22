@@ -74,6 +74,23 @@
 
           <v-divider class="my-6"></v-divider>
 
+          <div class="mb-6">
+            <div class="d-flex justify-space-between align-center mb-3">
+              <v-label>开发者工具</v-label>
+              <v-switch
+                v-model="ac.showDevTools"
+                color="warning"
+                density="compact"
+                hide-details
+              />
+            </div>
+            <div class="text-caption text-medium-emphasis mb-3">
+              开启后可在设置与聊天记录界面使用右键开发者工具，关闭以获得更好的使用体验
+            </div>
+          </div>
+
+          <v-divider class="my-6"></v-divider>
+
           <div class="mb-3 d-flex justify-space-between align-center">
             <h3 class="text-subtitle-1 font-weight-bold">表情包管理</h3>
             <div class="d-flex align-center" style="gap: 8px">
