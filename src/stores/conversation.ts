@@ -90,12 +90,40 @@ export const useConversationStore = defineStore('conversation', () => {
 
   async function addItem(item: PetResponseItem) {
     const itemWithAudio: PetResponseItemWithAudio = { ...item }
-    if (vitsConfig.on && vitsConfig.baseURL && item.japanese) {
+    if (vitsConfig.on && vitsConfig.baseURL) {
       try {
-        debug(`正在为日语文本生成语音: ${item.japanese}`)
-        const audioBlob = await voiceVits(item.japanese)
-        itemWithAudio.audioBlob = audioBlob
-        debug('语音生成成功')
+        // 根据引擎类型和语言设置选择要生成语音的文本
+        let textForVoice: string
+        if (vitsConfig.engineType === 'bert-vits2') {
+          // Bert-VITS2: 根据bv2Lang配置选择文本
+          switch (vitsConfig.bv2Lang) {
+            case 'zh':
+              textForVoice = item.message // 使用中文
+              debug(`正在为中文文本生成语音: ${textForVoice}`)
+              break
+            case 'ja':
+              textForVoice = item.japanese // 使用日语
+              debug(`正在为日语文本生成语音: ${textForVoice}`)
+              break
+            case 'en':
+              textForVoice = item.message // 使用中文作为英文的fallback
+              debug(`正在为英文文本生成语音: ${textForVoice}`)
+              break
+            default:
+              textForVoice = item.japanese // 默认使用日语
+              debug(`正在为默认日语文本生成语音: ${textForVoice}`)
+          }
+        } else {
+          // Style-Bert-VITS2: 保持原有逻辑，使用日语
+          textForVoice = item.japanese
+          debug(`正在为日语文本生成语音: ${textForVoice}`)
+        }
+        
+        if (textForVoice) {
+          const audioBlob = await voiceVits(textForVoice)
+          itemWithAudio.audioBlob = audioBlob
+          debug('语音生成成功')
+        }
       } catch (error) {
         debug(`语音生成失败: ${error}`)
         console.error('VITS语音生成失败:', error)
