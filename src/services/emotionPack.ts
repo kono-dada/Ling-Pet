@@ -221,10 +221,7 @@ export async function initEmotionPack(preferredPack?: string): Promise<void> {
   } catch { }
 }
 
-export function listEmotionDescriptions(): EmotionDescription[] {
-  const ac = useAppearanceConfigStore()
-  return ac.emotionCodeToDescription.slice()
-}
+
 
 export function codeToEmotion(code: number): EmotionDescription {
   const ac = useAppearanceConfigStore()
