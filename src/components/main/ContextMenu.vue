@@ -95,17 +95,17 @@ const menuRef = ref<HTMLElement>()
 
 // 合并所有UI尺寸计算到一个计算属性中
 const menuStyle = computed(() => {
-  // 根据桌宠大小计算缩放因子，范围在 0.7 到 1.2 之间
-  const scale = Math.max(0.7, Math.min(1.2, ac.petSize / 200))
-  // 基础尺寸：桌宠大小的 80%，但至少 120px，最多 200px
-  const baseWidth = Math.max(120, Math.min(200, ac.petSize * 0.8))
+  // 根据桌宠大小计算缩放因子，范围在 0.5 到 1.0 之间，使菜单更紧凑
+  const scale = Math.max(0.5, Math.min(1.0, ac.petSize / 200))
+  // 基础尺寸：桌宠大小的 70%，但至少 100px，最多 160px
+  const baseWidth = Math.max(100, Math.min(160, ac.petSize * 0.7))
   
   return {
     scale,
-    fontSize: Math.round(13 * scale),
-    iconSize: Math.round(16 * scale),
-    padding: Math.round(8 * scale),
-    borderRadius: Math.round(8 * scale),
+    fontSize: Math.round(12 * scale),
+    iconSize: Math.round(14 * scale),
+    padding: Math.round(6 * scale),
+    borderRadius: Math.round(6 * scale),
     width: baseWidth
   }
 })
@@ -212,7 +212,7 @@ defineExpose({
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  padding: 4px;
+  padding: 2px;
   outline: none;
   user-select: none;
 }
@@ -220,12 +220,13 @@ defineExpose({
 .menu-item {
   display: flex;
   align-items: center;
-  padding: var(--menu-padding, 8px) calc(var(--menu-padding, 8px) * 1.5);
-  border-radius: 4px;
+  padding: var(--menu-padding, 6px) calc(var(--menu-padding, 6px) * 1.2);
+  border-radius: 3px;
   cursor: pointer;
   transition: all 0.15s ease;
   color: #333;
   white-space: nowrap;
+  min-height: calc(var(--menu-padding, 6px) * 3);
 }
 
 .menu-item:hover {
@@ -234,19 +235,20 @@ defineExpose({
 }
 
 .menu-icon {
-  margin-right: calc(var(--menu-padding, 8px));
+  margin-right: calc(var(--menu-padding, 6px) * 0.8);
   opacity: 0.8;
   flex-shrink: 0;
 }
 
 .menu-text {
   font-weight: 500;
+  line-height: 1.2;
 }
 
 .menu-divider {
   height: 1px;
   background: rgba(0, 0, 0, 0.1);
-  margin: 4px calc(var(--menu-padding, 8px));
+  margin: 2px calc(var(--menu-padding, 6px) * 0.8);
 }
 
 .context-menu-overlay {
