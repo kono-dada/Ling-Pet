@@ -4,14 +4,17 @@ use tauri::Manager;
 mod commands;
 mod os;
 mod sbv2_manager;
+mod uiohook_manager;
 use commands::*;
 use sbv2_manager::Sbv2Manager;
+use commands::{UiohookState};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .manage(Sbv2Manager::new())
+        .manage(UiohookState::new())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
@@ -32,7 +35,13 @@ pub fn run() {
             open_data_folder,
             sbv2_start,
             sbv2_stop,
-            sbv2_status
+            sbv2_status,
+            set_window_click_through,
+            start_uiohook_monitoring,
+            stop_uiohook_monitoring,
+            poll_uiohook_events,
+            update_pet_window_bounds,
+            get_current_mouse_position
         ])
         .setup(|app| {
             let main_window = app.get_webview_window("main").unwrap();

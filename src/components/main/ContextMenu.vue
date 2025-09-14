@@ -22,6 +22,11 @@
         <v-icon :size="iconSize" class="menu-icon">mdi-bug-outline</v-icon>
         <span class="menu-text">关闭开发者工具</span>
       </div>
+      <div class="menu-divider"></div>
+      <div class="menu-item" @click="togglePetFixed">
+        <v-icon :size="iconSize" class="menu-icon">{{ ac.isPetFixed ? 'mdi-pin-off' : 'mdi-pin' }}</v-icon>
+        <span class="menu-text">{{ ac.isPetFixed ? '取消固定' : '固定桌宠' }}</span>
+      </div>
     </div>
     
     <!-- 遮罩层，点击时关闭菜单 -->
@@ -38,9 +43,11 @@
 import { ref, computed, nextTick } from 'vue'
 import { getAllWebviewWindows, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useAppearanceConfigStore } from '../../stores/configs/appearanceConfig'
+import { getPetFixManager } from '../../services/petFixManager'
 
 // 获取外观配置
 const ac = useAppearanceConfigStore()
+const petFixManager = getPetFixManager()
 interface WindowConfig {
   title: string
   url: string
@@ -159,6 +166,9 @@ const showMenu = async (event: MouseEvent) => {
 // 隐藏菜单
 const hideMenu = () => {
   isVisible.value = false
+  
+  // 通知固定桌宠管理器菜单已隐藏
+  petFixManager.setContextMenuVisible(false)
 }
 
 // 打开设置窗口
@@ -195,6 +205,12 @@ const openChatHistory = async () => {
 const toggleDevTools = () => {
   hideMenu()
   ac.showDevTools = !ac.showDevTools
+}
+
+// 切换固定桌宠
+const togglePetFixed = () => {
+  hideMenu()
+  ac.isPetFixed = !ac.isPetFixed
 }
 
 // 导出方法供父组件使用

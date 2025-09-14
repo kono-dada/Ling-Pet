@@ -1,11 +1,14 @@
 use crate::sbv2_manager::Sbv2Manager;
+use crate::uiohook_manager::{UiohookManager, GlobalMouseEvent};
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt; // for creation_flags
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
-use tauri::Manager;
+use std::sync::{Arc, Mutex, mpsc::Receiver};
+use tauri::{Manager, WebviewWindow};
 use tauri::State;
 use tauri_plugin_opener::OpenerExt;
+use log::{debug, info, warn};
 
 #[tauri::command]
 pub fn quit_app(app: tauri::AppHandle) -> Result<(), String> {
@@ -130,4 +133,140 @@ pub async fn sbv2_status(state: State<'_, Sbv2Manager>) -> Result<Sbv2Status, St
     let running = Sbv2Manager::is_running_inner(&mut guard);
     let pid = guard.as_ref().map(|c| c.id());
     Ok(Sbv2Status { running, pid })
+}
+
+// ==================== UIohook全局监听状态管理 ====================
+
+/// UIohook全局监听状态管理
+pub struct UiohookState {
+    manager: Arc<Mutex<UiohookManager>>,
+    event_receiver: Arc<Mutex<Option<Receiver<GlobalMouseEvent>>>>,
+}
+
+impl UiohookState {
+    pub fn new() -> Self {
+        Self {
+            manager: Arc::new(Mutex::new(UiohookManager::new())),
+            event_receiver: Arc::new(Mutex::new(None)),
+        }
+    }
+}
+
+// ==================== 窗口透过控制命令 ====================
+
+/// 设置窗口透明度（允许事件穿透）
+#[tauri::command]
+pub async fn set_window_click_through(
+    window: WebviewWindow,
+    click_through: bool
+) -> Result<(), String> {
+    info!("设置窗口点击穿透: {}", click_through);
+    
+    window.set_ignore_cursor_events(click_through)
+        .map_err(|e| format!("设置窗口点击穿透失败: {}", e))?;
+    
+    debug!("窗口点击穿透设置成功: {}", click_through);
+    Ok(())
+}
+
+// ==================== UIohook相关命令 ====================
+
+/// 启动UIohook全局鼠标监听
+#[tauri::command]
+pub async fn start_uiohook_monitoring(
+    state: State<'_, UiohookState>
+) -> Result<(), String> {
+    info!("🚀 启动UIohook全局鼠标监听");
+    
+    let mut manager = state.manager.lock().map_err(|_| "无法锁定UIohook管理器".to_string())?;
+    
+    if manager.is_running() {
+        warn!("UIohook监听已经在运行中");
+        return Ok(());
+    }
+    
+    let receiver = manager.start_global_mouse_monitoring()?;
+    
+    // 存储接收器
+    let mut event_receiver = state.event_receiver.lock().map_err(|_| "无法锁定事件接收器".to_string())?;
+    *event_receiver = Some(receiver);
+    
+    info!("✅ UIohook全局鼠标监听启动成功");
+    Ok(())
+}
+
+/// 停止UIohook全局鼠标监听
+#[tauri::command]
+pub async fn stop_uiohook_monitoring(
+    state: State<'_, UiohookState>
+) -> Result<(), String> {
+    info!("🛑 停止UIohook全局鼠标监听");
+    
+    let mut manager = state.manager.lock().map_err(|_| "无法锁定UIohook管理器".to_string())?;
+    
+    manager.stop_global_mouse_monitoring()?;
+    
+    // 清理接收器
+    let mut event_receiver = state.event_receiver.lock().map_err(|_| "无法锁定事件接收器".to_string())?;
+    *event_receiver = None;
+    
+    info!("✅ UIohook全局鼠标监听已停止");
+    Ok(())
+}
+
+/// 轮询UIohook全局鼠标事件
+#[tauri::command]
+pub async fn poll_uiohook_events(
+    state: State<'_, UiohookState>
+) -> Result<Vec<GlobalMouseEvent>, String> {
+    let mut events = Vec::new();
+    
+    let event_receiver = state.event_receiver.lock().map_err(|_| "无法锁定事件接收器".to_string())?;
+    
+    if let Some(receiver) = event_receiver.as_ref() {
+        // 非阻塞轮询事件
+        while let Ok(event) = receiver.try_recv() {
+            info!("🖱️ UIohook事件轮询: {} 在位置 ({}, {}) {}",
+                  event.button, event.x, event.y,
+                  if event.is_over_pet { "【在桌宠上】" } else { "【不在桌宠上】" });
+            events.push(event);
+        }
+    } else {
+        debug!("UIohook事件接收器未初始化");
+    }
+    
+    if !events.is_empty() {
+        info!("🔄 本次UIohook轮询处理 {} 个事件", events.len());
+    }
+    
+    Ok(events)
+}
+
+/// 更新桌宠窗口边界信息
+#[tauri::command]
+pub async fn update_pet_window_bounds(
+    state: State<'_, UiohookState>,
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32
+) -> Result<(), String> {
+    info!("📐 更新桌宠窗口边界: ({}, {}) {}x{}", x, y, width, height);
+    
+    let manager = state.manager.lock().map_err(|_| "无法锁定UIohook管理器".to_string())?;
+    manager.update_pet_window_bounds(x, y, width, height)?;
+    
+    debug!("✅ 桌宠窗口边界更新成功");
+    Ok(())
+}
+
+/// 获取当前鼠标位置（UIohook版本）
+#[tauri::command]
+pub async fn get_current_mouse_position(
+    state: State<'_, UiohookState>
+) -> Result<(i32, i32), String> {
+    let manager = state.manager.lock().map_err(|_| "无法锁定UIohook管理器".to_string())?;
+    let position = manager.get_current_mouse_position()?;
+    debug!("📍 当前鼠标位置: ({}, {})", position.0, position.1);
+    Ok(position)
 }

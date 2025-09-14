@@ -9,13 +9,21 @@
 
     <div class="avatar-border">
       <div class="avatar-anim" :class="{ shaking: isShaking, breathing: !isShaking }">
-        <img v-show="isReady" :src="emotionSrc" :alt="codeToEmotion(state.currentEmotion)" class="pet-avatar" draggable="false"
-          @load="onImgLoad" @error="onImgError" @mousedown="onDragStart" @click.stop="onClick" />
+        <img 
+          v-show="isReady" 
+          :src="emotionSrc" 
+          :alt="codeToEmotion(state.currentEmotion)" 
+          class="pet-avatar" 
+          draggable="false"
+          @load="onImgLoad" 
+          @error="onImgError" 
+          @mousedown="onDragStart" 
+          @click.stop="onClick" 
+        />
       </div>
     </div>
     <div v-if="!isReady" class="avatar-loading">首次加载，请稍等……</div>
   </div>
-
 </template>
 
 <script lang="ts" setup>
@@ -35,28 +43,40 @@ const conversation = useConversationStore();
 
 const isShaking = ref(false);
 const isReady = ref(false);
+
 // 依赖 store 中的版本号和当前包名（服务内部会附加 v/pack 查询参数）
 const ac = useAppearanceConfigStore()
 const emotionSrc = computed(() => {
-  // 建立依赖：当包名或版本变化时重新计算
   try {
+    // 建立依赖：当包名或版本变化时重新计算
     void ac.activeEmotionPackName
     void ac.emotionPackVersion
     return getEmotionImageSrcByCode(state.currentEmotion)
-  } catch (e) {
+  } catch (error) {
+    console.warn('获取表情图片路径失败:', error)
     // 在资源尚未就绪时返回空字符串，保持占位视图
     return ''
   }
 })
 
+/**
+ * 图片加载成功回调
+ */
 function onImgLoad() {
   isReady.value = true;
 }
 
+/**
+ * 图片加载失败回调
+ */
 function onImgError() {
   isReady.value = false;
+  console.warn('表情图片加载失败')
 }
 
+/**
+ * 拖拽开始处理
+ */
 function onDragStart(e: MouseEvent) {
   // 仅在按下主键时启用拖拽判定
   if ((e.buttons & 1) === 0) return;
@@ -91,6 +111,9 @@ function onDragStart(e: MouseEvent) {
   window.addEventListener('mouseup', onUp, { once: true });
 }
 
+/**
+ * 点击事件处理
+ */
 function onClick() {
   // 取消可能存在的自动播放定时器
   conversation.cancelAutoPlay();
@@ -100,6 +123,9 @@ function onClick() {
   registerAvatarClick();
 }
 
+/**
+ * 触发摇晃效果
+ */
 function triggerShakeEffect() {
   isShaking.value = true;
   setTimeout(() => {
@@ -107,11 +133,13 @@ function triggerShakeEffect() {
   }, 1000);
 }
 
+// 监听表情变化，触发摇晃效果
 watch(() => state.currentEmotion, () => {
   triggerShakeEffect();
 });
 
 onMounted(() => {
+  // 首次启动时的欢迎对话
   setTimeout(() => {
     if (useMemoryStore().firstLaunch) {
       [
@@ -141,12 +169,12 @@ onMounted(() => {
     }
     useMemoryStore().firstLaunch = false;
   }, 2000);
+  
+  // 触发一次点击事件，确保 avatarMultiClickEmitter 已经注册
   setTimeout(() => {
-    // 触发一次点击事件，确保 avatarMultiClickEmitter 已经注册
     conversation.cancelInactivityWatch()
   }, 6000);
 });
-
 </script>
 
 <style scoped>

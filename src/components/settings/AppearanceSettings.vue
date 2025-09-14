@@ -2,7 +2,6 @@
   <v-container>
     <v-card flat class="pa-2">
       <v-card-text>
-
         <div class="mb-8">
           <h2 class="text-h6 font-weight-bold mb-4">外观配置</h2>
           <v-divider class="mb-6"></v-divider>
@@ -12,8 +11,15 @@
               <v-label>宠物大小</v-label>
               <span class="text-primary font-weight-medium">{{ ac.petSize }}px</span>
             </div>
-            <v-slider v-model="ac.petSize" :min="MIN_SIZE" :max="MAX_SIZE" :step="1" thumb-label hide-details
-              color="primary"></v-slider>
+            <v-slider 
+              v-model="ac.petSize" 
+              :min="MIN_SIZE" 
+              :max="MAX_SIZE" 
+              :step="1" 
+              thumb-label 
+              hide-details
+              color="primary"
+            ></v-slider>
           </div>
 
           <div class="mb-6">
@@ -21,8 +27,15 @@
               <v-label>透明度</v-label>
               <span class="text-primary font-weight-medium">{{ formattedOpacity }}</span>
             </div>
-            <v-slider v-model="ac.opacity" :min="MIN_OPACITY" :max="MAX_OPACITY" :step="0.01" thumb-label hide-details
-              color="orange"></v-slider>
+            <v-slider 
+              v-model="ac.opacity" 
+              :min="MIN_OPACITY" 
+              :max="MAX_OPACITY" 
+              :step="0.01" 
+              thumb-label 
+              hide-details
+              color="orange"
+            ></v-slider>
           </div>
 
           <div class="mb-6">
@@ -39,6 +52,9 @@
               variant="outlined"
               hide-details
             />
+            <div v-if="ac.avatarType === 'live2d'" class="text-caption text-medium-emphasis mt-2">
+              Live2D模式下装饰效果将自动禁用
+            </div>
           </div>
 
           <div class="mb-6">
@@ -55,6 +71,88 @@
               variant="outlined"
               hide-details
             />
+          </div>
+
+          <!-- Live2D边界类型设置（仅在Live2D模式下显示） -->
+          <div v-if="ac.avatarType === 'live2d'" class="mb-6">
+            <div class="d-flex justify-space-between align-center mb-1">
+              <v-label>Live2D边界类型</v-label>
+              <span class="text-primary font-weight-medium">{{ live2dBorderLabel }}</span>
+            </div>
+            <v-select
+              v-model="ac.live2dBorderType"
+              :items="live2dBorderOptions"
+              item-title="label"
+              item-value="value"
+              density="comfortable"
+              variant="outlined"
+              hide-details
+            />
+            <div class="text-caption text-medium-emphasis mt-2">
+              选择"无边界"可解决模型显示不全问题
+            </div>
+          </div>
+
+          <!-- Live2D模型设置（仅在Live2D模式下显示） -->
+          <div v-if="ac.avatarType === 'live2d'" class="mb-6">
+            <h3 class="text-subtitle-1 font-weight-bold mb-3">Live2D模型设置</h3>
+            
+            <div class="mb-4">
+              <div class="d-flex justify-space-between align-center mb-1">
+                <v-label>模型缩放</v-label>
+                <span class="text-primary font-weight-medium">{{ formattedScale }}</span>
+              </div>
+              <v-slider 
+                v-model="ac.live2dModelScale" 
+                :min="0.01" 
+                :max="0.7" 
+                :step="0.01" 
+                thumb-label 
+                hide-details
+                color="primary"
+              ></v-slider>
+              <div class="text-caption text-medium-emphasis mt-1">
+                调整模型大小，避免显示不全
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <div class="d-flex justify-space-between align-center mb-1">
+                <v-label>模型水平位置</v-label>
+                <span class="text-primary font-weight-medium">{{ formattedPositionX }}</span>
+              </div>
+              <v-slider 
+                v-model="ac.live2dModelPositionX" 
+                :min="0" 
+                :max="1" 
+                :step="0.01" 
+                thumb-label 
+                hide-details
+                color="primary"
+              ></v-slider>
+              <div class="text-caption text-medium-emphasis mt-1">
+                调整模型水平位置 (0:最左, 1:最右)
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <div class="d-flex justify-space-between align-center mb-1">
+                <v-label>模型垂直位置</v-label>
+                <span class="text-primary font-weight-medium">{{ formattedPositionY }}</span>
+              </div>
+              <v-slider 
+                v-model="ac.live2dModelPositionY" 
+                :min="0" 
+                :max="1" 
+                :step="0.01" 
+                thumb-label 
+                hide-details
+                color="primary"
+              ></v-slider>
+              <div class="text-caption text-medium-emphasis mt-1">
+                调整模型垂直位置 (0:最上, 1:最下)
+              </div>
+            </div>
           </div>
 
           <div class="mb-6">
@@ -150,8 +248,8 @@ import { readTextFile } from '@tauri-apps/plugin-fs'
 import { convertFileSrc } from '@tauri-apps/api/core'
 
 // Constants
-const MIN_SIZE = 100;
-const MAX_SIZE = 300;
+const MIN_SIZE = 50;
+const MAX_SIZE = 500;
 const MIN_OPACITY = 0.1;
 const MAX_OPACITY = 1.0;
 
@@ -181,62 +279,106 @@ const avatarTypeLabel = computed(() => {
   return found ? found.label : '静态图片';
 });
 
+// Live2D边界类型选项
+const live2dBorderOptions = [
+  { label: '无边界', value: 'none' },
+  { label: '圆形边界', value: 'circle' },
+];
+
+const live2dBorderLabel = computed(() => {
+  const found = live2dBorderOptions.find(o => o.value === ac.live2dBorderType);
+  return found ? found.label : '无边界';
+});
+
 // Computed property to format the opacity value for display
 const formattedOpacity = computed(() => `${Math.round(ac.opacity * 100)}%`);
+
+// Computed properties for Live2D model settings
+const formattedScale = computed(() => `${Math.round(ac.live2dModelScale * 100)}%`);
+const formattedPositionX = computed(() => `${Math.round(ac.live2dModelPositionX * 100)}%`);
+const formattedPositionY = computed(() => `${Math.round(ac.live2dModelPositionY * 100)}%`);
 
 // 表情包管理状态
 const currentPack = ref<string | null>(null)
 type PackPreview = { name: string; src: string; code: number;}
 const previews = ref<PackPreview[]>([])
 
+/**
+ * 连接路径
+ */
 function joinPath(a: string, b: string) {
   if (!a) return b
   return a.replace(/[\/]+$/, '') + '/' + b.replace(/^[\/]+/, '')
 }
 
+/**
+ * 构建表情包预览
+ */
 async function buildPreview(name: string): Promise<PackPreview | null> {
   try {
     const base = await appDataDir()
     const root = joinPath(joinPath(base, 'emotion_packs'), name)
     const cfgText = await readTextFile(joinPath(root, 'config.json'))
-    const cfg = JSON.parse(cfgText) as { map: Record<string, number>; default: string }
+    const cfg = JSON.parse(cfgText) as { map: Record<string, number>; default: number }
     const code = cfg.default
     if (typeof code !== 'number') return null
     const img = convertFileSrc(joinPath(root, `${code}.png`))
     return { name, src: img, code }
-  } catch (e) {
-    console.warn('构建预览失败: ', name, e)
+  } catch (error) {
+    console.warn('构建预览失败: ', name, error)
     return null
   }
 }
 
+/**
+ * 刷新表情包列表
+ */
 async function refreshPacks() {
-  const names = await listEmotionPacks()
-  currentPack.value = await getActiveEmotionPack()
-  const built = await Promise.all(names.map(buildPreview))
-  previews.value = built.filter((x): x is PackPreview => !!x)
+  try {
+    const names = await listEmotionPacks()
+    currentPack.value = await getActiveEmotionPack()
+    const built = await Promise.all(names.map(buildPreview))
+    previews.value = built.filter((x): x is PackPreview => !!x)
+  } catch (error) {
+    console.error('刷新表情包列表失败:', error)
+  }
 }
 
+/**
+ * 激活表情包
+ */
 async function activatePack(name: string) {
   try {
     await setActiveEmotionPack(name)
     ac.activeEmotionPackName = name
     currentPack.value = name
-  } catch (e) {
-    console.error('切换表情包失败: ', e)
+  } catch (error) {
+    console.error('切换表情包失败: ', error)
   }
 }
 
+/**
+ * 导入表情包
+ */
 async function importPack() {
-  const picked = await open({ multiple: false, directory: false, filters: [{ name: 'Zip', extensions: ['zip'] }] })
-  const file = Array.isArray(picked) ? picked[0] : picked
-  if (!file) return
-  await importEmotionPackFromZip(file)
-  await refreshPacks()
+  try {
+    const picked = await open({ 
+      multiple: false, 
+      directory: false, 
+      filters: [{ name: 'Zip', extensions: ['zip'] }] 
+    })
+    const file = Array.isArray(picked) ? picked[0] : picked
+    if (!file) return
+    await importEmotionPackFromZip(file)
+    await refreshPacks()
+  } catch (error) {
+    console.error('导入表情包失败:', error)
+  }
 }
 
-onMounted(() => { refreshPacks() })
-
+onMounted(() => { 
+  refreshPacks() 
+})
 </script>
 
 <style scoped>

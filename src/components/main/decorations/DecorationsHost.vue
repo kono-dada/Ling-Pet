@@ -16,6 +16,8 @@ const registry: Record<string, any> = {
 };
 
 const currentComp = computed(() => {
+  // 在Live2D模式下默认不显示装饰
+  if (ac.avatarType === 'live2d') return null;
   if (ac.decorationType === 'none') return null;
   return registry[ac.decorationType] || null;
 });

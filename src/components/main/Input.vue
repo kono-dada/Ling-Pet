@@ -1,6 +1,7 @@
 <template>
   <input type="text" v-model="inputMessage" @keyup.enter="sendMessage" @keydown.enter="preventSendWhenThinking"
-    :readonly="currentConfig.readonly" :placeholder="placeholder" class="chat-input" :class="currentConfig.cssClass" />
+    :readonly="currentConfig.readonly" :placeholder="placeholder" class="chat-input" :class="currentConfig.cssClass" 
+    :style="inputStyle" />
 </template>
 
 <script lang="ts" setup>
@@ -9,15 +10,40 @@ import { useConversationStore } from '../../stores/conversation';
 import { storeToRefs } from 'pinia';
 import { chatWithPetStream } from '../../services/chatAndVoice/chatWithPet';
 import { callToolByName } from '../../services/tools';
+import { useAppearanceConfigStore } from '../../stores/configs/appearanceConfig';
 
 const conversation = useConversationStore();
 const { isStreaming, isTooling } = storeToRefs(conversation);
-
+const ac = useAppearanceConfigStore();
 
 const inputMessage = ref('');
 const thinkingMessages = ['正在思考中', '正在思考中.', '正在思考中..', '正在思考中...'];
 const thinkingIndex = ref(0);
 const toolingMessages = ['使用工具中', '使用工具中.', '使用工具中..', '使用工具中...'];
+
+// 计算输入框样式，使其跟随Live2D模型中心位置
+const inputStyle = computed(() => {
+  // 只在Live2D模式下调整位置
+  if (ac.avatarType === 'live2d') {
+    // 根据模型位置计算输入框位置
+    // 模型中心位置是相对于屏幕的百分比
+    const modelCenterX = ac.live2dModelPositionX;
+    
+    // 将输入框定位在窗口最下方，并在水平方向上跟随模型中心
+    // 需要考虑输入框自身的宽度(60%)，所以要居中对齐
+    const leftPosition = `${modelCenterX * 100 - 30}%`; // 60%的一半是30%
+    const bottomPosition = '3%'; // 固定在窗口最下方
+    
+    return {
+      left: leftPosition,
+      bottom: bottomPosition,
+      transform: 'translateX(0)', // 重置默认的居中transform
+    };
+  }
+  
+  // 非Live2D模式下使用默认位置
+  return {};
+});
 
 // 全局思考计时器（当 conversation.isStreaming 为 true 时播放）
 let thinkingTimer: number | null = null;
@@ -185,6 +211,10 @@ function preventSendWhenThinking(event: KeyboardEvent) {
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
+  
+  /* 添加居中对齐的默认样式 */
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .chat-input::placeholder {
@@ -196,7 +226,7 @@ function preventSendWhenThinking(event: KeyboardEvent) {
   border-color: rgba(100, 150, 255, 0.8);
   background: rgba(255, 255, 255, 1);
   box-shadow: 0 2px 8px rgba(100, 150, 255, 0.2);
-  transform: scale(1.02);
+  transform: translateX(-50%) scale(1.02);
 }
 
 .chat-input:hover {
@@ -289,14 +319,12 @@ function preventSendWhenThinking(event: KeyboardEvent) {
   0%,
   100% {
     opacity: 0.85;
-    transform: scale(1);
     border-color: var(--breathing-color);
     box-shadow: 0 0 8px var(--breathing-shadow);
   }
 
   50% {
     opacity: 1;
-    transform: scale(1.015);
     border-color: var(--breathing-color-active);
     box-shadow: 0 0 15px var(--breathing-shadow-active);
   }
@@ -315,5 +343,42 @@ function preventSendWhenThinking(event: KeyboardEvent) {
     opacity: 1;
     text-shadow: 0 0 8px var(--text-shadow-heavy);
   }
+}
+
+/* Live2D模式下的动画效果 */
+.chat-input.thinking[data-avatar-type="live2d"],
+.chat-input.tooling[data-avatar-type="live2d"],
+.chat-input.continue[data-avatar-type="live2d"],
+.chat-input[readonly][data-avatar-type="live2d"] {
+  animation: live2d-state-breathing 2s ease-in-out infinite;
+}
+
+@keyframes live2d-state-breathing {
+
+  0%,
+  100% {
+    opacity: 0.85;
+    border-color: var(--breathing-color);
+    box-shadow: 0 0 8px var(--breathing-shadow);
+  }
+
+  50% {
+    opacity: 1;
+    border-color: var(--breathing-color-active);
+    box-shadow: 0 0 15px var(--breathing-shadow-active);
+  }
+}
+
+/* 在Live2D模式下，所有状态都移除默认的居中transform */
+.chat-input.thinking[data-avatar-type="live2d"],
+.chat-input.tooling[data-avatar-type="live2d"],
+.chat-input.continue[data-avatar-type="live2d"],
+.chat-input[readonly][data-avatar-type="live2d"],
+.chat-input[data-avatar-type="live2d"]:focus {
+  transform: translateX(0) scale(1);
+}
+
+.chat-input[data-avatar-type="live2d"]:focus {
+  transform: translateX(0) scale(1.02);
 }
 </style>
