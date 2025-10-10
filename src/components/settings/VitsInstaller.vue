@@ -7,9 +7,82 @@
       </div>
       <v-divider class="mb-4"></v-divider>
 
+      <!-- 安装类型选择 -->
+      <div class="mb-4">
+        <h3 class="text-subtitle-1 font-weight-medium mb-3">安装类型</h3>
+        <v-btn-toggle
+          v-model="installType"
+          color="primary"
+          mandatory
+          variant="outlined"
+          divided
+          class="mb-3"
+        >
+          <v-btn value="style-bert-vits2">
+            <v-icon start>mdi-microphone</v-icon>
+            Style-Bert-VITS2
+          </v-btn>
+          <v-btn value="vits-simple-api">
+            <v-icon start>mdi-microphone-variant</v-icon>
+            VITS-Simple-API
+          </v-btn>
+        </v-btn-toggle>
+        <v-alert type="info" variant="tonal" density="compact" class="mb-4">
+          <div v-if="installType === 'style-bert-vits2'">
+            <strong>Style-Bert-VITS2:</strong> 适用于本地部署，支持情感控制。需要下载模型文件和可执行文件。
+          </div>
+          <div v-else>
+            <strong>VITS-Simple-API:</strong> 适用于Bert-VITS2远程API调用。支持多种模型，可部署在本地或远程服务器。
+          </div>
+        </v-alert>
+      </div>
+
       <v-alert v-if="!osSupported" type="warning" variant="tonal" class="mb-4">
-        当前系统不支持安装。当前仅支持：macOS 与 Windows。
+        <div v-if="installType === 'style-bert-vits2'">
+          当前系统不支持 Style-Bert-VITS2 安装。当前仅支持：macOS 与 Windows。
+        </div>
+        <div v-else>
+          当前系统不支持 VITS-Simple-API 自动安装。当前仅支持：Linux 与 Windows。
+          <div v-if="currentOs === 'macos'" class="mt-2">
+            <strong>macOS 用户：</strong>可通过源码手动安装，运行以下命令：<br>
+            <code class="text-caption">git clone https://github.com/Artrajz/vits-simple-api.git</code><br>
+            <code class="text-caption">cd vits-simple-api && pip install -r requirements.txt</code><br>
+            <code class="text-caption">python app.py</code>
+          </div>
+        </div>
       </v-alert>
+
+      <!-- VITS-Simple-API 版本选择 -->
+      <div v-if="installType === 'vits-simple-api'" class="mb-4">
+        <h3 class="text-subtitle-1 font-weight-medium mb-3">版本选择</h3>
+        <v-btn-toggle
+          v-model="vitsApiVersion"
+          color="primary"
+          mandatory
+          variant="outlined"
+          divided
+          class="mb-3"
+        >
+          <v-btn value="gpu">
+            <v-icon start>mdi-chip</v-icon>
+            GPU 版本
+          </v-btn>
+          <v-btn value="cpu">
+            <v-icon start>mdi-memory</v-icon>
+            CPU 版本
+          </v-btn>
+        </v-btn-toggle>
+        <v-alert type="info" variant="tonal" density="compact" class="mb-4">
+          <div v-if="vitsApiVersion === 'gpu'">
+            <strong>GPU 版本:</strong> 支持 NVIDIA GPU 加速，生成速度更快，需要 CUDA 环境。
+          </div>
+          <div v-else>
+            <strong>CPU 版本:</strong> 仅使用 CPU 计算，兼容性更好，无需额外环境配置。
+          </div>
+        </v-alert>
+      </div>
+
+
 
       <div class="d-flex align-center gap-2 mb-2" style="gap: 8px" :class="{ 'text-disabled': !osSupported }">
         <v-text-field v-model="vc.installPath" :disabled="!osSupported" label="保存目录" density="compact" variant="outlined" hide-details
@@ -101,31 +174,63 @@ const overwrite = ref(false)
 const isBatchDownloading = ref(false)
 const items = ref<DownloadItem[]>([])
 const pathExists = ref<boolean | null>(null)
+const installType = ref<'style-bert-vits2' | 'vits-simple-api'>('style-bert-vits2')
+const vitsApiVersion = ref<'gpu' | 'cpu'>('gpu') // VITS-Simple-API 版本选择
 
 const vc = useVitsConfigStore();
 
 // 安装清单
 const INSTALL_MANIFEST = {
-  files: {
-    'configuration.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/configuration.json',
-    'deberta.onnx': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/deberta.onnx',
-    'model_Murasame.onnx': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/model_Murasame.onnx',
-    'style_vectors_Murasame.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/style_vectors_Murasame.json',
-    'tokenizer.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/tokenizer.json',
-  },
-  binary: {
-    macos: {
-      'sbv2_api_mac_arm64.zip': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/sbv2_api_mac_arm64.zip'
+  'style-bert-vits2': {
+    files: {
+      'configuration.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/configuration.json',
+      'deberta.onnx': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/deberta.onnx',
+      'model_Murasame.onnx': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/model_Murasame.onnx',
+      'style_vectors_Murasame.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/style_vectors_Murasame.json',
+      'tokenizer.json': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/tokenizer.json',
     },
-    windows: {
-      'sbv2_api_win_x64.zip': 'https://www.modelscope.cn/models/konodada/PET-sbv2/resolve/master/sbv2_api_win_x64.zip'
+    binary: {
+      macos: {
+        'sbv2_api_mac_arm64.zip': 'https://modelscope.cn/models/konodada/PET-sbv2/resolve/master/sbv2_api_mac_arm64.zip'
+      },
+      windows: {
+        'sbv2_api_win_x64.zip': 'https://www.modelscope.cn/models/konodada/PET-sbv2/resolve/master/sbv2_api_win_x64.zip'
+      }
+    }
+  },
+  'vits-simple-api': {
+    files: {},
+    binary: {
+      linux: {
+        gpu: {
+          'vits-simple-api-linux-gpu.tar.gz': 'https://github.com/Artrajz/vits-simple-api/releases/download/v0.6.16/vits-simple-api-linux-gpu-v0.6.16.tar.gz'
+        },
+        cpu: {
+          'vits-simple-api-linux-cpu.tar.gz': 'https://github.com/Artrajz/vits-simple-api/releases/download/v0.6.16/vits-simple-api-linux-cpu-v0.6.16.tar.gz'
+        }
+      },
+      windows: {
+        gpu: {
+          'vits-simple-api-windows-gpu.7z': 'https://github.com/Artrajz/vits-simple-api/releases/download/v0.6.16/vits-simple-api-windows-gpu-v0.6.16.7z'
+        },
+        cpu: {
+          'vits-simple-api-windows-cpu.7z': 'https://github.com/Artrajz/vits-simple-api/releases/download/v0.6.16/vits-simple-api-windows-cpu-v0.6.16.7z'
+        }
+      }
     }
   }
 } as const
 
 // 计算属性
 const currentOs = osType()
-const osSupported = computed(() => currentOs === 'macos' || currentOs === 'windows')
+const osSupported = computed(() => {
+  if (installType.value === 'style-bert-vits2') {
+    return currentOs === 'macos' || currentOs === 'windows'
+  } else {
+    // vits-simple-api 仅支持 Linux 和 Windows
+    return currentOs === 'linux' || currentOs === 'windows'
+  }
+})
 const pathHint = computed(() => pathExists.value === true ? '目录存在' : pathExists.value === false ? '目录将被创建' : '请输入路径')
 
 const totalProgress = computed(() => {
@@ -153,6 +258,17 @@ watch(() => (vc as any).installPath, async (val: string) => {
   }
 }, { immediate: true })
 
+// 监听安装类型和版本变化
+watch(installType, () => {
+  prepareItems()
+}, { immediate: false })
+
+watch(vitsApiVersion, () => {
+  if (installType.value === 'vits-simple-api') {
+    prepareItems()
+  }
+}, { immediate: false })
+
 // 工具函数
 function joinPath(dir: string, name: string) {
   return `${dir.replace(/\/+$/, '')}/${name}`
@@ -167,20 +283,42 @@ async function ensureDir(path: string) {
 // 生成安装项目
 function prepareItems() {
   const list: DownloadItem[] = []
+  const manifest = INSTALL_MANIFEST[installType.value]
+  
   // 常规文件
-  Object.entries(INSTALL_MANIFEST.files).forEach(([name, url]) => {
-    list.push({ url, name, progress: 0, status: 'pending', kind: (name.endsWith('.zip') ? 'zip' : 'file') })
+  Object.entries(manifest.files).forEach(([name, url]) => {
+    list.push({ url: url as string, name, progress: 0, status: 'pending', kind: (name.endsWith('.zip') || name.endsWith('.7z') || name.endsWith('.tar.gz') ? 'zip' : 'file') })
   })
-  // 二进制按平台
-  if (currentOs === 'macos') {
-    Object.entries(INSTALL_MANIFEST.binary.macos).forEach(([name, url]) => {
-      list.push({ url, name, progress: 0, status: 'pending', kind: 'zip' })
-    })
-  } else if (currentOs === 'windows') {
-    Object.entries(INSTALL_MANIFEST.binary.windows).forEach(([name, url]) => {
-      list.push({ url, name, progress: 0, status: 'pending', kind: 'zip' })
-    })
+  
+  // 二进制按平台和版本
+  if (installType.value === 'style-bert-vits2') {
+    // Style-Bert-VITS2: 原有逻辑
+    if (currentOs === 'macos' && 'macos' in manifest.binary) {
+      Object.entries(manifest.binary.macos).forEach(([name, url]) => {
+        list.push({ url: url as string, name, progress: 0, status: 'pending', kind: 'zip' })
+      })
+    } else if (currentOs === 'windows' && 'windows' in manifest.binary) {
+      Object.entries(manifest.binary.windows).forEach(([name, url]) => {
+        list.push({ url: url as string, name, progress: 0, status: 'pending', kind: 'zip' })
+      })
+    }
+  } else if (installType.value === 'vits-simple-api') {
+    // VITS-Simple-API: 按版本选择
+    if (currentOs === 'linux' && 'linux' in manifest.binary) {
+      const osManifest = manifest.binary.linux as any
+      const versionFiles = osManifest[vitsApiVersion.value] || {}
+      Object.entries(versionFiles).forEach(([name, url]) => {
+        list.push({ url: url as string, name, progress: 0, status: 'pending', kind: 'zip' })
+      })
+    } else if (currentOs === 'windows' && 'windows' in manifest.binary) {
+      const osManifest = manifest.binary.windows as any
+      const versionFiles = osManifest[vitsApiVersion.value] || {}
+      Object.entries(versionFiles).forEach(([name, url]) => {
+        list.push({ url: url as string, name, progress: 0, status: 'pending', kind: 'zip' })
+      })
+    }
   }
+  
   items.value = list
 }
 
@@ -248,7 +386,9 @@ async function downloadOne(item: DownloadItem) {
       await extractZipFile(fullPath, vc.installPath)
       // macOS/Linux: 给予可执行权限
       if (currentOs === 'macos' || currentOs === 'linux') {
-        const exePath = joinPath(vc.installPath, 'sbv2_api')
+        const exePath = installType.value === 'style-bert-vits2' 
+          ? joinPath(vc.installPath, 'sbv2_api')
+          : joinPath(vc.installPath, 'vits-simple-api')
         try { await Command.create('chmod', ['+x', exePath]).spawn() } catch (err) {
           console.warn('设置可执行权限失败，请手动 chmod +x：', exePath, err)
         }
@@ -274,7 +414,7 @@ async function startInstall() {
   try {
     const results = await Promise.allSettled(items.value.map(it => downloadOne(it)))
     const hasError = results.some(r => r.status === 'rejected') || items.value.some(i => i.status === 'error' || i.status === 'canceled')
-    if (!hasError) {
+    if (!hasError && installType.value === 'style-bert-vits2') {
       await writeEnvFile()
     }
   } finally {
@@ -290,23 +430,47 @@ function cancelBatch() {
   for (const it of items.value) it.cancel?.()
 }
 
-// 使用系统原生命令解压磁盘上的 zip 文件，避免将压缩包解到内存
+// 使用系统原生命令解压磁盘上的压缩文件，避免将压缩包解到内存
 async function extractZipFile(zipPath: string, destDir: string): Promise<void> {
   await ensureDir(destDir)
-  if (currentOs === 'windows') {
-    // 使用 PowerShell Expand-Archive -Force
-    await Command.create('powershell', [
-      '-NoProfile',
-      '-NonInteractive',
-      '-Command',
-      `Expand-Archive -LiteralPath \"${zipPath}\" -DestinationPath \"${destDir}\" -Force`
-    ]).execute()
+  
+  if (zipPath.endsWith('.7z')) {
+    // .7z 文件解压
+    if (currentOs === 'windows') {
+      // Windows: 使用 7z 命令（如果存在）或 PowerShell 的 Expand-Archive
+      try {
+        await Command.create('7z', ['x', zipPath, `-o${destDir}`, '-y']).execute()
+      } catch {
+        throw new Error('无法解压 .7z 文件，请手动安装 7-Zip 或使用其他压缩工具')
+      }
+    } else {
+      // Linux: 使用 p7zip
+      try {
+        await Command.create('7z', ['x', zipPath, `-o${destDir}`, '-y']).execute()
+      } catch {
+        throw new Error('无法解压 .7z 文件，请安装 p7zip-full: sudo apt install p7zip-full')
+      }
+    }
+  } else if (zipPath.endsWith('.tar.gz')) {
+    // .tar.gz 文件解压
+    await Command.create('tar', ['-xzf', zipPath, '-C', destDir]).execute()
   } else {
-    // macOS / Linux 常见为 unzip，部分环境也可用 tar -xf
-    try {
-      await Command.create('unzip', ['-o', zipPath, '-d', destDir]).execute()
-    } catch {
-      await Command.create('tar', ['-xf', zipPath, '-C', destDir]).execute()
+    // .zip 文件解压（原有逻辑）
+    if (currentOs === 'windows') {
+      // 使用 PowerShell Expand-Archive -Force
+      await Command.create('powershell', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        `Expand-Archive -LiteralPath \"${zipPath}\" -DestinationPath \"${destDir}\" -Force`
+      ]).execute()
+    } else {
+      // macOS / Linux 常见为 unzip，部分环境也可用 tar -xf
+      try {
+        await Command.create('unzip', ['-o', zipPath, '-d', destDir]).execute()
+      } catch {
+        await Command.create('tar', ['-xf', zipPath, '-C', destDir]).execute()
+      }
     }
   }
 }

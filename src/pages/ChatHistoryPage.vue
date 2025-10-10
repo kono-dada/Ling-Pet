@@ -76,7 +76,7 @@
                     color="primary"
                     class="ml-2 voice-btn"
                     :loading="playingIndex === `${index}-${aiMsg.chinese}`"
-                    @click="playVoice(aiMsg.japanese, `${index}-${aiMsg.chinese}`)"
+                    @click="playVoice(aiMsg.japanese, aiMsg.chinese, `${index}-${aiMsg.chinese}`)"
                   >
                     <v-icon size="18">mdi-volume-high</v-icon>
                   </v-btn>
@@ -305,7 +305,7 @@ function handleDelete() {
   deleteIndex.value = -1;
 }
 
-async function playVoice(japaneseText: string, uniqueId: string) {
+async function playVoice(japaneseText: string, chineseText: string, uniqueId: string) {
   if (playingIndex.value === uniqueId) {
     return; // 如果正在播放，则忽略
   }
@@ -318,8 +318,10 @@ async function playVoice(japaneseText: string, uniqueId: string) {
   }
   try {
     playingIndex.value = uniqueId;
+    // 根据用户选择的语言决定使用哪种文本
+    const textToSpeak = vcs.bv2Lang === 'zh' ? chineseText : japaneseText;
     // 调用VITS服务生成语音
-    const audioBlob = await voiceVits(japaneseText);
+    const audioBlob = await voiceVits(textToSpeak);
     // 创建音频URL并播放
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
